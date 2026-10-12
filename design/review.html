@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Conference Leverage · Design review</title>
+    <link rel="stylesheet" href="../assets/design.css" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--text);
+        font: 16px/1.65 var(--body-face);
+      }
+      main {
+        max-width: 1250px;
+        margin: auto;
+        padding: 40px 24px 80px;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--heading-face);
+        letter-spacing: -0.035em;
+        line-height: 1.25;
+      }
+      h1 {
+        font-size: 36px;
+        margin: 12px 0 18px;
+      }
+      h2 {
+        font-size: 25px;
+        margin: 42px 0 10px;
+      }
+      p {
+        max-width: 85ch;
+        color: var(--secondary);
+      }
+      a {
+        color: var(--blue-dark);
+        text-underline-offset: 4px;
+      }
+      .links {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin: 20px 0;
+      }
+      .mode {
+        display: flex;
+        gap: 10px;
+        margin: 28px 0;
+      }
+      button {
+        font: 600 15px var(--body-face);
+        padding: 12px 20px;
+        min-height: 44px;
+        border: 1px solid var(--control-border);
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--blue-dark);
+        cursor: pointer;
+      }
+      button[aria-pressed="true"] {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: white;
+      }
+      .pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+      figure {
+        margin: 16px 0 0;
+        min-width: 0;
+      }
+      figcaption {
+        font-size: 14px;
+        color: var(--secondary);
+        margin-bottom: 10px;
+      }
+      img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        background: white;
+      }
+      .mobile figure {
+        max-width: 390px;
+      }
+      .mobile .pair {
+        max-width: 804px;
+      }
+      .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+      .detail-grid .phone img {
+        max-width: 390px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      :focus-visible {
+        outline: 3px solid var(--blue);
+        outline-offset: 4px;
+      }
+      footer {
+        margin-top: 42px;
+        border-top: 1px solid var(--rule);
+        padding-top: 24px;
+        font-size: 14px;
+        color: var(--secondary);
+      }
+      @media (max-width: 700px) {
+        main {
+          padding: 28px 18px 48px;
+        }
+        h1 {
+          font-size: 30px;
+        }
+        .pair,
+        .detail-grid {
+          grid-template-columns: 1fr;
+        }
+        .links {
+          gap: 14px;
+        }
+        .mode {
+          flex-wrap: wrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p>Conference Leverage · Internal design review · October 12, 2026</p>
+      <h1>One visual language.<br />Three ways to use it.</h1>
+      <p>
+        Compare the original prototype with the Priorities, Funding and My
+        Conference implementation. These are real browser captures. Open an
+        image to inspect it at full size.
+      </p>
+      <nav class="links" aria-label="Review resources">
+        <a href="viewport.html">Try the responsive preview →</a
+        ><a href="../index.html#/guide/prioritize">Open the app →</a
+        ><a href="../docs/DESIGN_SYSTEM.md">Design system</a
+        ><a href="../docs/DESIGN_QA.md">QA &amp; limits</a>
+      </nav>
+      <div class="mode" role="group" aria-label="Screenshot size">
+        <button data-mode="desktop" aria-pressed="true">
+          Desktop · 1,440 px</button
+        ><button data-mode="mobile" aria-pressed="false">Phone · 390 px</button>
+      </div>
+      <div id="comparisons"></div>
+      <h2>Examples and tools in context</h2>
+      <p>
+        The worksheets share their save behavior with My Conference. The funding
+        case is explicitly fictional; pending support stays out of the
+        subtraction.
+      </p>
+      <div class="detail-grid">
+        <figure>
+          <figcaption>Priorities · integrated worksheet</figcaption>
+          <a href="screenshots/after/priority-worksheet-desktop.jpg"
+            ><img
+              src="screenshots/after/priority-worksheet-desktop.jpg"
+              alt="Integrated priority worksheet on desktop"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Funding · full cost, support and cash timing</figcaption>
+          <a href="screenshots/after/funding-example-desktop.jpg"
+            ><img
+              src="screenshots/after/funding-example-desktop.jpg"
+              alt="Funding ledger showing USD 800 final and USD 1,200 upfront"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure class="phone">
+          <figcaption>Funding · mobile example</figcaption>
+          <a href="screenshots/after/funding-example-mobile.jpg"
+            ><img
+              src="screenshots/after/funding-example-mobile.jpg"
+              alt="Mobile funding ledger"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure class="phone">
+          <figcaption>My Conference · mobile editor</figcaption>
+          <a href="screenshots/after/conference-editor-mobile.jpg"
+            ><img
+              src="screenshots/after/conference-editor-mobile.jpg"
+              alt="Mobile planner access-status editor"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+      <footer>
+        Review these three experiences before extending the design. The v1.3
+        snapshot is unchanged. Seven guide bodies and legacy screens, workbook
+        assets, full screen-reader/cross-browser printing QA and launch-time
+        source freshness remain outstanding. This is not a published or
+        production-approved release.
+      </footer>
+    </main>
+    <script>
+      const experiences = [
+        [
+          "priorities",
+          "What should I prioritize?",
+          "Open numbered advice, a goal lens and a practical next move.",
+        ],
+        [
+          "funding",
+          "How can I fund my trip?",
+          "The same reading rhythm, with clear financial distinctions.",
+        ],
+        [
+          "conference",
+          "My Conference",
+          "A lighter planning workspace with an obvious next step.",
+        ],
+      ];
+      function render(mode) {
+        document.getElementById("comparisons").className = mode;
+        document.getElementById("comparisons").innerHTML = experiences
+          .map(
+            ([key, title, description]) =>
+              `<section><h2>${title}</h2><p>${description}</p><div class="pair">${["before", "after"].map((state) => `<figure><figcaption>${state === "before" ? "Before · original v5" : "After · review implementation"} · ${mode === "desktop" ? "1,440 × 1,000" : "390 × 844"} px</figcaption><a href="screenshots/${state}/${key}-${mode}.jpg"><img src="screenshots/${state}/${key}-${mode}.jpg" alt="${title}, ${state}, ${mode}" loading="lazy"></a></figure>`).join("")}</div></section>`,
+          )
+          .join("");
+      }
+      document.querySelectorAll("[data-mode]").forEach((button) =>
+        button.addEventListener("click", () => {
+          document
+            .querySelectorAll("[data-mode]")
+            .forEach((b) =>
+              b.setAttribute("aria-pressed", String(b === button)),
+            );
+          render(button.dataset.mode);
+        }),
+      );
+      render("desktop");
+    </script>
+  </body>
+</html>

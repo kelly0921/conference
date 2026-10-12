@@ -1,0 +1,164 @@
+[
+  {
+    "requested": 320,
+    "route": "guide/prioritize",
+    "duplicates": [],
+    "heading": "What should I prioritize?",
+    "height": 844,
+    "scrollWidth": 305,
+    "width": 320
+  },
+  {
+    "requested": 320,
+    "route": "guide/funding",
+    "duplicates": [],
+    "heading": "How can I fund my trip?",
+    "height": 844,
+    "scrollWidth": 305,
+    "width": 320
+  },
+  {
+    "requested": 320,
+    "route": "conference",
+    "duplicates": [],
+    "heading": "GHC 2026",
+    "height": 844,
+    "scrollWidth": 305,
+    "width": 320
+  },
+  {
+    "requested": 390,
+    "route": "guide/prioritize",
+    "duplicates": [],
+    "heading": "What should I prioritize?",
+    "height": 844,
+    "scrollWidth": 375,
+    "width": 390
+  },
+  {
+    "requested": 390,
+    "route": "guide/funding",
+    "duplicates": [],
+    "heading": "How can I fund my trip?",
+    "height": 844,
+    "scrollWidth": 375,
+    "width": 390
+  },
+  {
+    "requested": 390,
+    "route": "conference",
+    "duplicates": [],
+    "heading": "GHC 2026",
+    "height": 844,
+    "scrollWidth": 375,
+    "width": 390
+  },
+  {
+    "requested": 768,
+    "route": "guide/prioritize",
+    "duplicates": [],
+    "heading": "What should I prioritize?",
+    "height": 844,
+    "scrollWidth": 753,
+    "width": 768
+  },
+  {
+    "requested": 768,
+    "route": "guide/funding",
+    "duplicates": [],
+    "heading": "How can I fund my trip?",
+    "height": 844,
+    "scrollWidth": 753,
+    "width": 768
+  },
+  {
+    "requested": 768,
+    "route": "conference",
+    "duplicates": [],
+    "heading": "GHC 2026",
+    "height": 844,
+    "scrollWidth": 753,
+    "width": 768
+  },
+  {
+    "requested": 800,
+    "route": "guide/prioritize",
+    "duplicates": [],
+    "heading": "What should I prioritize?",
+    "height": 844,
+    "scrollWidth": 785,
+    "width": 800
+  },
+  {
+    "requested": 800,
+    "route": "guide/funding",
+    "duplicates": [],
+    "heading": "How can I fund my trip?",
+    "height": 844,
+    "scrollWidth": 785,
+    "width": 800
+  },
+  {
+    "requested": 800,
+    "route": "conference",
+    "duplicates": [],
+    "heading": "GHC 2026",
+    "height": 844,
+    "scrollWidth": 785,
+    "width": 800
+  },
+  {
+    "requested": 1024,
+    "route": "guide/prioritize",
+    "duplicates": [],
+    "heading": "What should I prioritize?",
+    "height": 1000,
+    "scrollWidth": 1009,
+    "width": 1024
+  },
+  {
+    "requested": 1024,
+    "route": "guide/funding",
+    "duplicates": [],
+    "heading": "How can I fund my trip?",
+    "height": 1000,
+    "scrollWidth": 1009,
+    "width": 1024
+  },
+  {
+    "requested": 1024,
+    "route": "conference",
+    "duplicates": [],
+    "heading": "GHC 2026",
+    "height": 1000,
+    "scrollWidth": 1009,
+    "width": 1024
+  },
+  {
+    "requested": 1440,
+    "route": "guide/prioritize",
+    "duplicates": [],
+    "heading": "What should I prioritize?",
+    "height": 1000,
+    "scrollWidth": 1425,
+    "width": 1440
+  },
+  {
+    "requested": 1440,
+    "route": "guide/funding",
+    "duplicates": [],
+    "heading": "How can I fund my trip?",
+    "height": 1000,
+    "scrollWidth": 1425,
+    "width": 1440
+  },
+  {
+    "requested": 1440,
+    "route": "conference",
+    "duplicates": [],
+    "heading": "GHC 2026",
+    "height": 1000,
+    "scrollWidth": 1425,
+    "width": 1440
+  }
+]

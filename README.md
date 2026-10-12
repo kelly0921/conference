@@ -9,20 +9,23 @@ A resource-first, interactive conference playbook for students and early-career 
 Run a local static server from the repository root:
 
 ```bash
-python -m http.server 4173
+python -m http.server 4173 --bind 127.0.0.1
 ```
 
-Open [http://localhost:4173/](http://localhost:4173/). The app is currently a standalone HTML prototype (`index.html`). The design experiment is available at `/design/reading-style-study.html`.
+Open [http://127.0.0.1:4173/](http://127.0.0.1:4173/). This is a static HTML/JavaScript site with no build step. The reviewed snapshot stays embedded in `index.html`; application/rendering styles live in `assets/`. The original design experiment is available at `/design/reading-style-study.html`.
+
+The three representative experiences are now implemented for internal design review. Open [the before/after screenshot gallery](design/REVIEW.md), or serve `/design/review.html` for its desktop/mobile comparison controls. `/design/viewport.html` previews the actual app at phone, tablet and desktop widths. See [design tokens and patterns](docs/DESIGN_SYSTEM.md) and [functional/accessibility results and limits](docs/DESIGN_QA.md).
 
 For a simple source validation check:
 
 ```bash
 python -m unittest discover -s tests -v
+node --test tests/runtime.test.cjs
 ```
 
 ## What's here
 
-- **`index.html`** — integrated v5 reading library + planning prototype. Includes the frozen editorial content for the current demonstration.
+- **`index.html` + `assets/`** — integrated v5 reading library and planner, with a bounded design pass for Priorities, Funding and My Conference. Includes the unchanged frozen editorial content.
 - **`content/playbook-v1.3.snapshot.json`** — extracted copy of the same snapshot for review/refactoring, with stable guide IDs, source links and templates.
 - **`design/reading-style-study.html`** — typography and reading-flow experiment; **not** the approved final design.
 - **`docs/CODEX_DESIGN_BRIEF.md`** — current three-surface design implementation scope.

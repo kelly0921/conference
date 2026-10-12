@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Conference Leverage · Responsive preview</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #ecece6;
+        color: #263b46;
+        font:
+          15px/1.5 system-ui,
+          sans-serif;
+      }
+      .controls {
+        padding: 16px 24px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex-wrap: wrap;
+        background: #fbf9f4;
+        border-bottom: 1px solid #ccc;
+      }
+      .controls label {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      select {
+        font: inherit;
+        min-height: 40px;
+        padding: 7px 12px;
+      }
+      a {
+        color: #253c80;
+      }
+      .frame-wrap {
+        padding: 24px;
+        overflow: auto;
+      }
+      iframe {
+        display: block;
+        border: 0;
+        background: #fbf9f4;
+        box-shadow: 0 3px 18px #263b461a;
+      }
+      body.capture {
+        background: #fbf9f4;
+        overflow: hidden;
+      }
+      .capture .controls {
+        display: none;
+      }
+      .capture .frame-wrap {
+        padding: 0;
+        overflow: hidden;
+      }
+      .capture iframe {
+        box-shadow: none;
+      }
+      :focus-visible {
+        outline: 3px solid #334fa0;
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="controls">
+      <a href="review.html">← Screenshot review</a>
+      <label for="width"
+        >Viewport
+        <select id="width">
+          <option value="320">320 px</option>
+          <option value="390">390 px · mobile</option>
+          <option value="768">768 px · tablet</option>
+          <option value="800">800 px</option>
+          <option value="1024">1,024 px</option>
+          <option value="1440">1,440 px · desktop</option>
+        </select></label
+      >
+      <label for="route"
+        >Experience
+        <select id="route">
+          <option value="guide/prioritize">Priorities</option>
+          <option value="guide/funding">Funding</option>
+          <option value="conference">My Conference</option>
+        </select></label
+      >
+      <span>Actual app rendering in a sized viewport. Local preview only.</span>
+    </div>
+    <div class="frame-wrap">
+      <iframe
+        id="preview"
+        title="Conference Leverage responsive preview"
+      ></iframe>
+    </div>
+    <script>
+      const params = new URLSearchParams(location.search),
+        widths = [320, 390, 768, 800, 1024, 1440],
+        routes = ["guide/prioritize", "guide/funding", "conference"];
+      const widthSelect = document.getElementById("width"),
+        routeSelect = document.getElementById("route"),
+        frame = document.getElementById("preview");
+      widthSelect.value = String(
+        widths.includes(Number(params.get("width")))
+          ? Number(params.get("width"))
+          : 390,
+      );
+      routeSelect.value = routes.includes(params.get("route"))
+        ? params.get("route")
+        : "guide/prioritize";
+      const capture = params.get("capture") === "1";
+      if (capture) document.body.classList.add("capture");
+      // Baseline capture is a development-only source; its temporary file is ignored.
+      const source =
+        params.get("source") === "baseline"
+          ? "../.qa-baseline/index.html"
+          : "../index.html";
+      function update() {
+        frame.style.width = widthSelect.value + "px";
+        frame.style.height =
+          (Number(widthSelect.value) <= 800 ? 844 : 1000) + "px";
+        if (frame.dataset.view !== routeSelect.value) {
+          frame.src = source + "#/" + routeSelect.value;
+          frame.dataset.view = routeSelect.value;
+        }
+      }
+      widthSelect.addEventListener("change", update);
+      routeSelect.addEventListener("change", update);
+      update();
+    </script>
+  </body>
+</html>

@@ -11,3 +11,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test embedded editorial snapshot parity
         run: python -m unittest discover -s tests -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check application syntax
+        run: |
+          node --check assets/app.js
+          node --check assets/representative.js
+      - name: Test planning, calculations and private exports
+        run: node --test tests/runtime.test.cjs
