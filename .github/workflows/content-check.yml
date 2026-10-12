@@ -1,0 +1,13 @@
+name: Content source check
+on:
+  push:
+    branches: [main, "develop/**"]
+  pull_request:
+
+jobs:
+  source-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test embedded editorial snapshot parity
+        run: python -m unittest discover -s tests -v
