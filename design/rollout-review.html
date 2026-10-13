@@ -17,9 +17,9 @@
       nav, .controls, .mode { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
       nav { margin: 24px 0; }
       .controls { padding: 24px 0; border-block: 1px solid var(--rule); }
-      label { display: grid; gap: 6px; font-size: 14px; color: var(--secondary); }
+      label { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 6px; font-size: 14px; color: var(--secondary); }
       select, button { font: 600 15px var(--body-face); color: var(--accent-dark); background: var(--surface); border: 1px solid var(--control-border); border-radius: 6px; min-height: 44px; padding: 10px 16px; }
-      select { max-width: 100%; }
+      select { width: 100%; min-width: 0; max-width: 100%; }
       button { cursor: pointer; }
       button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: white; }
       :focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
