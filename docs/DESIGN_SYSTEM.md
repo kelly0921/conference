@@ -39,6 +39,14 @@ Body text is 16 px with a 1.65 line height. Introductions use 17–19 px; instru
 
 ## Reusable patterns
 
+### Icon-only home link and browser icon
+
+The header and browser tab use Kelly’s supplied waving “Hi” character. The original artwork is preserved in `assets/characters/kelly-hi.png`; website-size PNG, ICO and Apple touch files use versioned v4 filenames. The earlier KC, CL and bridge assets remain archived explorations.
+
+The character displays at 44 × 44 px inside a home link labeled “Playbook home”, with a matching hover tooltip and rounded corners. Navigation stays alongside it on phones where space allows and moves to its own row below 360 px. Current assets and archived exploration notes are documented in [brand assets](../assets/brand/README.md). The [brand review](../design/brand-review.html) shows the home link and actual-size character icons.
+
+The character is used only for the home icon and browser icons. The preparation panel, guides, fictional examples and worksheets use their existing reading treatment. Source provenance is recorded in [character assets](../assets/characters/README.md).
+
 | Pattern | Purpose and behavior |
 | --- | --- |
 | `reading-tip` | Open numbered section, one approved check per section, generous rhythm and an actionable heading. |

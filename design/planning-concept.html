@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An isolated Conference Leverage checklist concept using fictional information.">
+  <title>Conference Leverage — planning concept</title>
+  <link rel="icon" href="../assets/brand/favicon-v4.ico" type="image/x-icon" sizes="16x16 32x32 48x48">
+  <link rel="icon" href="../assets/brand/favicon-32-v4.png" type="image/png" sizes="32x32">
+  <link rel="icon" href="../assets/brand/favicon-48-v4.png" type="image/png" sizes="48x48">
+  <link rel="stylesheet" href="planning-concept.css">
+  <script src="planning-concept.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header>
+    <a class="brand" href="../#/playbook/before" aria-label="Playbook home" title="Playbook home"><img class="brand-mark" src="../assets/brand/kelly-character-v4.png" width="44" height="44" alt=""></a>
+    <span class="concept-label">Planning concept</span>
+    <a class="current" href="../#/conference">Current planner ↗</a>
+  </header>
+  <div class="preview-note">Fictional preview · changes last until reload · AI example only</div>
+  <main id="main">
+    <div class="intro">
+      <p class="eyebrow"><span aria-hidden="true">●</span> My Conference</p>
+      <h1>Your conference, your plan.</h1>
+      <p class="lead">A few thoughtful preparations. One useful outcome. Room to change your mind.</p>
+    </div>
+    <div class="workspace">
+      <section class="checklist" aria-labelledby="checklist-title">
+        <div class="checklist-top"><div><p id="timing" class="eyebrow"></p><h2 id="checklist-title">Your preparation checklist</h2></div><span id="progress-text" class="progress-text" role="status" aria-live="polite"></span></div>
+        <progress id="progress" max="1" value="0" aria-label="Checklist completion"></progress>
+        <p class="helper">Check an action when you have prepared it. Completion does not confirm registration or access.</p>
+        <div class="phases" role="group" aria-label="Planning phase">
+          <button type="button" data-phase="before" aria-pressed="true">Prepare</button>
+          <button type="button" data-phase="week" aria-pressed="false">Final week</button>
+          <button type="button" data-phase="during" aria-pressed="false">At event</button>
+          <button type="button" data-phase="after" aria-pressed="false">After</button>
+        </div>
+        <p id="phase-note" class="phase-note"></p>
+        <div id="task-list"></div>
+        <p id="empty-note" class="helper" hidden>No applicable actions in this phase.</p>
+        <div class="checklist-foot"><p>Preparation windows are suggestions. Use the organizer’s actual deadlines.</p><button type="button" id="reset-checks">Reset example checks</button></div>
+      </section>
+      <aside class="profile" aria-labelledby="profile-title">
+        <p class="eyebrow">Any conference starts here</p>
+        <h2 id="profile-title">Open Systems Summit</h2>
+        <p class="helper">Fictional example event</p>
+        <p id="profile-dates" class="profile-dates"></p>
+        <p id="profile-place" class="helper"></p>
+        <label for="goal">My main goal</label>
+        <select id="goal"><option value="learning">Technical learning</option><option value="recruiting">Recruiting / career</option><option value="community">People / community</option><option value="project">Build / share a project</option></select>
+        <label for="format">Event format</label>
+        <select id="format"><option value="in-person">In person</option><option value="online">Online</option><option value="hybrid">Hybrid</option></select>
+        <details class="profile-details">
+          <summary>Edit conference details</summary>
+          <label for="name">Conference name</label><input id="name" value="Open Systems Summit" maxlength="100">
+          <label for="start">Start date</label><input id="start" type="date" value="2026-11-12">
+          <label for="end">End date</label><input id="end" type="date" value="2026-11-14">
+          <label for="timezone">Event timezone</label><input id="timezone" value="America/New_York" maxlength="80">
+          <label for="place">Location</label><input id="place" value="Example City" maxlength="150">
+          <label for="currency">Planning currency</label><select id="currency"><option>USD</option><option>EUR</option><option>GBP</option><option>CAD</option><option>AUD</option><option>INR</option><option>JPY</option></select>
+          <label for="official">Official website</label><input id="official" type="url" placeholder="https://…">
+          <p class="helper">Enter the current edition’s organizer page. A link by itself does not verify access.</p>
+          <p id="profile-error" class="error" role="alert"></p>
+        </details>
+        <div class="profile-foot"><span class="small-dot" aria-hidden="true"></span> Example timeline as of Oct 13, 2026</div>
+        <div class="ai-example">
+          <p class="eyebrow">Optional · future feature</p>
+          <h3>A second look at your plan</h3>
+          <p>AI could help turn a broad intention into a specific action and a realistic backup.</p>
+          <details id="ai-review">
+            <summary>See an AI review example</summary>
+            <div class="ai-body">
+              <p class="example-badge">Illustrative response · no AI connected</p>
+              <p><strong>Example input:</strong> “I want to learn about data reliability. I’ll attend a session. Access needs checking.”</p>
+              <ol><li><strong>Make the action concrete.</strong> Find one relevant session on the current official program and write one question.</li><li><strong>Resolve the access gap.</strong> Check pass and RSVP requirements before treating it as a fixed commitment.</li><li><strong>Keep a fallback.</strong> Find another open session or public resource if the first choice is unavailable.</li></ol>
+              <p class="helper">These suggestions do not establish that any session exists or that you have admission. A real review would show the selected fields being shared and let you accept, edit or dismiss each suggestion.</p>
+            </div>
+          </details>
+        </div>
+      </aside>
+    </div>
+    <section class="reader-reminder"><h2>Need the why behind a step?</h2><p>The Playbook stays open to everyone, with numbered advice, worked examples and optional worksheets.</p><a href="../#/playbook/before">Read the Playbook →</a></section>
+  </main>
+  <footer>Concept for internal review · approved charcoal &amp; teal · no saved plans or AI requests</footer>
+</body>
+</html>
