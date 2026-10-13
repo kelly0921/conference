@@ -6,6 +6,7 @@ This repository starts with a **functional v5 HTML prototype** and a separate ed
 
 - Priorities and Funding now use open numbered advice, worked examples, contextual interactions and inline worksheets shared with the planner.
 - My Conference has a clearer suggested next move, less crowded editors, desktop/mobile task navigation and access to every existing planning step.
+- User-selected palette: Charcoal & teal, with white surfaces and pale mint examples, applied consistently to the three experiences and shared navigation.
 - The frozen v1.3 JSON and embedded snapshot remain unchanged. Styles and renderers are separated into static assets; the v5 storage schema and export pipeline remain in use.
 - Before/after desktop and mobile screenshots, a responsive preview, design tokens and QA notes are committed. Local checks: 4 content tests and 16 runtime regression tests pass; actual Chromium layout checks cover three surfaces at six widths. Local reload persistence, keyboard validation, event separation, templates, appointments and default private export behavior were checked in the browser.
 - Seven guide bodies and the other legacy screens await a design decision. No broad rollout or production approval is implied.

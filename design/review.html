@@ -40,7 +40,7 @@
         color: var(--secondary);
       }
       a {
-        color: var(--blue-dark);
+        color: var(--accent-dark);
         text-underline-offset: 4px;
       }
       .links {
@@ -61,12 +61,12 @@
         border: 1px solid var(--control-border);
         border-radius: 6px;
         background: var(--surface);
-        color: var(--blue-dark);
+        color: var(--accent-dark);
         cursor: pointer;
       }
       button[aria-pressed="true"] {
-        background: var(--blue);
-        border-color: var(--blue);
+        background: var(--accent);
+        border-color: var(--accent);
         color: white;
       }
       .pair {
@@ -110,7 +110,7 @@
         display: none !important;
       }
       :focus-visible {
-        outline: 3px solid var(--blue);
+        outline: 3px solid var(--accent);
         outline-offset: 4px;
       }
       footer {
@@ -151,6 +151,7 @@
       </p>
       <nav class="links" aria-label="Review resources">
         <a href="viewport.html">Try the responsive preview →</a
+        ><a href="palette-review.html">Selected palette &amp; alternatives</a
         ><a href="../index.html#/guide/prioritize">Open the app →</a
         ><a href="../docs/DESIGN_SYSTEM.md">Design system</a
         ><a href="../docs/DESIGN_QA.md">QA &amp; limits</a>
@@ -170,36 +171,36 @@
       <div class="detail-grid">
         <figure>
           <figcaption>Priorities · integrated worksheet</figcaption>
-          <a href="screenshots/after/priority-worksheet-desktop.jpg"
+          <a href="screenshots/selected/priority-worksheet-desktop.png"
             ><img
-              src="screenshots/after/priority-worksheet-desktop.jpg"
+              src="screenshots/selected/priority-worksheet-desktop.png"
               alt="Integrated priority worksheet on desktop"
               loading="lazy"
           /></a>
         </figure>
         <figure>
           <figcaption>Funding · full cost, support and cash timing</figcaption>
-          <a href="screenshots/after/funding-example-desktop.jpg"
+          <a href="screenshots/selected/funding-example-desktop.png"
             ><img
-              src="screenshots/after/funding-example-desktop.jpg"
+              src="screenshots/selected/funding-example-desktop.png"
               alt="Funding ledger showing USD 800 final and USD 1,200 upfront"
               loading="lazy"
           /></a>
         </figure>
         <figure class="phone">
           <figcaption>Funding · mobile example</figcaption>
-          <a href="screenshots/after/funding-example-mobile.jpg"
+          <a href="screenshots/selected/funding-example-mobile.png"
             ><img
-              src="screenshots/after/funding-example-mobile.jpg"
+              src="screenshots/selected/funding-example-mobile.png"
               alt="Mobile funding ledger"
               loading="lazy"
           /></a>
         </figure>
         <figure class="phone">
           <figcaption>My Conference · mobile editor</figcaption>
-          <a href="screenshots/after/conference-editor-mobile.jpg"
+          <a href="screenshots/selected/conference-editor-mobile.png"
             ><img
-              src="screenshots/after/conference-editor-mobile.jpg"
+              src="screenshots/selected/conference-editor-mobile.png"
               alt="Mobile planner access-status editor"
               loading="lazy"
           /></a>
@@ -236,7 +237,10 @@
         document.getElementById("comparisons").innerHTML = experiences
           .map(
             ([key, title, description]) =>
-              `<section><h2>${title}</h2><p>${description}</p><div class="pair">${["before", "after"].map((state) => `<figure><figcaption>${state === "before" ? "Before · original v5" : "After · review implementation"} · ${mode === "desktop" ? "1,440 × 1,000" : "390 × 844"} px</figcaption><a href="screenshots/${state}/${key}-${mode}.jpg"><img src="screenshots/${state}/${key}-${mode}.jpg" alt="${title}, ${state}, ${mode}" loading="lazy"></a></figure>`).join("")}</div></section>`,
+              `<section><h2>${title}</h2><p>${description}</p><div class="pair">${["before", "after"].map((state) => {
+                const path = state === "before" ? `screenshots/before/${key}-${mode}.jpg` : `screenshots/selected/${key}-${mode}.png`;
+                return `<figure><figcaption>${state === "before" ? "Before · original v5" : "After · selected charcoal & teal"} · ${mode === "desktop" ? "1,440 × 1,000" : "390 × 844"} px</figcaption><a href="${path}"><img src="${path}" alt="${title}, ${state}, ${mode}" loading="lazy"></a></figure>`;
+              }).join("")}</div></section>`,
           )
           .join("");
       }

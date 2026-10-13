@@ -18,17 +18,21 @@ html {
 
 /* Shared tokens. Surface styles below are bounded to the three review views. */
 :root {
-  --paper: #fbf9f4;
-  --surface: #fffefa;
-  --text: #263b46;
-  --secondary: #586670;
-  --rule: #dfdfd6;
-  --control-border: #7d8b96;
-  --blue: #334fa0;
-  --blue-dark: #253c80;
-  --blue-wash: #edf0fa;
-  --butter: #f3edcf;
-  --terracotta: #9a4e36;
+  --paper: #ffffff;
+  --surface: #ffffff;
+  --text: #252b2e;
+  --secondary: #596469;
+  --rule: #dde3e4;
+  --control-border: #7d8c8d;
+  --accent: #006d68;
+  --accent-dark: #00544f;
+  --accent-wash: #edf6f5;
+  --example-wash: #e7f3ef;
+  --emphasis: var(--accent);
+  --example-rule: #c4dcd3;
+  --worksheet-rule: #c4dcd3;
+  --shadow-ink: #252b2e1a;
+  --shadow-soft: #252b2e05;
   --body-face: "DM Sans", "Segoe UI", Arial, sans-serif;
   --heading-face: Manrope, "Trebuchet MS", sans-serif;
   --space-1: 8px;
@@ -57,7 +61,7 @@ header {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: var(--butter);
+  background: var(--example-wash);
   color: var(--text);
   font: 700 24px var(--heading-face);
 }
@@ -82,11 +86,11 @@ header {
 }
 .nav a.active,
 .nav a:hover {
-  background: var(--blue-wash);
-  color: var(--blue-dark);
+  background: var(--accent-wash);
+  color: var(--accent-dark);
 }
 .nav a.active {
-  box-shadow: inset 0 -2px var(--blue);
+  box-shadow: inset 0 -2px var(--accent);
 }
 .visually-hidden {
   position: absolute;
@@ -142,7 +146,7 @@ body.review-surface {
   letter-spacing: -0.025em;
 }
 .review-surface a {
-  color: var(--blue-dark);
+  color: var(--accent-dark);
   text-underline-offset: 4px;
 }
 .review-surface .muted {
@@ -160,7 +164,7 @@ body.review-surface {
   font-weight: 600;
 }
 .review-surface :focus-visible {
-  outline: 3px solid var(--blue);
+  outline: 3px solid var(--accent);
   outline-offset: 4px;
 }
 .review-surface .btn {
@@ -169,7 +173,7 @@ body.review-surface {
   font-weight: 650;
   padding: 12px 17px;
   min-height: 44px;
-  color: var(--blue-dark);
+  color: var(--accent-dark);
   border-color: var(--control-border);
   border-radius: 7px;
   background: var(--surface);
@@ -178,16 +182,16 @@ body.review-surface {
     border-color 0.15s;
 }
 .review-surface .btn:hover {
-  background: var(--blue-wash);
-  border-color: var(--blue);
+  background: var(--accent-wash);
+  border-color: var(--accent);
 }
 .review-surface .btn.primary {
-  background: var(--blue);
+  background: var(--accent);
   color: white;
-  border-color: var(--blue);
+  border-color: var(--accent);
 }
 .review-surface .btn.primary:hover {
-  background: var(--blue-dark);
+  background: var(--accent-dark);
 }
 .review-surface .btn.sm {
   padding: 8px 11px;
@@ -213,7 +217,7 @@ body.review-surface {
   max-width: calc(100vw - 40px);
   border-radius: 8px;
   padding: 14px 18px;
-  box-shadow: 0 8px 30px #263b461a;
+  box-shadow: 0 8px 30px var(--shadow-ink);
 }
 .section-caption {
   display: flex;
@@ -225,14 +229,14 @@ body.review-surface {
   color: var(--secondary);
 }
 .caption-divider {
-  color: #929789;
+  color: var(--control-border);
   font-weight: 400;
 }
 .edition-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--terracotta);
+  background: var(--emphasis);
   display: inline-block;
   flex-shrink: 0;
 }
@@ -276,7 +280,7 @@ body.review-surface {
 .guide-mood {
   margin-top: 16px;
   font-size: 15px;
-  color: var(--terracotta);
+  color: var(--emphasis);
   font-weight: 500;
 }
 .guide-shortcuts {
@@ -292,7 +296,7 @@ body.review-surface {
 }
 .tip-number {
   font: 600 28px/1.2 var(--heading-face);
-  color: var(--terracotta);
+  color: var(--emphasis);
   letter-spacing: -0.04em;
   padding-top: 1px;
 }
@@ -324,15 +328,15 @@ body.review-surface {
   transition: background 0.15s;
 }
 .goal-chip:hover {
-  border-color: var(--blue);
+  border-color: var(--accent);
 }
 .goal-chip[aria-pressed="true"] {
-  border-color: var(--blue);
-  background: var(--blue);
+  border-color: var(--accent);
+  background: var(--accent);
   color: white;
 }
 .goal-response {
-  border-left: 3px solid var(--blue);
+  border-left: 3px solid var(--accent);
   padding: 3px 0 3px 18px;
 }
 .goal-response strong {
@@ -347,7 +351,7 @@ body.review-surface {
 }
 .reflection {
   margin-top: 18px;
-  background: var(--butter);
+  background: var(--example-wash);
   padding: 16px 20px;
   border-radius: 2px 12px 12px 2px;
   color: var(--text);
@@ -372,8 +376,8 @@ body.review-surface {
   padding: 6px 0;
 }
 .rail-stages a[aria-current] {
-  color: var(--blue-dark);
-  box-shadow: 0 2px var(--blue);
+  color: var(--accent-dark);
+  box-shadow: 0 2px var(--accent);
   font-weight: 700;
 }
 .rail-caption {
@@ -392,11 +396,11 @@ body.review-surface {
   color: var(--text);
 }
 .reading-toc a:hover {
-  color: var(--blue);
+  color: var(--accent);
   text-decoration: underline;
 }
 .reading-toc a span {
-  color: var(--terracotta);
+  color: var(--emphasis);
   font-size: 13px;
   min-width: 20px;
 }
@@ -410,7 +414,7 @@ body.review-surface {
 .rail-note > span {
   display: block;
   font-size: 27px;
-  color: var(--terracotta);
+  color: var(--emphasis);
   margin-bottom: 8px;
 }
 .rail-more {
@@ -432,7 +436,7 @@ body.review-surface {
 .worked-example {
   margin: 12px 0 32px;
   padding: 28px 30px;
-  background: var(--butter);
+  background: var(--example-wash);
   border-radius: 12px;
   scroll-margin-top: 24px;
 }
@@ -441,7 +445,7 @@ body.review-surface {
   font-size: 25px;
 }
 .worked-example .section-caption {
-  color: #68573d;
+  color: var(--secondary);
 }
 .example-mark {
   font-size: 23px;
@@ -454,7 +458,7 @@ body.review-surface {
 }
 .worked-example > .helper {
   margin-top: 12px;
-  color: #695f4c;
+  color: var(--secondary);
 }
 .priority-comparison {
   display: grid;
@@ -462,12 +466,12 @@ body.review-surface {
   gap: 24px;
 }
 .priority-comparison > div + div {
-  border-left: 1px solid #d5cfae;
+  border-left: 1px solid var(--example-rule);
   padding-left: 24px;
 }
 .comparison-label {
   font-size: 14px;
-  color: #68573d;
+  color: var(--secondary);
   font-weight: 600;
 }
 .priority-comparison h3 {
@@ -478,7 +482,7 @@ body.review-surface {
   margin: 8px 0 0;
   font-size: 14px;
   line-height: 1.65;
-  color: #4e554f;
+  color: var(--secondary);
 }
 .funding-ledger {
   background: var(--surface);
@@ -535,7 +539,7 @@ body.review-surface {
   color: var(--secondary);
 }
 .cash-result {
-  color: var(--blue-dark);
+  color: var(--accent-dark);
 }
 .review-surface .guide-details {
   margin: 0 0 36px;
@@ -552,7 +556,7 @@ body.review-surface {
   font-weight: 650;
   cursor: pointer;
   padding: 17px 0;
-  color: var(--blue-dark);
+  color: var(--accent-dark);
 }
 .review-surface .guide-details > summary {
   list-style: none;
@@ -582,7 +586,7 @@ body.review-surface {
   margin: 16px 0;
 }
 .inline-worksheet {
-  background: var(--blue-wash);
+  background: var(--accent-wash);
   padding: 30px;
   border-radius: 12px;
   scroll-margin-top: 24px;
@@ -626,7 +630,7 @@ body.review-surface {
   max-width: 100%;
 }
 .review-surface .formrow :is(input, textarea)::placeholder {
-  color: #69747a;
+  color: var(--secondary);
   opacity: 1;
 }
 .review-surface .formrow small {
@@ -643,7 +647,7 @@ body.review-surface {
   margin-left: 7px;
 }
 .worksheet-notes {
-  border-top: 1px solid #cbd2e2;
+  border-top: 1px solid var(--worksheet-rule);
   margin: 8px 0 20px;
 }
 .worksheet-notes > summary {
@@ -656,7 +660,7 @@ body.review-surface {
 }
 .preview-result {
   padding: 16px 18px;
-  border-left: 3px solid var(--blue);
+  border-left: 3px solid var(--accent);
   background: var(--surface);
   margin-top: 20px;
   border-radius: 4px;
@@ -672,7 +676,7 @@ body.review-surface {
   border-color: #963b2b !important;
 }
 .saved-priorities {
-  border-top: 1px solid #cbd2e2;
+  border-top: 1px solid var(--worksheet-rule);
   margin-top: 28px;
   padding-top: 20px;
 }
@@ -732,7 +736,7 @@ body.review-surface {
   font: 750 18px/1.5 var(--heading-face);
   margin-bottom: 18px;
   width: 100%;
-  border-bottom: 1px solid #cbd2e2;
+  border-bottom: 1px solid var(--worksheet-rule);
   padding-bottom: 12px;
 }
 .funding-form legend span {
@@ -875,7 +879,7 @@ body.review-surface {
 .save-state::before {
   content: "·";
   font-weight: 700;
-  color: var(--blue);
+  color: var(--accent);
   margin-right: 7px;
 }
 .planner-context {
@@ -891,8 +895,8 @@ body.review-surface {
   margin-bottom: 28px;
 }
 .review-surface .event-pill {
-  background: var(--blue-wash);
-  color: var(--blue-dark);
+  background: var(--accent-wash);
+  color: var(--accent-dark);
   border: 0;
   font-size: 14px;
   padding: 7px 13px;
@@ -916,14 +920,14 @@ body.review-surface {
   display: flex;
   gap: 20px;
   align-items: center;
-  background: var(--butter);
+  background: var(--example-wash);
   padding: 24px 28px;
   border-radius: 10px;
   margin-bottom: 36px;
 }
 .next-icon {
   font: 500 35px/1 var(--heading-face);
-  color: var(--terracotta);
+  color: var(--emphasis);
   width: 36px;
   flex-shrink: 0;
 }
@@ -934,13 +938,13 @@ body.review-surface {
 .next-move p {
   font-size: 15px;
   line-height: 1.6;
-  color: #5f6354;
+  color: var(--secondary);
 }
 .next-move .btn {
   margin-left: auto;
   white-space: nowrap;
   background: transparent;
-  border-color: #aab3b0;
+  border-color: var(--control-border);
   flex-shrink: 0;
 }
 .review-surface .conference-grid {
@@ -980,8 +984,8 @@ body.review-surface {
   white-space: nowrap;
 }
 .review-surface .phasebuttons button.active {
-  background: var(--blue-wash);
-  color: var(--blue-dark);
+  background: var(--accent-wash);
+  color: var(--accent-dark);
 }
 .review-surface .taskrow {
   padding: 14px 12px 14px 10px;
@@ -993,13 +997,13 @@ body.review-surface {
 }
 .review-surface .taskrow.active {
   background: var(--surface);
-  border-left-color: var(--blue);
+  border-left-color: var(--accent);
 }
 .review-surface .taskrow input {
   width: 24px;
   height: 24px;
   flex-shrink: 0;
-  accent-color: var(--blue);
+  accent-color: var(--accent);
   margin-top: 3px;
 }
 .review-surface .taskrow .titlebutton {
@@ -1033,7 +1037,7 @@ body.review-surface {
   line-height: 1.8;
 }
 .planner-side-note strong {
-  color: var(--terracotta);
+  color: var(--emphasis);
   font-weight: 500;
 }
 .review-surface .edbox {
@@ -1041,7 +1045,7 @@ body.review-surface {
   background: var(--surface);
   border-radius: 12px;
   min-height: 0;
-  box-shadow: 0 3px 24px #263b4605;
+  box-shadow: 0 3px 24px var(--shadow-soft);
   min-width: 0;
 }
 .review-surface .edhead {
@@ -1083,8 +1087,8 @@ body.review-surface {
   background: var(--surface);
 }
 .review-surface .tip {
-  background: var(--blue-wash);
-  border-left-color: var(--blue);
+  background: var(--accent-wash);
+  border-left-color: var(--accent);
   color: var(--text);
   padding: 16px 18px;
   font-size: 14px;
@@ -1119,7 +1123,7 @@ body.review-surface {
   max-width: 76ch;
 }
 .review-surface .assistbox {
-  background: var(--blue-wash);
+  background: var(--accent-wash);
   padding: 22px;
   border: 0;
   border-radius: 8px;
@@ -1153,8 +1157,8 @@ body.review-surface {
   color: var(--text);
 }
 .review-surface .select-card:hover {
-  border-color: var(--blue);
-  background: var(--blue-wash);
+  border-color: var(--accent);
+  background: var(--accent-wash);
 }
 .review-surface .select-card strong {
   font: 750 20px/1.4 var(--heading-face);
@@ -1401,7 +1405,7 @@ body.review-surface {
   .priority-comparison > div + div {
     border-left: 0;
     padding: 20px 0 0;
-    border-top: 1px solid #d5cfae;
+    border-top: 1px solid var(--example-rule);
   }
   .funding-ledger {
     padding: 12px 16px;

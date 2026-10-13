@@ -36,6 +36,8 @@ The fictional QA data is used only to exercise local planning; it is not a curre
 
 Reviewed Priorities, Funding and My Conference at desktop and mobile. The screenshot set includes matched before/after top views and additional example, worksheet and editor views. See [the screenshot review](../design/REVIEW.md).
 
+The user selected **Charcoal & teal** (option 01) after live color comparison. The shared navigation and three representative experiences now use white surfaces, charcoal text, teal accents and pale mint examples. All ten current after/detail captures were refreshed in `design/screenshots/selected/`. The 20 existing checks and all 18 layout combinations were rerun successfully after applying the palette; `design/viewport-checks.json` records the current accent and dimensions. The palette comparison remains a separate review tool and defaults to the selected option.
+
 The repeatable responsive preview runs the actual app in a same-origin frame at 320, 390, 768, 800, 1,024 and 1,440 px. All 18 surface/width combinations had no horizontal overflow and no duplicate element IDs. This verifies CSS layout in Chromium; it does not emulate a phone's OS, touch input or browser UI.
 
 Browser review caught and corrected a pending-funding input/output ID collision, a planner task disclosure that could stay hidden after changing from mobile to desktop, and wrapping phase labels. Shared control sizing and validation states were refined during this pass. The final pending label has its own ID, and the resize listener changes the task disclosure without discarding unsaved fields.
@@ -44,7 +46,7 @@ Browser review caught and corrected a pending-funding input/output ID collision,
 
 Labels, landmarks, native disclosures, selected/current states, live status feedback, contrast tokens, focus behavior, responsive layout and reduced-motion rules were reviewed. This is **not** a WCAG conformance claim or full accessibility audit.
 
-Measured token contrast: text on paper 11.11:1, secondary text on paper 5.62:1, white on the primary blue 7.59:1, terracotta on paper 5.67:1, and secondary text on the worksheet wash 5.20:1. Control borders use a darker dedicated token rather than the decorative separator color.
+Selected Charcoal & teal token contrast: charcoal on white 14.35:1, secondary text on white 6.08:1, white on the primary teal 6.20:1, secondary text on the worksheet wash 5.53:1, and secondary text on the mint example panels 5.35:1. Control boundaries are 3.50:1 against white and use a dedicated token rather than the decorative separator color.
 
 - No NVDA, JAWS or VoiceOver session was performed; screen-reader announcements and the long live totals region still need real testing.
 - No Firefox/Safari, OS touch/zoom, high-contrast-mode or cross-browser print test was performed.

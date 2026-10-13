@@ -16,6 +16,8 @@ Open [http://127.0.0.1:4173/](http://127.0.0.1:4173/). This is a static HTML/Jav
 
 The three representative experiences are now implemented for internal design review. Open [the before/after screenshot gallery](design/REVIEW.md), or serve `/design/review.html` for its desktop/mobile comparison controls. `/design/viewport.html` previews the actual app at phone, tablet and desktop widths. See [design tokens and patterns](docs/DESIGN_SYSTEM.md) and [functional/accessibility results and limits](docs/DESIGN_QA.md).
 
+The selected palette is **Charcoal & teal**: white surfaces, charcoal text, teal controls and pale mint examples. `/design/palette-review.html` retains the color alternatives and opens the selected reference by default.
+
 For a simple source validation check:
 
 ```bash

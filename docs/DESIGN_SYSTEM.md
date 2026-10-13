@@ -6,7 +6,7 @@ Internal design review, October 12, 2026. Implemented for Priorities, Funding, a
 
 The [Panther GHC Guide](https://panther-hub.org/resources/ghc-guide) makes long advice approachable with conversational headings, numbered progression, concrete comparisons, reflection, and small contextual interactions. The existing [reading-style study](../design/reading-style-study.html) tests a more open article treatment. Both were read and inspected in a browser.
 
-This implementation develops its own paper, ink-blue, butter and terracotta palette. It uses open sections, a compact reading rail, and a restrained typographic hierarchy. Examples and worksheets get a background treatment because they change the reader's mode; ordinary advice does not need a card shell. No reference branding, imagery or application content is reused.
+This implementation develops its own white, charcoal, teal and pale mint palette selected during user review. It uses open sections, a compact reading rail, and a restrained typographic hierarchy. Examples and worksheets get a background treatment because they change the reader's mode; ordinary advice does not need a card shell. No reference branding, imagery or application content is reused.
 
 ## Tokens
 
@@ -14,23 +14,26 @@ Defined once in [assets/design.css](../assets/design.css).
 
 | Purpose | Token | Value |
 | --- | --- | --- |
-| Page | `--paper` | `#fbf9f4` |
-| Form/editor surface | `--surface` | `#fffefa` |
-| Primary text | `--text` | `#263b46` |
-| Supporting text | `--secondary` | `#586670` |
-| Quiet separator | `--rule` | `#dfdfd6` |
-| Control boundary | `--control-border` | `#7d8b96` |
-| Interactive accent | `--blue` | `#334fa0` |
-| Link/hover accent | `--blue-dark` | `#253c80` |
-| Worksheet/selected wash | `--blue-wash` | `#edf0fa` |
-| Example/next-move wash | `--butter` | `#f3edcf` |
-| Section number/emphasis | `--terracotta` | `#9a4e36` |
+| Page | `--paper` | `#ffffff` |
+| Form/editor surface | `--surface` | `#ffffff` |
+| Primary text | `--text` | `#252b2e` |
+| Supporting text | `--secondary` | `#596469` |
+| Quiet separator | `--rule` | `#dde3e4` |
+| Control boundary | `--control-border` | `#7d8c8d` |
+| Interactive accent | `--accent` | `#006d68` |
+| Link/hover accent | `--accent-dark` | `#00544f` |
+| Worksheet/selected wash | `--accent-wash` | `#edf6f5` |
+| Example/next-move wash | `--example-wash` | `#e7f3ef` |
+| Section number/emphasis | `--emphasis` | `#006d68` |
+| Example/worksheet dividers | `--example-rule` / `--worksheet-rule` | `#c4dcd3` |
 | Body | `--body-face` | DM Sans, Segoe UI, Arial |
 | Headings | `--heading-face` | Manrope, Trebuchet MS |
 | Reading column | `--reading-width` | Maximum 720 px |
 | Space scale | `--space-1` … `--space-6` | 8 / 16 / 24 / 32 / 48 / 64 px |
 
 The variable Latin web fonts total approximately 49 KB and are served from the repository. Their OFL licenses are in `assets/fonts/`. There are no remote font calls or new runtime packages.
+
+The selected palette is **Charcoal & teal**, option 01 from the browser comparison: white page and editor surfaces, charcoal text, deep teal links/controls, and pale mint examples. Color tokens describe their purpose so palette changes stay consistent across all three experiences. The local [palette comparison](../design/palette-review.html) preserves the alternatives and opens the selected reference by default.
 
 Body text is 16 px with a 1.65 line height. Introductions use 17–19 px; instructions use 15–16 px; supporting text generally uses 14 px. Tertiary task captions and compact status labels use 13 px. Desktop page headings reach 48 px, mobile headings 35–36 px; tip headings use 21–23 px. Inputs use 16 px, including mobile. Avoid adding further small-text tiers or uppercase instructional labels.
 
@@ -49,7 +52,7 @@ Body text is 16 px with a 1.65 line height. Introductions use 17–19 px; instru
 | `other-steps` | All editors remain reachable even when outside the suggested date window. |
 | `save-state` / status toast | Distinguishes unsaved form changes, local saves and unavailable storage. Priority and budget errors focus the relevant field. |
 
-Buttons have at least 44 px height, main controls at least 44–46 px, and task checkboxes are 24 px. Blue focus outlines, selected text/state, native labels and explicit access statuses support keyboard use. Hover changes are short and restrained. Reduced-motion preferences remove transitions and animation; in-page reading links scroll directly and move focus to the section.
+Buttons have at least 44 px height, main controls at least 44–46 px, and task checkboxes are 24 px. Teal focus outlines, selected text/state, native labels and explicit access statuses support keyboard use. Hover changes are short and restrained. Reduced-motion preferences remove transitions and animation; in-page reading links scroll directly and move focus to the section.
 
 Small-screen guide shortcuts reach the worked example and worksheet without requiring a long scroll.
 

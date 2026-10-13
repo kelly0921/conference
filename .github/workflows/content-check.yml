@@ -18,5 +18,6 @@ jobs:
         run: |
           node --check assets/app.js
           node --check assets/representative.js
+          node --check design/palette-review.js
       - name: Test planning, calculations and private exports
         run: node --test tests/runtime.test.cjs

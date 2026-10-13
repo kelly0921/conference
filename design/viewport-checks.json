@@ -2,6 +2,8 @@
   {
     "requested": 320,
     "route": "guide/prioritize",
+    "accent": "#006d68",
+    "clientWidth": 305,
     "duplicates": [],
     "heading": "What should I prioritize?",
     "height": 844,
@@ -11,6 +13,8 @@
   {
     "requested": 320,
     "route": "guide/funding",
+    "accent": "#006d68",
+    "clientWidth": 305,
     "duplicates": [],
     "heading": "How can I fund my trip?",
     "height": 844,
@@ -20,6 +24,8 @@
   {
     "requested": 320,
     "route": "conference",
+    "accent": "#006d68",
+    "clientWidth": 305,
     "duplicates": [],
     "heading": "GHC 2026",
     "height": 844,
@@ -29,6 +35,8 @@
   {
     "requested": 390,
     "route": "guide/prioritize",
+    "accent": "#006d68",
+    "clientWidth": 375,
     "duplicates": [],
     "heading": "What should I prioritize?",
     "height": 844,
@@ -38,6 +46,8 @@
   {
     "requested": 390,
     "route": "guide/funding",
+    "accent": "#006d68",
+    "clientWidth": 375,
     "duplicates": [],
     "heading": "How can I fund my trip?",
     "height": 844,
@@ -47,6 +57,8 @@
   {
     "requested": 390,
     "route": "conference",
+    "accent": "#006d68",
+    "clientWidth": 375,
     "duplicates": [],
     "heading": "GHC 2026",
     "height": 844,
@@ -56,6 +68,8 @@
   {
     "requested": 768,
     "route": "guide/prioritize",
+    "accent": "#006d68",
+    "clientWidth": 753,
     "duplicates": [],
     "heading": "What should I prioritize?",
     "height": 844,
@@ -65,6 +79,8 @@
   {
     "requested": 768,
     "route": "guide/funding",
+    "accent": "#006d68",
+    "clientWidth": 753,
     "duplicates": [],
     "heading": "How can I fund my trip?",
     "height": 844,
@@ -74,6 +90,8 @@
   {
     "requested": 768,
     "route": "conference",
+    "accent": "#006d68",
+    "clientWidth": 753,
     "duplicates": [],
     "heading": "GHC 2026",
     "height": 844,
@@ -83,6 +101,8 @@
   {
     "requested": 800,
     "route": "guide/prioritize",
+    "accent": "#006d68",
+    "clientWidth": 785,
     "duplicates": [],
     "heading": "What should I prioritize?",
     "height": 844,
@@ -92,6 +112,8 @@
   {
     "requested": 800,
     "route": "guide/funding",
+    "accent": "#006d68",
+    "clientWidth": 785,
     "duplicates": [],
     "heading": "How can I fund my trip?",
     "height": 844,
@@ -101,6 +123,8 @@
   {
     "requested": 800,
     "route": "conference",
+    "accent": "#006d68",
+    "clientWidth": 785,
     "duplicates": [],
     "heading": "GHC 2026",
     "height": 844,
@@ -110,6 +134,8 @@
   {
     "requested": 1024,
     "route": "guide/prioritize",
+    "accent": "#006d68",
+    "clientWidth": 1009,
     "duplicates": [],
     "heading": "What should I prioritize?",
     "height": 1000,
@@ -119,6 +145,8 @@
   {
     "requested": 1024,
     "route": "guide/funding",
+    "accent": "#006d68",
+    "clientWidth": 1009,
     "duplicates": [],
     "heading": "How can I fund my trip?",
     "height": 1000,
@@ -128,6 +156,8 @@
   {
     "requested": 1024,
     "route": "conference",
+    "accent": "#006d68",
+    "clientWidth": 1009,
     "duplicates": [],
     "heading": "GHC 2026",
     "height": 1000,
@@ -137,6 +167,8 @@
   {
     "requested": 1440,
     "route": "guide/prioritize",
+    "accent": "#006d68",
+    "clientWidth": 1425,
     "duplicates": [],
     "heading": "What should I prioritize?",
     "height": 1000,
@@ -146,6 +178,8 @@
   {
     "requested": 1440,
     "route": "guide/funding",
+    "accent": "#006d68",
+    "clientWidth": 1425,
     "duplicates": [],
     "heading": "How can I fund my trip?",
     "height": 1000,
@@ -155,6 +189,8 @@
   {
     "requested": 1440,
     "route": "conference",
+    "accent": "#006d68",
+    "clientWidth": 1425,
     "duplicates": [],
     "heading": "GHC 2026",
     "height": 1000,

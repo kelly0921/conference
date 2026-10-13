@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Conference Leverage · Color directions</title>
+    <link rel="stylesheet" href="palette-review.css" />
+  </head>
+  <body>
+    <header class="review-header">
+      <div>
+        <a href="../index.html#/guide/prioritize">← Current site</a>
+        <h1>Color directions</h1>
+        <p>Compare the actual page, then expand a palette to see it at full width.</p>
+      </div>
+      <div class="controls">
+        <label for="palette-set">Palettes
+          <select id="palette-set">
+            <option value="first">First three · 01–03</option>
+            <option value="more">Three more · 04–06</option>
+            <option value="variations">New variations · 07–09</option>
+            <option value="crisp">White &amp; charcoal · 10–12</option>
+            <option value="favorite">Selected · charcoal &amp; teal</option>
+            <option value="all">All twelve</option>
+          </select>
+        </label>
+        <label for="route">Experience
+          <select id="route">
+            <option value="guide/prioritize">Priorities</option>
+            <option value="guide/funding">Funding</option>
+            <option value="conference">My Conference</option>
+          </select>
+        </label>
+        <label for="section">Jump to
+          <select id="section">
+            <option value="top">Page top</option>
+            <option value="worked-example">Worked example</option>
+            <option value="guide-worksheet">Worksheet</option>
+          </select>
+        </label>
+        <button id="compare" hidden>Compare this set</button>
+      </div>
+    </header>
+    <main class="palette-grid" id="palettes">
+      <article class="palette-card" data-palette="teal" data-set="first">
+        <div class="palette-heading">
+          <div><span class="option-number">01</span><h2>Charcoal &amp; teal</h2></div>
+          <p>Selected · Crisp white, charcoal text, deep teal, soft mint.</p>
+          <div class="palette-actions"><div class="swatches" aria-label="White, charcoal, teal, mint"><i style="background:#ffffff"></i><i style="background:#252b2e"></i><i style="background:#006d68"></i><i style="background:#e7f3ef"></i></div><button data-expand="teal">Expand ↗</button></div>
+        </div>
+        <iframe id="teal-preview" title="Charcoal and teal palette preview"></iframe>
+        <p class="loading" role="status">Loading preview…</p>
+      </article>
+      <article class="palette-card" data-palette="forest" data-set="first">
+        <div class="palette-heading">
+          <div><span class="option-number">02</span><h2>Ivory &amp; forest</h2></div>
+          <p>Warm ivory, brown text, forest green, pale sage.</p>
+          <div class="palette-actions"><div class="swatches" aria-label="Ivory, brown, forest, sage"><i style="background:#faf8f2"></i><i style="background:#342e28"></i><i style="background:#35634b"></i><i style="background:#eaf0e6"></i></div><button data-expand="forest">Expand ↗</button></div>
+        </div>
+        <iframe id="forest-preview" title="Ivory and forest palette preview"></iframe>
+        <p class="loading" role="status">Loading preview…</p>
+      </article>
+      <article class="palette-card" data-palette="burgundy" data-set="first">
+        <div class="palette-heading">
+          <div><span class="option-number">03</span><h2>Slate &amp; burgundy</h2></div>
+          <p>Cool white, slate text, burgundy, a quiet blush.</p>
+          <div class="palette-actions"><div class="swatches" aria-label="Cool white, slate, burgundy, blush"><i style="background:#f8fafc"></i><i style="background:#293341"></i><i style="background:#843a50"></i><i style="background:#f7ebef"></i></div><button data-expand="burgundy">Expand ↗</button></div>
+        </div>
+        <iframe id="burgundy-preview" title="Slate and burgundy palette preview"></iframe>
+        <p class="loading" role="status">Loading preview…</p>
+      </article>
+      <article class="palette-card" data-palette="aubergine" data-set="more">
+        <div class="palette-heading">
+          <div><span class="option-number">04</span><h2>Aubergine &amp; peach</h2></div>
+          <p>Soft white, aubergine accents, pale peach panels.</p>
+          <div class="palette-actions"><div class="swatches" aria-label="Soft white, aubergine ink, purple, peach"><i style="background:#fffaf7"></i><i style="background:#332a35"></i><i style="background:#69416d"></i><i style="background:#faece4"></i></div><button data-expand="aubergine">Expand ↗</button></div>
+        </div>
+        <iframe id="aubergine-preview" title="Aubergine and peach palette preview"></iframe>
+        <p class="loading" role="status">Loading preview…</p>
+      </article>
+      <article class="palette-card" data-palette="navy" data-set="more">
+        <div class="palette-heading">
+          <div><span class="option-number">05</span><h2>Navy &amp; apricot</h2></div>
+          <p>Deep navy text and accents, warm apricot panels.</p>
+          <div class="palette-actions"><div class="swatches" aria-label="Warm white, navy ink, navy, apricot"><i style="background:#fffdf9"></i><i style="background:#253447"></i><i style="background:#2e4d70"></i><i style="background:#ffedda"></i></div><button data-expand="navy">Expand ↗</button></div>
+        </div>
+        <iframe id="navy-preview" title="Navy and apricot palette preview"></iframe>
+        <p class="loading" role="status">Loading preview…</p>
+      </article>
+      <article class="palette-card" data-palette="graphite" data-set="more">
+        <div class="palette-heading">
+          <div><span class="option-number">06</span><h2>Graphite &amp; cobalt</h2></div>
+          <p>Neutral gray surfaces, with cobalt for interactions.</p>
+          <div class="palette-actions"><div class="swatches" aria-label="White, graphite, cobalt, gray"><i style="background:#fafafa"></i><i style="background:#252529"></i><i style="background:#3a50bb"></i><i style="background:#f0f0f2"></i></div><button data-expand="graphite">Expand ↗</button></div>
+        </div>
+        <iframe id="graphite-preview" title="Graphite and cobalt palette preview"></iframe>
+        <p class="loading" role="status">Loading preview…</p>
+      </article>
+      <article class="palette-card" data-palette="plum" data-set="variations">
+        <div class="palette-heading">
+          <div><span class="option-number">07</span><h2>Plum &amp; rose</h2></div>
+          <p>Muted plum accents with soft rose panels.</p>
+          <div class="palette-actions"><div class="swatches" aria-label="Rose white, plum ink, plum, rose"><i style="background:#fff9fb"></i><i style="background:#342b38"></i><i style="background:#70486e"></i><i style="background:#f8e7ec"></i></div><button data-expand="plum">Expand ↗</button></div>
+        </div>
+        <iframe id="plum-preview" title="Plum and rose palette preview"></iframe>
+        <p class="loading" role="status">Loading preview…</p>
+      </article>
+      <article class="palette-card" data-palette="mulberry" data-set="variations">
+        <div class="palette-heading">
+          <div><span class="option-number">08</span><h2>Mulberry &amp; lilac</h2></div>
+          <p>Richer berry accents with cool lilac panels.</p>
+          <div class="palette-actions"><div class="swatches" aria-label="Soft white, dark plum, mulberry, lilac"><i style="background:#fffbfe"></i><i style="background:#372d39"></i><i style="background:#873e63"></i><i style="background:#efeafb"></i></div><button data-expand="mulberry">Expand ↗</button></div>
+        </div>
+        <iframe id="mulberry-preview" title="Mulberry and lilac palette preview"></iframe>
+        <p class="loading" role="status">Loading preview…</p>
+      </article>
+      <article class="palette-card" data-palette="cocoa" data-set="variations">
+        <div class="palette-heading">
+          <div><span class="option-number">09</span><h2>Cocoa &amp; blush</h2></div>
+          <p>Warm cocoa accents with pale blush panels.</p>
+          <div class="palette-actions"><div class="swatches" aria-label="Warm white, brown ink, cocoa, blush"><i style="background:#fffaf8"></i><i style="background:#362d29"></i><i style="background:#765443"></i><i style="background:#fae9e8"></i></div><button data-expand="cocoa">Expand ↗</button></div>
+        </div>
+        <iframe id="cocoa-preview" title="Cocoa and blush palette preview"></iframe>
+        <p class="loading" role="status">Loading preview…</p>
+      </article>
+      <article class="palette-card" data-palette="ocean" data-set="crisp">
+        <div class="palette-heading">
+          <div><span class="option-number">10</span><h2>Charcoal &amp; ocean</h2></div>
+          <p>Crisp white and charcoal, with ocean blue accents.</p>
+          <div class="palette-actions"><div class="swatches" aria-label="White, charcoal, ocean blue, pale blue"><i style="background:#ffffff"></i><i style="background:#252b2e"></i><i style="background:#176da0"></i><i style="background:#edf5fa"></i></div><button data-expand="ocean">Expand ↗</button></div>
+        </div>
+        <iframe id="ocean-preview" title="Charcoal and ocean blue palette preview"></iframe>
+        <p class="loading" role="status">Loading preview…</p>
+      </article>
+      <article class="palette-card" data-palette="violet" data-set="crisp">
+        <div class="palette-heading">
+          <div><span class="option-number">11</span><h2>Charcoal &amp; violet</h2></div>
+          <p>Crisp white and charcoal, with clear violet accents.</p>
+          <div class="palette-actions"><div class="swatches" aria-label="White, charcoal, violet, pale violet"><i style="background:#ffffff"></i><i style="background:#252b2e"></i><i style="background:#7046b4"></i><i style="background:#f1edfb"></i></div><button data-expand="violet">Expand ↗</button></div>
+        </div>
+        <iframe id="violet-preview" title="Charcoal and violet palette preview"></iframe>
+        <p class="loading" role="status">Loading preview…</p>
+      </article>
+      <article class="palette-card" data-palette="coral" data-set="crisp">
+        <div class="palette-heading">
+          <div><span class="option-number">12</span><h2>Charcoal &amp; coral</h2></div>
+          <p>Crisp white and charcoal, with deep coral accents.</p>
+          <div class="palette-actions"><div class="swatches" aria-label="White, charcoal, coral, pale coral"><i style="background:#ffffff"></i><i style="background:#252b2e"></i><i style="background:#a54143"></i><i style="background:#fcebed"></i></div><button data-expand="coral">Expand ↗</button></div>
+        </div>
+        <iframe id="coral-preview" title="Charcoal and coral palette preview"></iframe>
+        <p class="loading" role="status">Loading preview…</p>
+      </article>
+    </main>
+    <p class="review-note">Charcoal &amp; teal is applied to the site. The other palettes remain review alternatives.</p>
+    <script src="palette-review.js"></script>
+  </body>
+</html>
