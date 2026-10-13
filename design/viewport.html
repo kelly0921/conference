@@ -88,6 +88,22 @@
           <option value="guide/prioritize">Priorities</option>
           <option value="guide/funding">Funding</option>
           <option value="conference">My Conference</option>
+          <option value="guide/worth">Guide · Worth it?</option>
+          <option value="guide/prepare">Guide · Prepare</option>
+          <option value="guide/time">Guide · Time</option>
+          <option value="guide/conversations">Guide · Conversations</option>
+          <option value="guide/explore">Guide · Explore</option>
+          <option value="guide/followup">Guide · Follow-up</option>
+          <option value="guide/learning">Guide · Learning</option>
+          <option value="playbook/before">Playbook · Before</option>
+          <option value="playbook/during">Playbook · During</option>
+          <option value="playbook/after">Playbook · After</option>
+          <option value="templates/funding">Template · Funding</option>
+          <option value="templates/pre">Template · Reach-out</option>
+          <option value="templates/follow">Template · Follow-up</option>
+          <option value="templates/recap">Template · Recap</option>
+          <option value="plan">Field Plan</option>
+          <option value="downloads">Downloads</option>
         </select></label
       >
       <span>Actual app rendering in a sized viewport. Local preview only.</span>
@@ -101,7 +117,7 @@
     <script>
       const params = new URLSearchParams(location.search),
         widths = [320, 390, 768, 800, 1024, 1440],
-        routes = ["guide/prioritize", "guide/funding", "conference"];
+        routes = ["guide/prioritize", "guide/funding", "conference", "guide/worth", "guide/prepare", "guide/time", "guide/conversations", "guide/explore", "guide/followup", "guide/learning", "playbook/before", "playbook/during", "playbook/after", "templates/funding", "templates/pre", "templates/follow", "templates/recap", "plan", "downloads"];
       const widthSelect = document.getElementById("width"),
         routeSelect = document.getElementById("route"),
         frame = document.getElementById("preview");
@@ -119,7 +135,7 @@
       const source =
         params.get("source") === "baseline"
           ? "../.qa-baseline/index.html"
-          : "../index.html";
+          : "../index.html?preview=" + encodeURIComponent(params.get("revision") || "design-rollout");
       function update() {
         frame.style.width = widthSelect.value + "px";
         frame.style.height =

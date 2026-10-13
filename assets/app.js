@@ -297,11 +297,7 @@ function render() {
   const r = routeHash(),
     view = r[0] || "playbook",
     target = r[1] || "";
-  document.body.classList.toggle(
-    "review-surface",
-    view === "conference" ||
-      (view === "guide" && ["prioritize", "funding"].includes(target)),
-  );
+  document.body.classList.toggle("review-surface", true);
   let html;
   if (view === "guide" && GUIDE_BY_ID[target])
     html = renderGuide(GUIDE_BY_ID[target]);
@@ -375,38 +371,7 @@ const GUIDE_TASK = {
   learning: "learning",
 };
 function renderGuide(g) {
-  if (["prioritize", "funding"].includes(g.id)) return renderEditorialGuide(g);
-  const st = g.stage;
-  const p = getPlan();
-  const refKeys = [
-    ...new Set([
-      ...(g.officialRefs || []),
-      ...(p && SNAPSHOT.events[p.id] ? SNAPSHOT.events[p.id].sourceRefs : []),
-    ]),
-  ].filter(
-    (k) =>
-      SNAPSHOT.sources[k] &&
-      (!p || !SNAPSHOT.sources[k].event || SNAPSHOT.sources[k].event === p.id),
-  );
-  return `<div class="crumb no-print"><a href="#/playbook/${st}">← ${esc(STAGES[st].title)}</a><span>/</span><span>${esc(g.topic)}</span></div><div class="guide-layout"><article class="guide-main" id="print-guide"><div class="eyebrow">${esc(st)} · ${esc(g.topic)} · Editorial v${esc(SNAPSHOT.snapshotVersion)}</div><h1>${esc(g.title)}</h1><p class="guide-sub">${esc(g.purpose)}</p><hr class="sep"><h2>${g.checks.length} useful checks</h2><ol class="checks">${g.checks.map((c, i) => `<li><span class="num">${String(i + 1).padStart(2, "0")}</span><div><b>${esc(c.label)}</b><p>${esc(c.text)}</p></div></li>`).join("")}</ol><hr class="sep"><h2>Completed teaching example</h2><div class="example"><p><strong>${esc(g.exampleTitle)}</strong></p><p>${esc(g.example)}</p><p class="fineprint">Fictional teaching example. These are not current jobs, meetings, grants or confirmed event programs.</p></div><details class="guide-details"><summary>${esc(g.detailsHeading)} <span aria-hidden="true">↓</span></summary><ol class="method-steps">${g.details.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></details><div class="toolbox no-print"><div class="eyebrow">Optional worksheet</div><h3>${esc(g.optionalHeading)}</h3><p>${esc(g.optionalBody)}</p>${g.tool === "prompt" ? `<button class="btn" data-copy-text="I noticed [specific detail]. This connects to [real experience]. I'm curious about [one answerable question].">Copy conversation prompt</button>` : `<button class="btn primary" data-launch="${esc(GUIDE_TASK[g.id] || "access")}">Use this in My Conference →</button>`}</div><div class="linkrow no-print" style="margin-top:20px"><button class="btn sm" data-print="guide">Print this guide</button><a class="plainlink" href="conference-playbook-workbook-v5.pdf">Printable workbook ↓</a></div>${
-    refKeys.length
-      ? `<details class="source-refs no-print"><summary>Official references · checked ${esc(SNAPSHOT.sourceCheckedDate)}</summary><ul>${refKeys
-          .map((k) => {
-            const s = SNAPSHOT.sources[k];
-            return `<li><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.label)} ↗</a><div class="fineprint">${esc(s.note)}</div></li>`;
-          })
-          .join("")}</ul></details>`
-      : ""
-  }<p class="sourcenote">General procedures and fictional examples. Check official sources for current editions, access and eligibility. <a href="${esc(g.notionSource)}" target="_blank" rel="noopener noreferrer">Editorial source ↗</a></p></article><aside class="guide-aside no-print"><div class="quiet-card"><div class="eyebrow">More in this stage</div><div class="topiclist">${GUIDES.filter(
-    (z) => z.stage === st,
-  )
-    .map(
-      (z) =>
-        `<a class="${z.id === g.id ? "current" : ""}" href="#/guide/${z.id}">${esc(z.title)}</a>`,
-    )
-    .join(
-      "",
-    )}</div></div><div class="quiet-card"><div class="eyebrow">My Conference</div><h3>Use what you learned</h3><p>Save a real source, action or commitment to your event plan.</p><a class="plainlink" href="#/conference">Open My Conference →</a></div></aside></div>`;
+  return renderEditorialGuide(g);
 }
 function renderSetup() {
   return `<section class="setup"><div class="eyebrow">My Conference</div><h1>Choose the conference you're preparing for</h1><p class="lead" style="margin-top:13px">Create a private planning workspace only when you need it. The Playbook is free to read without choosing an event.</p>${oldPlanAvailable() ? `<div class="quiet-card"><p><strong>Have an earlier v4 plan?</strong> You can import it into a new separate v5 workspace. Event access still needs rechecking.</p><button class="btn" data-import-v4="1">Import my v4 plans</button></div>` : ""}<div class="setuplist">${Object.entries(
@@ -634,12 +599,21 @@ function renderTemplates(requested) {
   const keys = Object.keys(TEMPLATE_DATA),
     k = TEMPLATE_DATA[requested] ? requested : activeTemplate;
   activeTemplate = k;
-  const t = TEMPLATE_DATA[k],
-    p = getPlan(),
-    body =
-      p?.drafts?.[k] ??
-      t.text.replace("[Conference]", p ? String(p.name) : "[Conference]");
-  return `<section class="section-intro"><div class="eyebrow">Templates & Downloads · editorial v${esc(SNAPSHOT.snapshotVersion)}</div><h1>Copy what you need. Leave the rest.</h1><p class="lead">Four user-authored template structures from the original Playbook. Unknown facts remain bracketed; nothing is sent.</p></section><div class="templayout"><nav class="tlist" aria-label="Message templates">${keys.map((id) => `<a href="#/templates/${id}" class="${id === k ? "active" : ""}">${esc(TEMPLATE_DATA[id].name)}</a>`).join("")}<div style="padding:10px"><a class="plainlink" href="#/downloads">Printable resources ↓</a></div></nav><section class="templatebody"><div class="eyebrow">${esc(t.stage)} · Editable template</div><h2>${esc(t.name)}</h2><p class="muted small" style="margin:6px 0 17px">${esc(t.check)}</p><div class="formrow"><label for="template-editor">Edit all bracketed details</label><textarea id="template-editor" rows="13">${esc(body)}</textarea></div><div class="linkrow"><button class="btn" data-copy-template="1">Copy draft</button><button class="btn primary" data-save-template="${k}">${p ? "Save to " + esc(p.name) : "Save to My Conference"}</button><a href="#/conference" class="plainlink">My Conference →</a></div><p class="fineprint">The template source is shared with the printable workbook. Save is browser-local and event-specific. A public recap is optional.</p></section></div><div class="quiet-card" style="margin-top:17px"><strong class="small">Prefer paper?</strong><div class="linkrow"><a class="plainlink" href="conference-playbook-workbook-v5.pdf" download>Printable workbook ↓</a><a class="plainlink" href="conference-playbook-sample-field-plan-v5.pdf" download>Completed fictional sample ↓</a></div></div>`;
+  const t = TEMPLATE_DATA[k], p = getPlan();
+  const body = p?.drafts?.[k] ?? t.text.replace("[Conference]", p ? String(p.name) : "[Conference]");
+  return `<section class="section-intro"><div class="section-caption"><span class="edition-dot" aria-hidden="true"></span> Templates &amp; Downloads <span class="caption-divider">/</span> Editorial v${esc(SNAPSHOT.snapshotVersion)}</div>
+    <h1>Copy what you need. Leave the rest.</h1><p class="lead">Four user-authored template structures from the original Playbook. Unknown facts remain bracketed; nothing is sent.</p></section>
+    <div class="templayout"><nav class="tlist" aria-label="Message templates"><p class="rail-caption">Choose a template</p>
+      ${keys.map((id) => `<a href="#/templates/${id}" class="${id === k ? "active" : ""}" ${id === k ? 'aria-current="page"' : ""}>${esc(TEMPLATE_DATA[id].name)}</a>`).join("")}
+      <a class="template-resources" href="#/downloads">Printable resources ↓</a></nav>
+    <section class="templatebody" aria-labelledby="template-title"><div class="section-caption">${esc(t.stage)} <span class="caption-divider">/</span> Editable template</div>
+      <h2 id="template-title">${esc(t.name)}</h2><p class="template-check">${esc(t.check)}</p>
+      <div class="template-state"><span>${p ? `For <strong>${esc(p.name)}</strong>` : 'Copy a draft here, or <a href="#/conference">choose an event</a> to save it.'}</span>
+      <span class="save-state" role="status">${p?.drafts?.[k] !== undefined ? "Saved in this browser" : "Not saved yet"}</span></div>
+      <div class="linkrow template-actions"><button class="btn primary" data-save-template="${k}">${p ? "Save to " + esc(p.name) : "Save to My Conference"}</button><button class="btn" data-copy-template="1">Copy draft</button><a href="#/conference" class="plainlink">My Conference →</a></div>
+      <div class="formrow"><label for="template-editor">Edit all bracketed details</label><textarea id="template-editor" rows="15">${esc(body)}</textarea></div>
+      <p class="fineprint">The template source is shared with the printable workbook. Save is browser-local and event-specific. A public recap is optional.</p></section></div>
+    <div class="print-resources no-print"><strong>Prefer paper?</strong><div class="linkrow"><a class="plainlink" href="conference-playbook-workbook-v5.pdf" download>Printable workbook ↓</a><a class="plainlink" href="conference-playbook-sample-field-plan-v5.pdf" download>Completed fictional sample ↓</a></div></div>`;
 }
 function renderDownloads() {
   return `<section class="section-intro"><div class="eyebrow">Offline & printable</div><h1>Take the useful parts with you.</h1><p class="lead">A blank workbook needs no account or plan. Your personal field plan prints only the event currently selected.</p></section><div class="pdf-tile"><div class="pdf-icon">PDF</div><div><h3>Printable Playbook + Workbook</h3><p>Short Before / During / After instructions, completed fictional examples, original four template families, and blank worksheets. Versioned v${esc(SNAPSHOT.snapshotVersion)}.</p><a class="btn primary" href="conference-playbook-workbook-v5.pdf" download>Download Letter workbook ↓</a><a class=\"btn\" href=\"conference-playbook-workbook-v5-a4.pdf\" download>Download A4 workbook ↓</a></div></div><div class="pdf-tile"><div class="pdf-icon">PDF</div><div><h3>Completed fictional field plan</h3><p>Example content with invented roles and appointments only; not a real attendee schedule.</p><a class="btn" href="conference-playbook-sample-field-plan-v5.pdf" download>Download example ↓</a></div></div><div class="pdf-tile"><div class="pdf-icon">MY</div><div><h3>Your own field plan</h3><p>Use the browser's Print / Save as PDF. Private fields are excluded by default and your event records stay separate.</p><a class="btn" href="#/plan">Open my field plan →</a></div></div><div class="quiet-card"><h3>One guide only?</h3><a class="plainlink" href="#/playbook/before">Open a guide and choose Print this guide →</a></div>`;
@@ -788,21 +762,19 @@ function fieldPlanText(p) {
 function renderFieldPlan() {
   const p = getPlan();
   if (!p) return renderSetup();
-  const pref = printPrefs(p),
-    sections = exportSections(p);
-  return `<div class="section-intro no-print"><div class="eyebrow">My Conference · Print view · Snapshot v${esc(SNAPSHOT.snapshotVersion)}</div><h1>Your field plan</h1><p class="lead">A portable summary of your own choices. Source links, saved times and next actions stay with their items. Private details are excluded unless you choose otherwise.</p><div class="linkrow"><button class="btn primary" data-print="plan">Print / Save as PDF</button><button class="btn" data-copy-plan="1">Copy plan</button><a class="plainlink" href="#/conference">Edit My Conference →</a></div><div class="quiet-card" style="margin-top:15px"><strong>Optional private fields in this export</strong><p class="muted small">Only this event is printed. Choose sensitive sections deliberately; they are OFF by default.</p>${[
-    ["includeFunding", "Funding numbers"],
-    ["includeContacts", "Private follow-up channels"],
-    ["includeDrafts", "Full edited message drafts"],
-    ["includePrivateLinks", "Private/token-bearing source links"],
-  ]
-    .map(
-      ([k, l]) =>
-        `<label class="privacyline"><input type="checkbox" data-print-pref="${k}" ${pref[k] ? "checked" : ""}> ${esc(l)}</label>`,
-    )
-    .join(
-      "",
-    )}</div></div><article class="planbox" id="print-plan"><div class="planhead"><div><div class="eyebrow">Conference field plan · v${esc(SNAPSHOT.snapshotVersion)}</div><h2>${esc(p.name)}</h2><p>${esc(prettyDate(p.date))}${p.location ? " · " + esc(p.location) : ""}${p.timezone ? " · " + esc(p.timezone) : ""}</p>${p.goal ? `<p style="margin-top:6px"><b>Goal:</b> ${esc(p.goal)}</p>` : ""}</div><span class="tiny muted">Browser-local · Self-reported</span></div>${sections.length ? sections.map((x) => `<section class="plansect"><h3>${esc(x.title)}</h3>${x.lines.map((line) => `<p class="plan-line">${esc(line)}</p>`).join("")}</section>`).join("") : "<p>No items yet. Choose one real target or action to begin.</p>"}<div class="printnote">Generated ${esc(new Date().toLocaleDateString())} from your selected event plan. Times, sources and access are user-entered/self-reported; verify official changes before acting. Private contact, money and drafts excluded unless selected.</div></article>`;
+  const pref = printPrefs(p), sections = exportSections(p);
+  return `<section class="section-intro no-print"><div class="section-caption"><span class="edition-dot" aria-hidden="true"></span> My Conference <span class="caption-divider">/</span> Print view · Snapshot v${esc(SNAPSHOT.snapshotVersion)}</div>
+    <h1>Your field plan</h1><p class="lead">A portable summary of your own choices. Source links, saved times and next actions stay with their items. Private details are excluded unless you choose otherwise.</p>
+    <div class="linkrow"><button class="btn primary" data-print="plan">Print / Save as PDF</button><button class="btn" data-copy-plan="1">Copy plan</button><a class="plainlink" href="#/conference">Edit My Conference →</a></div></section>
+    <div class="field-plan-layout"><aside class="privacy-controls no-print" aria-labelledby="privacy-heading"><h2 id="privacy-heading">Optional private fields in this export</h2>
+      <p>Only this event is printed. Choose sensitive sections deliberately; they are OFF by default.</p><div class="privacy-options">${[
+        ["includeFunding", "Funding numbers"], ["includeContacts", "Private follow-up channels"],
+        ["includeDrafts", "Full edited message drafts"], ["includePrivateLinks", "Private/token-bearing source links"],
+      ].map(([k, l]) => `<label class="privacyline"><input type="checkbox" data-print-pref="${k}" ${pref[k] ? "checked" : ""}> <span>${esc(l)}</span></label>`).join("")}</div></aside>
+    <article class="planbox" id="print-plan" aria-labelledby="plan-event-title"><div class="planhead"><div><div class="eyebrow">Conference field plan · v${esc(SNAPSHOT.snapshotVersion)}</div>
+      <h2 id="plan-event-title">${esc(p.name)}</h2><p>${esc(prettyDate(p.date))}${p.location ? " · " + esc(p.location) : ""}${p.timezone ? " · " + esc(p.timezone) : ""}</p>${p.goal ? `<p class="plan-goal"><b>Goal:</b> ${esc(p.goal)}</p>` : ""}</div><span class="plan-badge">Browser-local · Self-reported</span></div>
+      ${sections.length ? sections.map((x) => `<section class="plansect"><h3>${esc(x.title)}</h3>${x.lines.map((line) => `<p class="plan-line">${esc(line)}</p>`).join("")}</section>`).join("") : '<p class="plan-empty">No items yet. Choose one real target or action to begin.</p>'}
+      <div class="printnote">Generated ${esc(new Date().toLocaleDateString())} from your selected event plan. Times, sources and access are user-entered/self-reported; verify official changes before acting. Private contact, money and drafts excluded unless selected.</div></article></div>`;
 }
 function reviewPlan(p) {
   const remarks = [];

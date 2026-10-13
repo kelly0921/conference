@@ -16,7 +16,7 @@ html {
   src: url("fonts/manrope-latin.woff2") format("woff2");
 }
 
-/* Shared tokens. Surface styles below are bounded to the three review views. */
+/* Shared tokens for the Playbook, reading guides and planning tools. */
 :root {
   --paper: #ffffff;
   --surface: #ffffff;
@@ -1177,6 +1177,185 @@ body.review-surface {
   margin: 10px 0 22px;
 }
 
+/* Library navigation, editable templates and the private field-plan preview. */
+.review-surface :is(.pageintro, .section-intro) {
+  margin-bottom: 40px;
+  padding: 0;
+}
+.review-surface :is(.pageintro, .section-intro) h1 {
+  max-width: 800px;
+  margin: 16px 0 18px;
+}
+.review-surface .lead {
+  max-width: 66ch;
+  font-size: 19px;
+  line-height: 1.7;
+  color: var(--secondary);
+}
+.review-surface .stagebar {
+  gap: 12px;
+  margin-bottom: 36px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 12px;
+}
+.review-surface .stagebar a {
+  min-height: 44px;
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  background: transparent;
+  border-radius: 6px;
+  border-color: transparent;
+}
+.review-surface .stagebar a.active {
+  background: var(--accent-wash);
+  color: var(--accent-dark);
+  box-shadow: inset 0 -2px var(--accent);
+}
+.review-surface .resource-layout {
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 56px;
+  align-items: start;
+}
+.review-surface .topicline {
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.review-surface .topicline strong { font: 750 25px/1.3 var(--heading-face); }
+.review-surface .topicline span { font-size: 14px; color: var(--secondary); }
+.review-surface .cardlist {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 30px;
+}
+.review-surface .resource-card {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  border-radius: 0;
+  background: transparent;
+  padding: 24px 0;
+  min-height: 230px;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+.review-surface .resource-card strong {
+  font: 750 23px/1.35 var(--heading-face);
+  letter-spacing: -.03em;
+  color: var(--text);
+  margin: 9px 0 10px;
+}
+.review-surface .resource-card p { font-size: 16px; line-height: 1.65; color: var(--secondary); }
+.review-surface .resource-card:hover { background: transparent; border-color: var(--accent); }
+.review-surface .resource-card:hover strong { color: var(--accent-dark); text-decoration: underline; text-underline-offset: 4px; }
+.review-surface .card-foot { margin-top: auto; padding-top: 18px; font-size: 13px; color: var(--secondary); }
+.review-surface .card-foot > span:last-child { color: var(--accent); font-size: 22px; }
+.review-surface .resource-layout > aside { position: sticky; top: 24px; }
+.review-surface .quiet-card {
+  border: 0;
+  border-radius: 10px;
+  padding: 24px;
+  background: var(--example-wash);
+  margin-bottom: 24px;
+}
+.review-surface .quiet-card p { font-size: 15px; line-height: 1.7; color: var(--secondary); margin: 12px 0 16px; }
+.review-surface .templayout {
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+}
+.review-surface .tlist {
+  position: sticky;
+  top: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.review-surface .tlist a {
+  padding: 13px 16px;
+  min-height: 48px;
+  margin: 5px 0;
+  font-size: 15px;
+  line-height: 1.5;
+  border-radius: 0 6px 6px 0;
+  border-left: 2px solid transparent;
+  color: var(--text);
+}
+.review-surface .tlist a.active { background: var(--accent-wash); border-left-color: var(--accent); color: var(--accent-dark); }
+.review-surface .tlist a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.review-surface .tlist .template-resources { border-top: 1px solid var(--rule); margin-top: 24px; color: var(--accent-dark); }
+.review-surface .templatebody { min-width: 0; padding: 0; border: 0; background: transparent; }
+.review-surface .templatebody h2 { font: 750 30px/1.3 var(--heading-face); margin: 12px 0; letter-spacing: -.035em; }
+.template-check { font-size: 16px; line-height: 1.7; color: var(--secondary); margin-bottom: 22px; }
+.template-state { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--secondary); margin: 22px 0; padding-top: 20px; border-top: 1px solid var(--rule); }
+.review-surface .templatebody .formrow textarea { min-height: 440px; font-family: var(--body-face); font-size: 16px; line-height: 1.75; padding: 18px; resize: vertical; }
+.review-surface .templatebody .fineprint { margin-top: 20px; }
+.template-actions { margin: 0 0 24px; }
+.print-resources { border-top: 1px solid var(--rule); margin-top: 48px; padding-top: 24px; font-size: 16px; }
+.review-surface .pdf-tile { padding: 28px 0; margin: 0; border: 0; border-top: 1px solid var(--rule); border-radius: 0; background: transparent; gap: 24px; }
+.review-surface .pdf-icon { border: 0; background: var(--example-wash); color: var(--accent-dark); font: 700 16px var(--heading-face); width: 52px; height: 62px; }
+.review-surface .pdf-tile h3 { font-size: 21px; }
+.review-surface .pdf-tile p { font-size: 16px; line-height: 1.7; color: var(--secondary); max-width: 65ch; }
+.review-surface .pdf-tile .btn { margin: 6px 8px 6px 0; }
+.field-plan-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 48px; align-items: start; }
+.privacy-controls { grid-column: 2; grid-row: 1; background: var(--accent-wash); padding: 24px; border-radius: 10px; }
+.review-surface .privacy-controls h2 { font-size: 20px; line-height: 1.4; }
+.privacy-controls > p { color: var(--secondary); font-size: 14px; line-height: 1.7; margin: 12px 0 20px; }
+.review-surface .privacyline { display: grid; grid-template-columns: 22px minmax(0, 1fr); align-items: start; gap: 11px; margin: 8px 0; padding: 8px 0; min-height: 44px; font-size: 15px; line-height: 1.6; cursor: pointer; }
+.review-surface .privacyline input { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--accent); }
+.review-surface .planbox { grid-column: 1; grid-row: 1; min-width: 0; max-width: none; padding: 30px; border-color: var(--rule); border-radius: 10px; background: var(--surface); }
+.review-surface .planhead { flex-wrap: wrap; gap: 16px; padding-bottom: 24px; }
+.review-surface .planhead h2 { font-size: 30px; margin: 12px 0; }
+.review-surface .planhead p { font-size: 15px; line-height: 1.7; color: var(--secondary); overflow-wrap: anywhere; }
+.plan-goal { margin-top: 10px; }
+.plan-badge { font-size: 13px; padding: 6px 10px; border-radius: 5px; background: var(--accent-wash); color: var(--accent-dark); }
+.review-surface .plansect { padding: 24px 0; border-color: var(--rule); }
+.review-surface .plansect h3 { font-size: 19px; line-height: 1.45; margin-bottom: 12px; }
+.review-surface .plansect .plan-line { font-size: 16px; line-height: 1.75; color: var(--secondary); }
+.plan-empty { padding: 24px 0; font-size: 16px; }
+.review-surface .printnote { border-color: var(--rule); font-size: 13px; line-height: 1.7; color: var(--secondary); padding-top: 20px; }
+.review-surface .foot { font-size: 13px; color: var(--secondary); border-color: var(--rule); }
+.review-surface .skip:focus { background: var(--accent-dark); color: white; }
+
+@media (max-width: 1050px) {
+  .review-surface .resource-layout { grid-template-columns: minmax(0, 1fr) 240px; gap: 30px; }
+  .review-surface .cardlist { grid-template-columns: 1fr; }
+  .review-surface .resource-card { min-height: 0; }
+  .review-surface .templayout { grid-template-columns: 205px minmax(0, 1fr); gap: 32px; }
+  .field-plan-layout { grid-template-columns: minmax(0, 1fr) 240px; gap: 26px; }
+}
+@media (max-width: 800px) {
+  .review-surface .resource-layout, .review-surface .templayout, .field-plan-layout { display: block; }
+  .review-surface .resource-layout > aside { position: static; margin-top: 32px; }
+  .review-surface .tlist { position: static; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 12px; margin-bottom: 32px; }
+  .review-surface .tlist .rail-caption { grid-column: 1 / -1; }
+  .review-surface .tlist a { margin: 0; }
+  .review-surface .tlist .template-resources { grid-column: 1 / -1; margin-top: 12px; }
+  .privacy-controls { margin-bottom: 28px; }
+  .privacy-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 20px; }
+  .review-surface .planbox { padding: 26px; }
+}
+@media (max-width: 550px) {
+  .review-surface :is(.pageintro, .section-intro) { margin-bottom: 28px; }
+  .review-surface :is(.pageintro, .section-intro) h1 { font-size: 36px; line-height: 1.16; }
+  .review-surface .lead { font-size: 17px; }
+  .review-surface .stagebar { gap: 4px; }
+  .review-surface .stagebar a { flex: 1; padding: 10px 8px; text-align: center; font-size: 14px; }
+  .review-surface .resource-card strong { font-size: 23px; }
+  .review-surface .templatebody h2 { font-size: 25px; }
+  .review-surface .templatebody .formrow textarea { padding: 14px; min-height: 430px; }
+  .review-surface .tlist a { padding: 12px; font-size: 14px; }
+  .review-surface .pdf-tile { gap: 16px; }
+  .review-surface .pdf-icon { width: 42px; height: 52px; font-size: 14px; }
+  .privacy-options { display: block; }
+  .review-surface .planbox, .privacy-controls { padding: 22px 20px; }
+  .review-surface .planhead h2 { font-size: 26px; }
+}
+
 @media (max-width: 1050px) {
   .editorial-layout {
     gap: 40px;
@@ -1632,4 +1811,14 @@ body.review-surface {
   .worked-example {
     overflow-wrap: anywhere;
   }
+  .field-plan-layout { display: block; }
+  .review-surface .planbox { padding: 0; border: 0; border-radius: 0; max-width: none; }
+  .review-surface .planhead { padding-bottom: 12pt; }
+  .review-surface .planhead h2 { font-size: 21pt; }
+  .review-surface .planhead p { font-size: 10pt; line-height: 1.5; }
+  .plan-badge { padding: 0; background: white; color: black; font-size: 9pt; }
+  .review-surface .plansect { break-inside: auto; padding: 10pt 0; }
+  .review-surface .plansect h3 { font-size: 13pt; break-after: avoid; }
+  .review-surface .plansect .plan-line { font-size: 10pt; line-height: 1.5; }
+  .review-surface .printnote { font-size: 9pt; padding-top: 10pt; }
 }

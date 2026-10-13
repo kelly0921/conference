@@ -1,6 +1,6 @@
 # Conference Leverage · three-experience design review
 
-Internal review, October 12, 2026. These are actual Chromium screenshots of the original v5 prototype and the implementation on this branch. The current after captures use the selected Charcoal & teal palette. No deployment or full-site design rollout is included.
+Initial review, October 12, 2026. These are actual Chromium screenshots of the original v5 prototype and the first implementation on this branch. The after captures use the selected Charcoal & teal palette. The subsequent authorized rollout is documented in [the full rollout review](ROLLOUT_REVIEW.md) and [interactive gallery](rollout-review.html).
 
 The matched views use 1,440 × 1,000 px desktop and 390 × 844 px mobile rendering areas. They show the same guide routes and a neutral GHC planning checklist. Fictional funding figures and appointments were used separately for functional QA; no actual opportunity or access is confirmed by this work.
 
@@ -54,4 +54,4 @@ A clear suggested next action, shared typography/controls, an open desktop task 
 
 ## Review focus
 
-Assess the typography, user-selected white/charcoal/teal palette, reading rhythm and connection between the guides and planner. These are three representative experiences; the remaining guide bodies and legacy screens have not received this design pass. Workbook assets, full assistive-technology/print QA and launch-time source freshness still prevent production approval.
+Assess the typography, user-selected white/charcoal/teal palette, reading rhythm and connection between the guides and planner. These captures preserve the initial three-experience review. All nine guides, Templates, Field Plan and shared screens now use the approved system; see [the rollout gallery](rollout-review.html). Workbook assets, full assistive-technology/print QA and launch-time source freshness remain release work.

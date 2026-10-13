@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Conference Leverage · Full design review</title>
+    <link rel="stylesheet" href="../assets/design.css" />
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--paper); color: var(--text); font: 16px/1.65 var(--body-face); }
+      main { max-width: 1440px; margin: auto; padding: 36px 24px 64px; }
+      h1, h2 { font-family: var(--heading-face); line-height: 1.2; letter-spacing: -.035em; }
+      h1 { font-size: 36px; max-width: 24ch; margin: 16px 0; }
+      h2 { font-size: 24px; margin: 32px 0 10px; }
+      p { color: var(--secondary); max-width: 82ch; }
+      a { color: var(--accent-dark); text-underline-offset: 4px; }
+      nav, .controls, .mode { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+      nav { margin: 24px 0; }
+      .controls { padding: 24px 0; border-block: 1px solid var(--rule); }
+      label { display: grid; gap: 6px; font-size: 14px; color: var(--secondary); }
+      select, button { font: 600 15px var(--body-face); color: var(--accent-dark); background: var(--surface); border: 1px solid var(--control-border); border-radius: 6px; min-height: 44px; padding: 10px 16px; }
+      select { max-width: 100%; }
+      button { cursor: pointer; }
+      button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: white; }
+      :focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+      .mode { gap: 8px; }
+      .captures { display: grid; gap: 24px; align-items: start; }
+      .captures.paired { grid-template-columns: 1fr 1fr; }
+      figure { margin: 0; min-width: 0; }
+      figcaption { color: var(--secondary); font-size: 14px; margin: 12px 0; }
+      img { display: block; width: 100%; height: auto; border: 1px solid var(--rule); border-radius: 6px; }
+      .mobile figure { max-width: 390px; }
+      [hidden] { display: none !important; }
+      footer { font-size: 14px; color: var(--secondary); margin-top: 36px; border-top: 1px solid var(--rule); padding-top: 24px; }
+      @media (max-width: 700px) { main { padding: 24px 18px 48px; } h1 { font-size: 30px; } .captures.paired { grid-template-columns: 1fr; } .controls { align-items: stretch; } label { width: 100%; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p>Conference Leverage · Internal design review · October 13, 2026</p>
+      <h1>Charcoal and teal across the Playbook.</h1>
+      <p>The approved design now covers all nine guides, the reading library, Templates and My Field Plan. These are actual desktop and phone captures. The reviewed v1.3 content and event-specific planning behavior remain in use.</p>
+      <nav aria-label="Review resources">
+        <a id="live-page" href="../index.html?review=full-design#/guide/worth">Try this page →</a>
+        <a href="viewport.html?revision=full-design">Responsive preview</a>
+        <a href="review.html">Initial three-experience comparison</a>
+        <a href="ROLLOUT_REVIEW.md">Review notes</a>
+      </nav>
+      <div class="controls">
+        <label for="experience">Experience
+          <select id="experience">
+            <option value="worth">Is this conference worth it?</option>
+            <option value="prepare">What should I prepare?</option>
+            <option value="time">Where should I spend my time?</option>
+            <option value="conversations">How do I start better conversations?</option>
+            <option value="explore">What else should I explore?</option>
+            <option value="followup">Who should I follow up with?</option>
+            <option value="learning">What should I do with what I learned?</option>
+            <option value="templates">Templates</option>
+            <option value="field-plan">My Field Plan</option>
+            <option value="playbook">Reading library</option>
+            <option value="downloads">Downloads</option>
+          </select>
+        </label>
+        <div class="mode" role="group" aria-label="Screenshot size">
+          <button type="button" data-mode="desktop" aria-pressed="true">Desktop · 1,440 px</button>
+          <button type="button" data-mode="mobile" aria-pressed="false">Phone · 390 px</button>
+        </div>
+      </div>
+      <section aria-labelledby="capture-title">
+        <h2 id="capture-title">Is this conference worth it?</h2>
+        <p id="capture-description">Numbered advice, an approved worked example and an optional planning tool.</p>
+        <div id="captures" class="captures paired">
+          <figure id="before-capture">
+            <figcaption id="before-caption">Before rollout · 1,440 × 1,000 px</figcaption>
+            <a id="before-link" href="screenshots/rollout-before/worth-desktop.jpg"><img id="before-image" src="screenshots/rollout-before/worth-desktop.jpg" alt="Worth guide before rollout, desktop" /></a>
+          </figure>
+          <figure>
+            <figcaption id="after-caption">After · 1,440 × 1,000 px</figcaption>
+            <a id="after-link" href="screenshots/rollout/worth-desktop.jpg"><img id="after-image" src="screenshots/rollout/worth-desktop.jpg" alt="Worth guide after rollout, desktop" /></a>
+          </figure>
+        </div>
+      </section>
+      <p id="comparison-note">Matched before views use commit 051f10f, after the palette decision and before the full rollout. Open any capture to see its full resolution.</p>
+      <footer>22 automated checks pass. 114 route/width combinations were inspected in Chromium with no horizontal overflow or duplicate IDs. Workbook/sample PDFs, editorial synchronization and full assistive-technology and print testing remain release work. See <a href="../docs/DESIGN_QA.md">QA results and limits</a>.</footer>
+    </main>
+    <script>
+      const views = {
+        worth: ["Is this conference worth it?", "guide/worth", "Numbered advice, an approved worked example and an optional planning tool.", true],
+        prepare: ["What should I prepare?", "guide/prepare", "The preparation guide shares the approved reading rhythm and links to the existing planner."],
+        time: ["Where should I spend my time?", "guide/time", "Open sections and a quiet example panel help readers compare how to use their time."],
+        conversations: ["How do I start better conversations?", "guide/conversations", "The approved conversation example and copyable prompt remain directly available."],
+        explore: ["What else should I explore?", "guide/explore", "Advice, deeper instructions and optional planning follow the same reading system."],
+        followup: ["Who should I follow up with?", "guide/followup", "Follow-up guidance connects to the event-specific planning workspace."],
+        learning: ["What should I do with what I learned?", "guide/learning", "The learning guide leads to the existing Apply one lesson editor."],
+        templates: ["Templates", "templates/funding", "A clear template rail, local save status and actions above the editable draft.", true],
+        "field-plan": ["My Field Plan", "plan", "A readable portable plan with explicit private-data choices, all excluded by default.", true],
+        playbook: ["Reading library", "playbook/before", "Open guide links, readable summaries and consistent stage navigation."],
+        downloads: ["Downloads", "downloads", "Shared typography and controls; workbook and sample PDF assets still need integration."]
+      };
+      let mode = "desktop";
+      function renderCapture() {
+        const key = document.getElementById("experience").value;
+        const [title, route, description, paired] = views[key];
+        const size = mode === "desktop" ? "1,440 × 1,000" : "390 px phone viewport";
+        document.getElementById("capture-title").textContent = title;
+        document.getElementById("capture-description").textContent = description;
+        document.getElementById("live-page").href = "../index.html?review=full-design#/" + route;
+        document.getElementById("captures").className = "captures " + mode + (paired ? " paired" : "");
+        document.getElementById("before-capture").hidden = !paired;
+        for (const state of paired ? ["before", "after"] : ["after"]) {
+          const directory = state === "before" ? "rollout-before" : "rollout";
+          const path = "screenshots/" + directory + "/" + key + "-" + mode + ".jpg";
+          document.getElementById(state + "-link").href = path;
+          document.getElementById(state + "-image").src = path;
+          document.getElementById(state + "-image").alt = title + ", " + (state === "before" ? "before rollout" : "after rollout") + ", " + mode;
+          document.getElementById(state + "-caption").textContent = (state === "before" ? "Before rollout" : "After") + " · " + size + (mode === "desktop" ? " px" : "");
+        }
+        document.getElementById("comparison-note").textContent = paired
+          ? "Matched before views use commit 051f10f, after the palette decision and before the full rollout. Open any capture to see its full resolution."
+          : "This view documents the completed rollout. Open the capture to see its full resolution.";
+      }
+      document.getElementById("experience").addEventListener("change", renderCapture);
+      document.querySelectorAll("[data-mode]").forEach(button => button.addEventListener("click", () => {
+        mode = button.dataset.mode;
+        document.querySelectorAll("[data-mode]").forEach(b => b.setAttribute("aria-pressed", String(b === button)));
+        renderCapture();
+      }));
+      renderCapture();
+    </script>
+  </body>
+</html>

@@ -126,12 +126,13 @@ test("all nine guides render approved checks, examples and detailed instructions
   );
 });
 
-test("representative renderers produce unique IDs and explicitly labeled controls", () => {
+test("all guide and planning renderers produce unique IDs and labeled controls", () => {
   const a = app();
   a.run("ensurePreset('ghc')");
   for (const expression of [
-    "renderGuide(GUIDE_BY_ID.prioritize)",
-    "renderGuide(GUIDE_BY_ID.funding)",
+    ...a.run("GUIDES.map(g => 'renderGuide(GUIDE_BY_ID.' + g.id + ')')"),
+    ...a.run("Object.keys(TEMPLATE_DATA).map(k => 'renderTemplates(' + JSON.stringify(k) + ')')"),
+    "renderFieldPlan()",
     "renderConference()",
     "editorTargets(getPlan())",
     "editorBudget(getPlan())",
@@ -145,6 +146,31 @@ test("representative renderers produce unique IDs and explicitly labeled control
     ].map((x) => x[1]))
       assert.ok(html.includes('for="' + id + '"'), id);
   }
+});
+
+test("guide tools preserve the prompt and reach their existing planning editors", () => {
+  const a = app();
+  a.run(`for (const g of GUIDES) {
+    const html = renderGuide(g);
+    if (!html.includes(esc(g.optionalBody))) throw Error(g.id + ' optional guidance missing');
+    if (g.tool === 'prompt') {
+      if (!html.includes('data-copy-text=') || html.includes('data-launch=')) throw Error('copy prompt changed');
+    } else if (!['prioritize','funding'].includes(g.id)) {
+      if (!html.includes('data-launch="' + GUIDE_TASK[g.id] + '"')) throw Error(g.id + ' editor link missing');
+    }
+  }`);
+});
+
+test("field-plan preview preserves private exclusions and explicit opt-ins", () => {
+  const a = app();
+  a.run("ensurePreset('ghc');getPlan().budget={travel:1234};getPlan().drafts.pre='PRIVATE-DRAFT-TEST'");
+  const privateOff = a.run("renderFieldPlan()");
+  assert.ok(!privateOff.includes('PRIVATE-DRAFT-TEST'));
+  assert.equal([...privateOff.matchAll(/data-print-pref=/g)].length, 4);
+  assert.ok(!/data-print-pref="[^"]+" checked/.test(privateOff));
+  a.run("getPlan().printPreferences={includeDrafts:true}");
+  assert.ok(a.run("renderFieldPlan()").includes('PRIVATE-DRAFT-TEST'));
+  assert.ok(a.run("renderFieldPlan()").includes('data-print-pref="includeDrafts" checked'));
 });
 
 test("per-conference plans persist and switch without mixing targets", () => {

@@ -1,17 +1,17 @@
-# Project status — October 12, 2026
+# Project status — October 13, 2026
 
 This repository starts with a **functional v5 HTML prototype** and a separate editorial reading-style experiment. It is **not** a deployed, finalized or attendee-tested product.
 
-## Three-surface design pass · ready for internal review
+## Approved design rollout · ready for internal review
 
 - Priorities and Funding now use open numbered advice, worked examples, contextual interactions and inline worksheets shared with the planner.
 - My Conference has a clearer suggested next move, less crowded editors, desktop/mobile task navigation and access to every existing planning step.
-- User-selected palette: Charcoal & teal, with white surfaces and pale mint examples, applied consistently to the three experiences and shared navigation.
+- User-selected palette: Charcoal & teal, with white surfaces and pale mint examples, now applied across all nine guides, the reading library, Templates, Field Plan and shared screens.
+- The remaining seven guides use the same numbered advice and reading rail, with their approved examples, detailed instructions and optional planner links or copyable prompt. Templates have a compact navigation rail and visible local save status; Field Plan has readable sections and explicit privacy controls.
 - The frozen v1.3 JSON and embedded snapshot remain unchanged. Styles and renderers are separated into static assets; the v5 storage schema and export pipeline remain in use.
-- Before/after desktop and mobile screenshots, a responsive preview, design tokens and QA notes are committed. Local checks: 4 content tests and 16 runtime regression tests pass; actual Chromium layout checks cover three surfaces at six widths. Local reload persistence, keyboard validation, event separation, templates, appointments and default private export behavior were checked in the browser.
-- Seven guide bodies and the other legacy screens await a design decision. No broad rollout or production approval is implied.
+- Desktop and phone captures cover eleven rollout views, with matched before/after pairs for a guide, Templates and Field Plan. Local checks: 4 content tests and 18 runtime regression tests pass; Chromium layout checks cover 19 routes at six widths (114 combinations). Template reload persistence, event separation, private draft opt-in/reset and a long save label at 320 px were checked through the UI. Earlier checks for the initial three experiences remain documented separately.
 
-See [screenshot review](../design/REVIEW.md), [design system](DESIGN_SYSTEM.md) and [current QA/limits](DESIGN_QA.md).
+See [full rollout review](../design/ROLLOUT_REVIEW.md), [initial screenshot review](../design/REVIEW.md), [design system](DESIGN_SYSTEM.md) and [current QA/limits](DESIGN_QA.md).
 
 ## Implemented in the v5 HTML demo
 
@@ -23,7 +23,7 @@ See [screenshot review](../design/REVIEW.md), [design system](DESIGN_SYSTEM.md) 
 
 ## Remaining work
 
-1. Review the three representative designs, then decide whether to extend the patterns to the remaining guides and screens.
+1. Review the completed rollout using the localhost app and desktop/phone gallery.
 2. Continue validation and modularization of legacy editors as needed **without dropping existing flows**.
 3. Make a real publishing pipeline that freezes Notion editorial changes to one versioned JSON and generates both HTML and **Letter/A4 PDFs**. The source export committed here is not automatic Notion sync.
 4. Bring the reviewed PDF generation scripts and sample assets into this repository; ensure print parity and no private-data leakage.

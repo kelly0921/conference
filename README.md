@@ -14,7 +14,7 @@ python -m http.server 4173 --bind 127.0.0.1
 
 Open [http://127.0.0.1:4173/](http://127.0.0.1:4173/). This is a static HTML/JavaScript site with no build step. The reviewed snapshot stays embedded in `index.html`; application/rendering styles live in `assets/`. The original design experiment is available at `/design/reading-style-study.html`.
 
-The three representative experiences are now implemented for internal design review. Open [the before/after screenshot gallery](design/REVIEW.md), or serve `/design/review.html` for its desktop/mobile comparison controls. `/design/viewport.html` previews the actual app at phone, tablet and desktop widths. See [design tokens and patterns](docs/DESIGN_SYSTEM.md) and [functional/accessibility results and limits](docs/DESIGN_QA.md).
+The approved design now covers all nine guides, My Conference, the reading library, Templates and My Field Plan. Open [the full rollout review](design/ROLLOUT_REVIEW.md), or serve `/design/rollout-review.html` for desktop/phone captures and selected before/after comparisons. The [initial three-experience gallery](design/REVIEW.md) preserves the first design pass. `/design/viewport.html` previews the actual app at phone, tablet and desktop widths. See [design tokens and patterns](docs/DESIGN_SYSTEM.md) and [functional/accessibility results and limits](docs/DESIGN_QA.md). Local verification includes 22 automated checks and 114 route/width combinations in Chromium.
 
 The selected palette is **Charcoal & teal**: white surfaces, charcoal text, teal controls and pale mint examples. `/design/palette-review.html` retains the color alternatives and opens the selected reference by default.
 
@@ -27,10 +27,10 @@ node --test tests/runtime.test.cjs
 
 ## What's here
 
-- **`index.html` + `assets/`** — integrated v5 reading library and planner, with a bounded design pass for Priorities, Funding and My Conference. Includes the unchanged frozen editorial content.
+- **`index.html` + `assets/`** — integrated v5 reading library and planner, with the approved design across all nine guides, Templates, Field Plan and shared screens. Includes the unchanged frozen editorial content.
 - **`content/playbook-v1.3.snapshot.json`** — extracted copy of the same snapshot for review/refactoring, with stable guide IDs, source links and templates.
 - **`design/reading-style-study.html`** — typography and reading-flow experiment; **not** the approved final design.
-- **`docs/CODEX_DESIGN_BRIEF.md`** — current three-surface design implementation scope.
+- **`docs/CODEX_DESIGN_BRIEF.md`** — initial design scope and authorized full rollout.
 - **`docs/V5_QA_NOTES.md`** — internal testing evidence and remaining gaps.
 - **`docs/PROJECT_STATUS.md`** — what's included versus what still needs implementation.
 - **`tests/test_content.py`** — verifies the embedded snapshot and exported content agree.

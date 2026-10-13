@@ -1,4 +1,4 @@
-/* Three review surfaces. Editorial text always comes from the v1.3 snapshot.
+/* Shared reading and planning surfaces. Editorial text comes from v1.3.
    The original save handlers and field-plan exporter remain in app.js. */
 const guideScratch = new Map();
 function currentGuideScratch() {
@@ -65,7 +65,9 @@ function guideRail(g) {
   const labels =
     g.id === "prioritize"
       ? ["Your goal", "Real options", "Fit & access", "Your first move"]
-      : ["Full trip cost", "Funding routes", "The terms", "Cost vs. cash"];
+      : g.id === "funding"
+        ? ["Full trip cost", "Funding routes", "The terms", "Cost vs. cash"]
+        : g.checks.map((check) => check.label.replace(/\.$/, ""));
   return `<aside class="reading-rail no-print" aria-label="Guide navigation">
     <nav class="rail-stages" aria-label="Conference stage">${Object.keys(STAGES)
       .map(
@@ -76,9 +78,9 @@ function guideRail(g) {
     <p class="rail-caption">In this guide</p><nav class="reading-toc" aria-label="On this page">
     ${labels.map((l, i) => `<a href="#tip-${i + 1}" data-section-link="tip-${i + 1}"><span>${String(i + 1).padStart(2, "0")}</span>${l}</a>`).join("")}
     <a href="#worked-example" data-section-link="worked-example"><span>↳</span>Worked example</a>
-    <a href="#guide-worksheet" data-section-link="guide-worksheet"><span>↳</span>Try it yourself</a></nav>
+    <a href="#guide-worksheet" data-section-link="guide-worksheet"><span>↳</span>${g.tool === "prompt" ? "Copyable prompt" : "Try it yourself"}</a></nav>
     <div class="rail-note"><span aria-hidden="true">↗</span><p>You don’t need a perfect plan.<br>Just a useful next move.</p></div>
-    <div class="rail-more"><p class="rail-caption">More before you go</p>${GUIDES.filter(
+    <div class="rail-more"><p class="rail-caption">More ${esc(STAGES[g.stage].title.toLowerCase())}</p>${GUIDES.filter(
       (x) => x.stage === g.stage && x.id !== g.id,
     )
       .map(
@@ -126,17 +128,36 @@ function priorityExample(g) {
     <p class="example-prose">${esc(g.example)}</p><p class="helper">${esc(g.exampleTitle)}. No current role, session or invitation is confirmed.</p></section>`;
 }
 
+function standardGuideExample(g) {
+  return `<section class="worked-example" id="worked-example" aria-labelledby="example-heading">
+    <div class="section-caption"><span class="example-mark" aria-hidden="true">↳</span> A worked example · Fictional</div>
+    <h2 id="example-heading">${esc(g.exampleTitle)}</h2>
+    <p class="example-prose">${esc(g.example)}</p>
+    <p class="helper">Fictional teaching example. These are not current jobs, meetings, grants or confirmed event programs.</p></section>`;
+}
+
+function guidePlanningLink(g) {
+  return `<section class="inline-worksheet no-print" id="guide-worksheet" aria-labelledby="worksheet-heading">
+    <div class="section-caption">Make it yours <span class="caption-divider">/</span> Optional</div>
+    <h2 id="worksheet-heading">${esc(g.optionalHeading)}</h2><p class="worksheet-intro">${esc(g.optionalBody)}</p>
+    <div class="linkrow">${g.tool === "prompt"
+      ? `<button class="btn primary" data-copy-text="I noticed [specific detail]. This connects to [real experience]. I'm curious about [one answerable question].">Copy conversation prompt</button>`
+      : `<button class="btn primary" data-launch="${esc(GUIDE_TASK[g.id] || "access")}">Use this in My Conference →</button>`}</div></section>`;
+}
+
 function renderEditorialGuide(g) {
   const p = getPlan(),
-    priority = g.id === "prioritize";
+    priority = g.id === "prioritize",
+    funding = g.id === "funding";
   const titleExtra = priority
     ? "A little intention goes a long way."
-    : "Plan for the bill. And when it’s due.";
+    : funding ? "Plan for the bill. And when it’s due." : "";
+  const stageLabel = {before: "Before you go", during: "While you’re there", after: "After you return"}[g.stage];
   return `<div class="crumb no-print"><a href="#/playbook/${g.stage}">← ${esc(STAGES[g.stage].title)}</a><span>/ ${esc(g.topic)}</span></div>
     <div class="editorial-layout"><article class="reading" id="print-guide">
-    <div class="guide-heading"><div class="section-caption"><span class="edition-dot" aria-hidden="true"></span> Before you go <span class="caption-divider">/</span> ${esc(g.topic)}</div>
-    <h1>${esc(g.title)}</h1><p class="guide-purpose">${esc(g.purpose)}</p><p class="guide-mood">${titleExtra}</p>
-    <nav class="guide-shortcuts no-print" aria-label="Guide shortcuts"><a href="#worked-example" data-section-link="worked-example">Worked example ↓</a><a href="#guide-worksheet" data-section-link="guide-worksheet">Try the worksheet ↓</a></nav></div>
+    <div class="guide-heading"><div class="section-caption"><span class="edition-dot" aria-hidden="true"></span> ${stageLabel} <span class="caption-divider">/</span> ${esc(g.topic)}</div>
+    <h1>${esc(g.title)}</h1><p class="guide-purpose">${esc(g.purpose)}</p>${titleExtra ? `<p class="guide-mood">${titleExtra}</p>` : ""}
+    <nav class="guide-shortcuts no-print" aria-label="Guide shortcuts"><a href="#worked-example" data-section-link="worked-example">Worked example ↓</a><a href="#guide-worksheet" data-section-link="guide-worksheet">${g.tool === "prompt" ? "Copyable prompt ↓" : "Try the worksheet ↓"}</a></nav></div>
     <div class="numbered-tips">${g.checks
       .map(
         (
@@ -145,18 +166,18 @@ function renderEditorialGuide(g) {
         ) => `<section class="reading-tip" id="tip-${i + 1}"><div class="tip-number" aria-hidden="true">${String(i + 1).padStart(2, "0")}</div><div class="tip-content"><h2>${esc(c.label)}</h2><p>${esc(c.text)}</p>
       ${priority && i === 0 ? goalSelector() : ""}
       ${priority && i === 2 ? '<p class="reflection">Ask yourself: <em>What would I get from this—and what would I give up to be there?</em></p>' : ""}
-      ${!priority && i === 3 ? '<p class="reflection">A reimbursement can reduce your final cost. <strong>It may not reduce what you need to pay today.</strong></p>' : ""}
+      ${funding && i === 3 ? '<p class="reflection">A reimbursement can reduce your final cost. <strong>It may not reduce what you need to pay today.</strong></p>' : ""}
       </div></section>`,
       )
       .join("")}</div>
-    ${priority ? priorityExample(g) : fundingExample(g)}
+    ${priority ? priorityExample(g) : funding ? fundingExample(g) : standardGuideExample(g)}
     <details class="guide-details"><summary>${esc(g.detailsHeading)}<span aria-hidden="true" class="disclosure-icon">+</span></summary><ol class="method-steps">${g.details.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></details>
-    <section class="inline-worksheet no-print" id="guide-worksheet" aria-labelledby="worksheet-heading"><div class="section-caption">Make it yours <span class="caption-divider">/</span> Optional</div><h2 id="worksheet-heading">${priority ? "Your first worthwhile priority" : "What would your trip cost?"}</h2>
+    ${priority || funding ? `<section class="inline-worksheet no-print" id="guide-worksheet" aria-labelledby="worksheet-heading"><div class="section-caption">Make it yours <span class="caption-divider">/</span> Optional</div><h2 id="worksheet-heading">${priority ? "Your first worthwhile priority" : "What would your trip cost?"}</h2>
       <p class="worksheet-intro">${priority ? "A specific target, a source to check, and a next action you control." : "Use one currency (USD). Separate costs, confirmed support and anything still pending."}</p>
       <p class="worksheet-event">${p ? `Saving to <strong>${esc(p.name)}</strong> · <a href="#/conference">Change event</a>` : 'Try this here. <a href="#/conference">Choose an event</a> when you want to save it.'}</p>
       ${priority ? priorityWorksheet(p, true) : fundingWorksheet(p, true)}
-      <details class="worksheet-notes"><summary>What else should I record?</summary><p>${esc(g.optionalBody)}</p></details></section>
-    <div class="guide-end"><div class="linkrow no-print"><button class="btn" data-print="guide">Print this guide</button><a class="plainlink" href="#/conference">My Conference →</a></div>
+      <details class="worksheet-notes"><summary>What else should I record?</summary><p>${esc(g.optionalBody)}</p></details></section>` : guidePlanningLink(g)}
+    <div class="guide-end"><div class="linkrow no-print"><button class="btn" data-print="guide">Print this guide</button><a class="plainlink" href="#/conference">My Conference →</a><a class="plainlink" href="conference-playbook-workbook-v5.pdf">Printable workbook ↓</a></div>
     ${guideReferences(g, p)}<p class="sourcenote">General guidance and fictional examples · Editorial v${esc(SNAPSHOT.snapshotVersion)}. Confirm current editions, access and eligibility with official sources. <a href="${esc(g.notionSource)}" target="_blank" rel="noopener noreferrer">Editorial source ↗</a></p></div>
     </article>${guideRail(g)}</div>`;
 }
@@ -384,7 +405,7 @@ document.addEventListener("input", (event) => {
     currentGuideScratch().budget = Object.fromEntries(
       BUDGET_FIELDS.map(([k]) => [k, collectNumber(k)]),
     );
-  if (event.target.closest(".edbody, .inline-worksheet"))
+  if (event.target.closest(".edbody, .inline-worksheet, .templatebody"))
     document
       .querySelectorAll(".save-state")
       .forEach((x) => (x.textContent = "Unsaved changes"));

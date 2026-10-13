@@ -17,13 +17,19 @@ Study the [Panther GHC Guide](https://panther-hub.org/resources/ghc-guide) and i
 
 Inspect `index.html`, the embedded content snapshot, and this design study. Critique the real rendered desktop/mobile views: typography, reading widths, font sizes, layout density, contrast, crowded cards, hierarchy, interaction affordances, focus states and accessibility. Preserve existing behavior and content. Don't stop at “build succeeded.”
 
-## Phase 2 — implement ONLY three representative experiences
+## Phase 2 — initial three-experience review (completed)
 
 1. **What should I prioritize?** Open, enjoyable editorial reading with numbered tips, a real worked example, goal-sensitive explanation, optional detailed how-to, and a small inline priority tool.
 2. **How can I fund my trip?** Same visual language but distinctly presented numerical example, confirmed vs pending funding, cash-timing worksheet, and concise procedures.
 3. **My Conference** planning workspace. Should feel like the same product without forcing forms to look like articles. Preserve date-aware tasks, per-event data separation, sources, user-reported access statuses, editable templates, fixed appointments, private print controls and My Field Plan.
 
 Render desktop and mobile screenshots for each and improve iteratively, not merely once.
+
+## Phase 3 — approved rollout (authorized and implemented)
+
+After reviewing the initial experiences and color alternatives, the user selected **Charcoal & teal** and instructed Codex to continue with the proposed rollout. This supersedes the original stop after Phase 2.
+
+Extend the shared reading system to the other seven guides, preserving each approved example, detailed instruction, reference and optional tool. Apply the same typography and controls to the reading library, all four Templates, My Field Plan and Downloads. Preserve event-specific storage, template editing/copy/save and the existing private export choices. Record desktop/phone captures and check the actual app at six widths. Workbook integration, editorial synchronization and release QA remain separate work.
 
 ## Required design qualities
 
@@ -45,10 +51,10 @@ Render desktop and mobile screenshots for each and improve iteratively, not mere
 
 ## Deliverables
 
-- Three integrated and polished representative surfaces in a maintainable component/style structure.
+- The initial three surfaces plus the authorized rollout across the remaining guides, Templates, Field Plan and shared screens, using a maintainable component/style structure.
 - Before/after desktop and mobile screenshots.
 - Design tokens and reusable components documented.
 - A brief architecture/build note, internal accessibility and responsiveness results, and remaining tasks.
 - Explicit content/print parity check with `content/playbook-v1.3.snapshot.json`.
 
-Stop for product review before rolling the visual system out across all nine guides.
+The initial product-review gate was satisfied by the user's palette selection and instruction to continue. The completed rollout remains in the existing draft PR for internal review; deployment and merging remain outside this assignment.

@@ -1,6 +1,6 @@
-# Conference Leverage · representative design system
+# Conference Leverage · design system
 
-Internal design review, October 12, 2026. Implemented for Priorities, Funding, and My Conference only. The shared navigation is updated; the other seven guide bodies retain their v5 presentation.
+Internal design review, October 13, 2026. The approved system covers all nine guides, My Conference, Templates, My Field Plan, the reading library and Downloads.
 
 ## Direction and reference study
 
@@ -33,7 +33,7 @@ Defined once in [assets/design.css](../assets/design.css).
 
 The variable Latin web fonts total approximately 49 KB and are served from the repository. Their OFL licenses are in `assets/fonts/`. There are no remote font calls or new runtime packages.
 
-The selected palette is **Charcoal & teal**, option 01 from the browser comparison: white page and editor surfaces, charcoal text, deep teal links/controls, and pale mint examples. Color tokens describe their purpose so palette changes stay consistent across all three experiences. The local [palette comparison](../design/palette-review.html) preserves the alternatives and opens the selected reference by default.
+The selected palette is **Charcoal & teal**, option 01 from the browser comparison: white page and editor surfaces, charcoal text, deep teal links/controls, and pale mint examples. Color tokens describe their purpose so palette changes stay consistent across guides and tools. The local [palette comparison](../design/palette-review.html) preserves the alternatives and opens the selected reference by default.
 
 Body text is 16 px with a 1.65 line height. Introductions use 17–19 px; instructions use 15–16 px; supporting text generally uses 14 px. Tertiary task captions and compact status labels use 13 px. Desktop page headings reach 48 px, mobile headings 35–36 px; tip headings use 21–23 px. Inputs use 16 px, including mobile. Avoid adding further small-text tiers or uppercase instructional labels.
 
@@ -51,19 +51,22 @@ Body text is 16 px with a 1.65 line height. Introductions use 17–19 px; instru
 | `planner-menu` | Desktop task rail; compact disclosure on mobile. Resizing changes the disclosure state without rebuilding the form. |
 | `other-steps` | All editors remain reachable even when outside the suggested date window. |
 | `save-state` / status toast | Distinguishes unsaved form changes, local saves and unavailable storage. Priority and budget errors focus the relevant field. |
+| `resource-layout` / guide tiles | Open library links separated by quiet rules, with readable summaries and stage navigation. |
+| `templayout` / `tlist` / `templatebody` | Four-template navigation, selected link with `aria-current`, event context, save/copy actions above the draft and a labeled editor. Existing save/copy handlers stay in use. |
+| `privacy-controls` / `planbox` | Four native private-data choices beside the portable plan; all are excluded by default. Preview text still comes from the existing exporter. |
 
 Buttons have at least 44 px height, main controls at least 44–46 px, and task checkboxes are 24 px. Teal focus outlines, selected text/state, native labels and explicit access statuses support keyboard use. Hover changes are short and restrained. Reduced-motion preferences remove transitions and animation; in-page reading links scroll directly and move focus to the section.
 
-Small-screen guide shortcuts reach the worked example and worksheet without requiring a long scroll.
+Small-screen guide shortcuts reach the worked example and optional tool without requiring a long scroll. Conversations names its tool “Copyable prompt”; the approved prompt and copy handler remain in use.
 
 ## Responsive behavior
 
 - Above 1,050 px: a reading column and 200–300 px rail; planner steps and editor sit side by side.
 - At 801–1,050 px: gutters and columns tighten while reading width remains comfortable.
-- At 800 px and below: articles become one column; the planner menu becomes a disclosure above the editor. The suggested-step button moves focus to the editor.
+- At 800 px and below: articles and the library become one column; the planner menu becomes a disclosure above the editor. The suggested-step button moves focus to the editor. Template navigation becomes a two-column list, and privacy controls move above the Field Plan.
 - At 550 px and below: form pairs and comparisons stack, numerical results stack, and the navigation uses the shorter Templates label.
 
-The print layer follows the original v5 contract: interactive tools/navigation are omitted from guide prints; approved details expand; personal field-plan text comes from the existing event-specific exporter and privacy preferences. Private numbers, contact channels, drafts and sensitive source links remain excluded by default.
+The print layer follows the original v5 contract: interactive tools/navigation are omitted from guide prints; approved details expand; personal field-plan text comes from the existing event-specific exporter and privacy preferences. Private numbers, contact channels, drafts and sensitive source links remain excluded by default. Field Plan hides its controls, removes the preview border and allows long sections to flow across pages; physical Letter/A4 pagination still needs browser print testing.
 
 ## Architecture and editorial boundary
 
@@ -71,6 +74,6 @@ The print layer follows the original v5 contract: interactive tools/navigation a
 
 Unsaved inline drafts stay in memory under their event ID; switching events does not carry a draft into another plan. Anonymous work attaches once to a selected event and remains unsaved until the user saves it.
 
-The original v5 application is extracted to `assets/app.js`; its old presentation is in `assets/prototype.css`. `assets/representative.js` owns the three representative renderers and shared Priority/Funding worksheet markup. `assets/design.css` scopes the new body treatment to `review-surface`. The existing data schema, storage key, import behavior, template source and `exportSections` / `fieldPlanText` remain in use. No framework or application rebuild is required for this review.
+The original v5 application is extracted to `assets/app.js`; its original base presentation is in `assets/prototype.css`. `assets/representative.js` owns the shared guide renderer, My Conference renderer and Priority/Funding worksheet markup. All nine guides now use that renderer, with their own approved checks, instructions, examples, references and optional tools. Templates and Field Plan markup live in `assets/app.js`. `assets/design.css` applies the approved treatment through `review-surface` on app routes. The existing data schema, storage key, import behavior, template source and `exportSections` / `fieldPlanText` remain in use. Asset URLs include content hashes to prevent an older cached renderer from appearing during review. No framework or application build step is required.
 
-Future work should extend these patterns after design approval, rather than accumulating page-specific style forks. Workbook generators are still absent; a release pipeline must use a reviewed versioned snapshot for both web and PDF output. This change does not claim automatic Notion synchronization.
+The user approved Charcoal & teal and authorized extending these patterns across the remaining guides and tools. Workbook generators are still absent; a release pipeline must use a reviewed versioned snapshot for both web and PDF output. This change does not claim automatic Notion synchronization.
