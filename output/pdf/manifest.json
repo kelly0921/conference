@@ -1,0 +1,51 @@
+{
+  "snapshotVersion": "1.3.0",
+  "contentSha256": "86a937b8c8af0f2f1529d10c44055c2ccc0d73c8fa829fd6c8208ae2a0cd7ca5",
+  "sourceCheckedDate": "2026-10-12",
+  "guideIds": [
+    "worth",
+    "funding",
+    "prepare",
+    "prioritize",
+    "time",
+    "conversations",
+    "explore",
+    "followup",
+    "learning"
+  ],
+  "templateKinds": [
+    "funding",
+    "pre",
+    "follow",
+    "recap"
+  ],
+  "files": [
+    {
+      "name": "conference-playbook-workbook-v5.pdf",
+      "pages": 15,
+      "pageSizePoints": [
+        612.0,
+        792.0
+      ],
+      "sha256": "bf941f148645fb16ed9d0c12bac700c194c5ed721cc9915e1542de86b33caf3a"
+    },
+    {
+      "name": "conference-playbook-workbook-v5-a4.pdf",
+      "pages": 15,
+      "pageSizePoints": [
+        595.2755905511812,
+        841.8897637795277
+      ],
+      "sha256": "ec646df653d25034aba099773c13ba7866eb6d986b0053cf63af688719913591"
+    },
+    {
+      "name": "conference-playbook-sample-field-plan-v5.pdf",
+      "pages": 1,
+      "pageSizePoints": [
+        612.0,
+        792.0
+      ],
+      "sha256": "57ed8284f0a1d05c5037a6da4618ad3a6311c1f933d709173e4106244fa9a279"
+    }
+  ]
+}

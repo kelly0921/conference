@@ -42,4 +42,4 @@ These before views use commit `051f10f`, after the palette selection and before 
 
 UI checks confirmed template save/reload and event separation, excluded-by-default drafts, explicit private-draft inclusion and reset, a long event/save label at 320 px and the Learning guide's planner destination. See [QA evidence and limits](../docs/DESIGN_QA.md) and [shared patterns](../docs/DESIGN_SYSTEM.md).
 
-Workbook/sample PDF assets and generators, editorial synchronization, assistive-technology sessions, production-origin storage checks and Letter/A4 browser print testing remain release work. This rollout stays in draft PR #1 for internal review.
+Workbook/sample PDF assets, a reproducible build and connected-source revision checks are now included; see [print/source QA](../docs/PRINT_PIPELINE_QA.md). Assistive-technology sessions, production-origin checks, semantic review of future Notion edits and browser print testing remain release work. This stays in draft PR #1 for internal review.

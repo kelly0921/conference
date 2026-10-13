@@ -1,9 +1,11 @@
-# Asset and workbook integration
+# Workbook and sample integration
 
-The v5 internal-review package includes two generated offline workbooks (US Letter and A4, 15 pages), a fictional two-page example field plan, Python source scripts and fixture tests.
+Generated files now live in `output/pdf/` and are linked from guides, library, Templates and Downloads: fifteen-page Letter and A4 workbooks, plus a one-page fictional Jordan Field Plan populated by the application's exporter.
 
-**This initial GitHub branch commits the static v5 application, the embedded/extracted editorial snapshot, the design experiment and QA notes.** The downloadable binary PDF artifacts and their original generation scripts have **not yet been copied to GitHub**; they remain in the v5 review package supplied in the conversation. Don't infer that the repo currently regenerates PDFs by itself.
+The original v5 ZIP/generators were described in the earlier ChatGPT conversation but were unavailable in this workspace or Notion attachments. These are rebuilt artifacts from the unchanged approved JSON and selected Charcoal & teal design. The original two-page sample in `V5_QA_NOTES.md` is historical; recovery of its binaries/scripts is not claimed.
 
-Next Codex task: import the reviewed `src/build_workbook.py`, `src/build_web.py` (as reference only), `src/create_snapshot.py`, fixture scenarios and validation scripts from that package, then wire both print sizes to `content/playbook-v1.3.snapshot.json`. Regenerate, compare text/source versions, and add CI print checks. Avoid committing source documents or third-party PDFs that are not owned by this project.
+`scripts/build.py` regenerates the web snapshot, asset versions, PDFs and manifest. `scripts/validate_print.py` checks full guide/template text, dimensions/bounds, bookmarks and the sample's exported role/source/time/venue fields. Both paper sizes and the sample were rendered and inspected. Actual browser downloads returned hashes matching the generated artifacts.
 
-**Print privacy:** exclude private contact channels, token-bearing URLs, draft messages and personal funding figures by default. Only include them in a user's locally printed output following explicit opt-in.
+**Print privacy:** the sample uses only frozen fictional records in an isolated runtime. Personal exports still exclude private contact channels, token-bearing URLs, drafts and financial figures by default. Browser page CSS now respects the chosen paper size instead of forcing Letter.
+
+See [build/source workflow](CONTENT_PIPELINE.md) and [QA/limits](PRINT_PIPELINE_QA.md). Tagged-PDF accessibility and cross-browser Print dialogs still need dedicated review.

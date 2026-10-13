@@ -35,7 +35,18 @@ node --test tests/runtime.test.cjs
 - **`docs/PROJECT_STATUS.md`** — what's included versus what still needs implementation.
 - **`tests/test_content.py`** — verifies the embedded snapshot and exported content agree.
 
-The original v5 review package also contains Python build scripts and generated **Letter/A4 workbook PDFs**. Those binary PDFs and workbook-generation scripts have **not yet been committed** to this branch. They should be added from the reviewed source package as part of the next Codex implementation step; the site still requires a real production publishing pipeline.
+**Letter/A4 workbooks and a fictional sample are now included** in `output/pdf/` and linked from the app. Both workbooks have fifteen pages; the rebuilt sample fits on one page. They use the unchanged approved snapshot and the sample uses the application's exporter. See [build/source workflow](docs/CONTENT_PIPELINE.md) and [print QA](docs/PRINT_PIPELINE_QA.md).
+
+To regenerate or verify artifacts, install development dependencies first:
+
+```sh
+python -m pip install -r requirements-print.txt
+python scripts/build.py
+python scripts/build.py --check
+python scripts/validate_print.py
+```
+
+The static site needs no build step to run. Current verification: ten Python tests, twenty Node tests, all 31 PDF pages and deterministic regeneration pass. Four templates match Notion exactly; fourteen canonical source revisions are recorded for drift checks. New guide edits still require a reviewed structured freeze.
 
 ## Design direction
 

@@ -1,0 +1,80 @@
+{
+  "snapshotVersion": "1.3.0",
+  "contentSha256": "86a937b8c8af0f2f1529d10c44055c2ccc0d73c8fa829fd6c8208ae2a0cd7ca5",
+  "sourceMode": "reviewed structured extraction/transcription of canonical Notion page content; not byte-identical raw Notion Markdown",
+  "exportedAt": "2026-10-13 07:15:36 UTC",
+  "provider": "Notion connector",
+  "templateTextMatches": true,
+  "pages": [
+    {
+      "url": "https://app.notion.com/p/3f7b144c6b998117a837ef093afa8acf",
+      "pageLastEditedAt": "2026-10-12T17:56:58.330Z",
+      "readerSha256": "af5498638b3baf5e140603e4b4bd3df894134cc0014423b6843661abc05330b7"
+    },
+    {
+      "url": "https://app.notion.com/p/3f7b144c6b9981f7a85de426b3f4578f",
+      "pageLastEditedAt": "2026-10-12T17:46:13.184Z",
+      "readerSha256": "f948cba10df821fc0102c9d72597f0c92461c96e3fe73f60c6a781fdd491057d"
+    },
+    {
+      "url": "https://app.notion.com/p/3f7b144c6b998181bc61ef43ab6e7933",
+      "pageLastEditedAt": "2026-10-12T17:26:22.008Z",
+      "readerSha256": "0ec20830a6edb861a8dcacbdf311c1dea2345781e5744f0b83668f5544f20ee0"
+    },
+    {
+      "url": "https://app.notion.com/p/3f7b144c6b998184a8f5cede250b5bf0",
+      "pageLastEditedAt": "2026-10-12T17:27:03.922Z",
+      "readerSha256": "dc257f71836c2503968e0b2bd62402ac1fa2b588a6dc15789f6212df965e563b"
+    },
+    {
+      "url": "https://app.notion.com/p/3f7b144c6b99816d9d79d3a3a7570924",
+      "pageLastEditedAt": "2026-10-12T17:46:11.405Z",
+      "readerSha256": "251a3455389f2a47380986f6aa362128300529f5d421a459930bdbd3e653a86d"
+    },
+    {
+      "url": "https://app.notion.com/p/3f7b144c6b998132b3b7ddc3434b4bba",
+      "pageLastEditedAt": "2026-10-12T17:56:56.608Z",
+      "readerSha256": "4c0cbdaed93d549313aeebdbad4aa3dc6cd1f234c739301b1346a9417859b3cc"
+    },
+    {
+      "url": "https://app.notion.com/p/3f7b144c6b9981df9cd6d33e53927521",
+      "pageLastEditedAt": "2026-10-12T17:56:52.043Z",
+      "readerSha256": "2b447d01beba0b21ee73252131ed68655e1b29f78c3abdc2576c58832e4ff390"
+    },
+    {
+      "url": "https://app.notion.com/p/3f7b144c6b9981929326c32e721fa3ee",
+      "pageLastEditedAt": "2026-10-12T17:27:52.212Z",
+      "readerSha256": "b66a48c399e5bbe5a6aa638afa8270d98a3e4419843cab3f357e961330bb562f"
+    },
+    {
+      "url": "https://app.notion.com/p/3f7b144c6b9981da9ce5c2ddc1359f18",
+      "pageLastEditedAt": "2026-10-12T17:56:54.834Z",
+      "readerSha256": "6bfe0d45f2e06acd4d481813c3c886a30e5f1aa7010e3fe8fae8859a413a8f2e"
+    },
+    {
+      "url": "https://app.notion.com/p/3f7b144c6b998111a9b6c04438a99a89",
+      "pageLastEditedAt": "2026-10-12T18:02:44.213Z",
+      "readerSha256": "4b28f74941e928d48872a46524fb05995f8b76d0627dbe4b2c88f2115e692947"
+    },
+    {
+      "url": "https://app.notion.com/p/3f7b144c6b99816285a3e00b9d81a596",
+      "pageLastEditedAt": "2026-10-12T18:53:28.711Z",
+      "readerSha256": "6ba7f39e595049cccd5d43c0a3958ec5e9de81342d452dc3d1feb0a99713c70d"
+    },
+    {
+      "url": "https://app.notion.com/p/3f7b144c6b998172b901ea6ed67941ce",
+      "pageLastEditedAt": "2026-10-12T17:59:49.455Z",
+      "readerSha256": "d5765c59e9696df1af688c4da6e5f6168e9d01478f53b8c357640824513aaecd"
+    },
+    {
+      "url": "https://app.notion.com/p/3f7b144c6b998174aaa3e86cc0ec9cae",
+      "pageLastEditedAt": "2026-10-12T17:49:49.375Z",
+      "readerSha256": "ae7fa1f988a8fb476f79d28e5232af96fc6c67c76a474e94df907584304b1215"
+    },
+    {
+      "url": "https://app.notion.com/p/3f7b144c6b99814aac23eb6f256f0df4",
+      "pageLastEditedAt": "2026-10-12T17:25:30.994Z",
+      "readerSha256": "7b71f9e230c57c1f1bf73bce61711bd8ac25699cd36ff576525651f1bbbb08d0"
+    }
+  ]
+}

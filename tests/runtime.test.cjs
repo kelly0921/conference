@@ -2,81 +2,8 @@
    contract. Real UI/persistence checks are documented separately in QA notes. */
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const vm = require("node:vm");
-const path = require("node:path");
-const root = path.resolve(__dirname, "..");
 
-function app(stored = {}, blocked = false) {
-  const values = new Map(Object.entries(stored));
-  const nodes = new Map();
-  const listeners = {};
-  const node = (id) => {
-    if (!nodes.has(id))
-      nodes.set(id, {
-        id,
-        value: "",
-        textContent: "",
-        innerHTML: "",
-        dataset: {},
-        validity: { valid: true },
-        removeAttribute() {},
-        setAttribute() {},
-        focus() {},
-      });
-    return nodes.get(id);
-  };
-  const context = vm.createContext({
-    console,
-    Date,
-    setTimeout: () => 1,
-    clearTimeout() {},
-    location: { hash: "#/playbook/before" },
-    navigator: {},
-    localStorage: {
-      getItem: (k) => {
-        if (blocked) throw Error("blocked");
-        return values.get(k) || null;
-      },
-      setItem: (k, v) => {
-        if (blocked) throw Error("blocked");
-        values.set(k, v);
-      },
-    },
-    document: {
-      getElementById: node,
-      querySelectorAll: () => [],
-      body: { classList: { toggle() {} } },
-      addEventListener: (k, v) => {
-        listeners["document-" + k] = v;
-      },
-    },
-    window: {
-      matchMedia: () => ({ matches: true }),
-      scrollTo() {},
-      addEventListener: (k, v) => {
-        listeners[k] = v;
-      },
-    },
-  });
-  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
-  vm.runInContext(html.match(/<script>([\s\S]*?)<\/script>/)[1], context);
-  vm.runInContext(
-    fs.readFileSync(path.join(root, "assets/representative.js"), "utf8"),
-    context,
-  );
-  vm.runInContext(
-    fs.readFileSync(path.join(root, "assets/app.js"), "utf8"),
-    context,
-  );
-  return {
-    run: (s) => vm.runInContext(s, context),
-    node,
-    values,
-    listeners,
-    context,
-  };
-}
+const { application: app } = require('../scripts/application_runtime.cjs');
 
 test("cash timing excludes pending awards and distinguishes direct support", () => {
   const a = app();
@@ -326,4 +253,25 @@ test("printing expands approved instructions and restores disclosure state", () 
   a.listeners.afterprint();
   assert.equal(details[0].open, false);
   assert.equal(details[1].open, true);
+});
+
+
+test("unsaved status is announced once while typing continues", () => {
+  const a=app(); let text="Saved in this browser", writes=0;
+  const status={get textContent(){return text;},set textContent(value){text=value;writes++;}};
+  a.context.document.querySelectorAll=()=>[status];
+  const event={target:{id:'template-editor',removeAttribute(){},closest:selector=>selector.includes('.templatebody')?{}:null}};
+  a.listeners['document-input'](event);
+  a.listeners['document-input'](event);
+  assert.equal(text,'Unsaved changes'); assert.equal(writes,1);
+});
+
+
+test("library and download sections have a complete heading hierarchy", () => {
+  const a=app();
+  for (const render of ["renderHome('before')","renderHome('during')","renderHome('after')","renderDownloads()"]){
+    const levels=[...a.run(render).matchAll(/<h([1-6])(?:\s|>)/g)].map(m=>Number(m[1]));
+    assert.equal(levels[0],1);
+    for(let i=1;i<levels.length;i++)assert.ok(levels[i]<=levels[i-1]+1,render+" skips a heading level");
+  }
 });

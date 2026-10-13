@@ -33,6 +33,8 @@ Extend the shared reading system to the other seven guides, preserving each appr
 
 ## Required design qualities
 
+Phase 4 is authorized by the user's subsequent instruction to continue: integrate Letter/A4 PDFs and a fictional sample, establish a repeatable one-source build and connected editorial revision checks, and extend internal accessibility/print QA. The original v5 ZIP is unavailable locally; rebuilt artifacts use the approved snapshot. Preserve the draft-only/no-deployment boundary.
+
 - Friendly, confident typography; body text about 16–17px, readable line height, restrained helper text (avoid 10–12px instructions).
 - Warm, professional but not formal. Less reliance on Georgia serif headings, tiny uppercase labels, heavy borders, oversized hero ads, and repeated card shells.
 - A clear article rhythm; one thought at a time; quick key steps and optional deeper detail.

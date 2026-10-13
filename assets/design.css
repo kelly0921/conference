@@ -1225,7 +1225,7 @@ body.review-surface {
   gap: 16px;
   flex-wrap: wrap;
 }
-.review-surface .topicline strong { font: 750 25px/1.3 var(--heading-face); }
+.review-surface .topicline :is(strong, h2) { font: 750 25px/1.3 var(--heading-face); }
 .review-surface .topicline span { font-size: 14px; color: var(--secondary); }
 .review-surface .cardlist {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1242,7 +1242,7 @@ body.review-surface {
   display: flex;
   flex-direction: column;
 }
-.review-surface .resource-card strong {
+.review-surface .resource-card :is(strong, h3) {
   font: 750 23px/1.35 var(--heading-face);
   letter-spacing: -.03em;
   color: var(--text);
@@ -1250,7 +1250,7 @@ body.review-surface {
 }
 .review-surface .resource-card p { font-size: 16px; line-height: 1.65; color: var(--secondary); }
 .review-surface .resource-card:hover { background: transparent; border-color: var(--accent); }
-.review-surface .resource-card:hover strong { color: var(--accent-dark); text-decoration: underline; text-underline-offset: 4px; }
+.review-surface .resource-card:hover :is(strong, h3) { color: var(--accent-dark); text-decoration: underline; text-underline-offset: 4px; }
 .review-surface .card-foot { margin-top: auto; padding-top: 18px; font-size: 13px; color: var(--secondary); }
 .review-surface .card-foot > span:last-child { color: var(--accent); font-size: 22px; }
 .review-surface .resource-layout > aside { position: sticky; top: 24px; }
@@ -1298,7 +1298,8 @@ body.review-surface {
 .print-resources { border-top: 1px solid var(--rule); margin-top: 48px; padding-top: 24px; font-size: 16px; }
 .review-surface .pdf-tile { padding: 28px 0; margin: 0; border: 0; border-top: 1px solid var(--rule); border-radius: 0; background: transparent; gap: 24px; }
 .review-surface .pdf-icon { border: 0; background: var(--example-wash); color: var(--accent-dark); font: 700 16px var(--heading-face); width: 52px; height: 62px; }
-.review-surface .pdf-tile h3 { font-size: 21px; }
+.review-surface .pdf-tile :is(h2, h3) { font-size: 21px; }
+.review-surface .downloads-guide h2 { font-size: 21px; }
 .review-surface .pdf-tile p { font-size: 16px; line-height: 1.7; color: var(--secondary); max-width: 65ch; }
 .review-surface .pdf-tile .btn { margin: 6px 8px 6px 0; }
 .field-plan-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 48px; align-items: start; }
@@ -1345,7 +1346,7 @@ body.review-surface {
   .review-surface .lead { font-size: 17px; }
   .review-surface .stagebar { gap: 4px; }
   .review-surface .stagebar a { flex: 1; padding: 10px 8px; text-align: center; font-size: 14px; }
-  .review-surface .resource-card strong { font-size: 23px; }
+  .review-surface .resource-card :is(strong, h3) { font-size: 23px; }
   .review-surface .templatebody h2 { font-size: 25px; }
   .review-surface .templatebody .formrow textarea { padding: 14px; min-height: 430px; }
   .review-surface .tlist a { padding: 12px; font-size: 14px; }

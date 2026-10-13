@@ -4,7 +4,7 @@ Internal review only. No deployment, merge, external attendee testing or outreac
 
 ## Automated results
 
-22 checks pass locally: 4 existing Python snapshot/content checks and 18 Node regression checks. JavaScript syntax checks also pass. The workflow runs both suites.
+The design rollout initially passed 22 checks. The subsequent print/source phase passes 30: ten Python content/pipeline checks and twenty Node runtime checks. JavaScript syntax checks pass. CI also verifies regeneration and PDF contents/layout; see [print/source QA](PRINT_PIPELINE_QA.md).
 
 ```sh
 python -m unittest discover -s tests -v
@@ -64,15 +64,15 @@ Selected Charcoal & teal token contrast: charcoal on white 14.35:1, secondary te
 
 - No NVDA, JAWS or VoiceOver session was performed; screen-reader announcements and the long live totals region still need real testing.
 - No Firefox/Safari, OS touch/zoom, high-contrast-mode or cross-browser print test was performed.
-- Guide print instructions and privacy/export behavior have regression coverage. Actual Letter/A4 pagination, font rendering and browser Print / Save as PDF dialogs have not been visually certified in this pass. The original workbook PDFs and generation scripts are not present in the repository.
+- Guide print instructions and privacy/export behavior have regression coverage. Rebuilt Letter/A4 workbooks and a one-page exporter-based sample are included; all 31 generated PDF pages have text/geometry and visual checks. Browser Print dialogs and cross-browser personal-plan pagination remain unverified. See [print/source QA](PRINT_PIPELINE_QA.md).
 - Real localhost storage/reload was verified in this Chromium session. Persistence, migration and storage restrictions must still be checked on an eventual production origin.
 - The instrumented frame session logged `MutationObserver.observe` errors without source stacks. Repository scripts do not use MutationObserver; browser instrumentation is a likely source, but this was not conclusively attributed. This session is not evidence of a completely clean console. Confirm that in an uninstrumented browser before release.
 
 ## What still prevents production quality
 
-1. Download links to the original workbook and sample PDFs still refer to missing assets. Import the reviewed source package and establish snapshot-to-web/PDF parity before release.
+1. Complete tagged-PDF accessibility and browser/physical print testing. Download links now resolve to generated artifacts, with snapshot-to-web/PDF parity verified.
 2. Complete screen-reader, zoom, keyboard, touch and cross-browser print QA, including long user-entered URLs/drafts and both paper sizes.
-3. The v1.3 snapshot is a reviewed manual freeze. Notion export/release governance remains unimplemented. Organizer data and current availability need a separate launch-time freshness check.
+3. The v1.3 snapshot is a reviewed manual freeze. Connected-source drift checks are now available; semantic reconciliation of future edits and release governance remain manual. Organizer availability needs a launch-time freshness check.
 4. Local-only storage has no cloud recovery. Currency remains USD; the numeric budget is a simplified estimate without a per-expense due-date/payment calendar.
 5. Original editors still need broader validation, schema/migration and privacy/threat review before a public release. Unsaved work is indicated but there is no route-change draft recovery for every legacy editor.
 

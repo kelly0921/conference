@@ -54,4 +54,4 @@ A clear suggested next action, shared typography/controls, an open desktop task 
 
 ## Review focus
 
-Assess the typography, user-selected white/charcoal/teal palette, reading rhythm and connection between the guides and planner. These captures preserve the initial three-experience review. All nine guides, Templates, Field Plan and shared screens now use the approved system; see [the rollout gallery](rollout-review.html). Workbook assets, full assistive-technology/print QA and launch-time source freshness remain release work.
+Assess the typography, user-selected white/charcoal/teal palette, reading rhythm and connection between the guides and planner. These captures preserve the initial three-experience review. All nine guides, Templates, Field Plan and shared screens use the approved system; see [the rollout gallery](rollout-review.html). Workbook assets and shared build/source checks are now included. Full assistive-technology/browser print QA and source freshness remain release work.

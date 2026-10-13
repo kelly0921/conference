@@ -19,14 +19,15 @@ See [full rollout review](../design/ROLLOUT_REVIEW.md), [initial screenshot revi
 - Guidance and planning workflows for GHC, SHPE, AFROTECH and custom conferences.
 - Personal event-specific plans (browser-local prototype), priorities, access and application distinctions, sample/fixed appointments, four editable message templates, and field-plan print layout.
 - Rules-based `Review my plan` gap checker (**not generative AI**).
-- Printed sample plans and Letter/A4 workbooks were separately generated in the original v5 review package.
+- Rebuilt Letter/A4 workbooks and a one-page fictional sample are included and linked. They use the unchanged v1.3 snapshot and actual exporter; the original source ZIP was unavailable locally.
+- A repeatable web/PDF build, manifest, CI parity checks and connected Notion revision audit are implemented. Current checks: ten Python and twenty Node tests, all 31 PDF pages, matching browser downloads and deterministic regeneration. See [print/source QA](PRINT_PIPELINE_QA.md).
 
 ## Remaining work
 
 1. Review the completed rollout using the localhost app and desktop/phone gallery.
 2. Continue validation and modularization of legacy editors as needed **without dropping existing flows**.
-3. Make a real publishing pipeline that freezes Notion editorial changes to one versioned JSON and generates both HTML and **Letter/A4 PDFs**. The source export committed here is not automatic Notion sync.
-4. Bring the reviewed PDF generation scripts and sample assets into this repository; ensure print parity and no private-data leakage.
+3. Use the build/source-review pipeline for future approved freezes. Automated semantic Notion-to-JSON transcription and release governance remain separate work; drift checks do not approve new prose.
+4. Complete tagged-PDF accessibility and browser/physical print QA; generated workbook and exporter-based sample parity are now checked.
 5. Extend the completed localhost persistence/keyboard/layout checks to production-origin migration, screen readers, touch/zoom, A4/Letter pagination and cross-browser print behavior.
 6. Refresh organizer links and current access facts before any public distribution. Dynamic role/scholarship/meeting availability is not confirmed.
 7. Consider live AI only as an **explicit opt-in** plan reviewer after core product quality; currently none.

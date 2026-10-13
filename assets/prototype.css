@@ -1104,7 +1104,7 @@ header {
 }
 @media print {
   @page {
-    size: letter;
+    size: auto;
     margin: 14mm;
   }
   body {

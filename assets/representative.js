@@ -177,7 +177,7 @@ function renderEditorialGuide(g) {
       <p class="worksheet-event">${p ? `Saving to <strong>${esc(p.name)}</strong> · <a href="#/conference">Change event</a>` : 'Try this here. <a href="#/conference">Choose an event</a> when you want to save it.'}</p>
       ${priority ? priorityWorksheet(p, true) : fundingWorksheet(p, true)}
       <details class="worksheet-notes"><summary>What else should I record?</summary><p>${esc(g.optionalBody)}</p></details></section>` : guidePlanningLink(g)}
-    <div class="guide-end"><div class="linkrow no-print"><button class="btn" data-print="guide">Print this guide</button><a class="plainlink" href="#/conference">My Conference →</a><a class="plainlink" href="conference-playbook-workbook-v5.pdf">Printable workbook ↓</a></div>
+    <div class="guide-end"><div class="linkrow no-print"><button class="btn" data-print="guide">Print this guide</button><a class="plainlink" href="#/conference">My Conference →</a><a class="plainlink" href="output/pdf/conference-playbook-workbook-v5.pdf">Printable workbook ↓</a></div>
     ${guideReferences(g, p)}<p class="sourcenote">General guidance and fictional examples · Editorial v${esc(SNAPSHOT.snapshotVersion)}. Confirm current editions, access and eligibility with official sources. <a href="${esc(g.notionSource)}" target="_blank" rel="noopener noreferrer">Editorial source ↗</a></p></div>
     </article>${guideRail(g)}</div>`;
 }
@@ -408,6 +408,8 @@ document.addEventListener("input", (event) => {
   if (event.target.closest(".edbody, .inline-worksheet, .templatebody"))
     document
       .querySelectorAll(".save-state")
-      .forEach((x) => (x.textContent = "Unsaved changes"));
+      .forEach((x) => {
+        if (x.textContent !== "Unsaved changes") x.textContent = "Unsaved changes";
+      });
   event.target.removeAttribute("aria-invalid");
 });
