@@ -130,7 +130,7 @@ function keepWorksheetDraft(target) {
   const kept = recordWorksheetDraft(container.getAttribute("data-draft-owner"),
     container.getAttribute("data-draft-scope"), values);
   document.querySelectorAll(".save-state").forEach(x=>{
-    const text = kept ? "Draft kept in this browser · Worksheet not saved" : "Unsaved draft · Copy before leaving";
+    const text = kept ? "Draft kept in this browser · Worksheet not saved" : "Unsaved draft · Download a backup before leaving";
     if (x.textContent !== text) x.textContent = text;
   });
 }

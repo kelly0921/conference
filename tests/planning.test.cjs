@@ -1,5 +1,18 @@
 /* Behavioral checks for migration, recovery, validation and complete worksheets. */
 const {test}=require("node:test"), assert=require("node:assert/strict");
+test("draft status announces once while input continues across the shared listeners",()=>{
+ const a=application();a.run("ensurePreset('ghc')");
+ let text="Saved in this browser", writes=0;
+ const status={get textContent(){return text;},set textContent(v){text=v;writes++;}};
+ const container={getAttribute:k=>k==="data-draft-owner"?"ghc":"learning",querySelectorAll:()=>[field]};
+ const field={id:"insight-learning",value:"First draft",type:"textarea",dataset:{},removeAttribute(){},
+   closest:selector=>selector==="[data-draft-scope]"?container:selector.includes(".edbody")?{}:null};
+ a.context.document.querySelectorAll=selector=>selector===".save-state"?[status]:[];
+ a.listeners["document-input"]({target:field});
+ field.value="Continuing the same draft";a.listeners["document-input"]({target:field});
+ assert.equal(writes,1);assert.equal(text,"Draft kept in this browser · Worksheet not saved");
+ assert.equal(a.run("getPlan().worksheetDrafts.learning.values['insight-learning']"),field.value);
+});
 test("default export hides URL credentials, encoded tokens and fragment secrets",()=>{
  const a=application();a.run("ensurePreset('ghc')");
  for(const url of ["https://user:private@example.org/event","https://example.org/?%74oken=private","https://example.org/#auth_token=private"]){

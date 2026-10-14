@@ -6,7 +6,7 @@ The previously reviewed v5 site is hosted at https://conference-playbook.pages.d
 
 Priorities 1–4 from the product review are implemented: persistent worksheet drafts, valid timezones, a complete conference profile, an integrated actionable checklist, and funding/community/follow-up/debrief details. Browser-local backup/restore and selected-plan deletion are available. The storage key remains compatible with existing v5 plans; records migrate to schema version 6.
 
-Verification now includes 39 Node and 10 Python checks, all 31 PDF pages, tagged-document structure and embedded Unicode fonts. In-app Chromium testing covers fictional profile creation, draft/navigation/reload recovery, timezone validation, checklist skipping and backup restore. The profile and field plan were checked at 320 px. Existing character branding and the approved palette/reading layout remain; browser/heading/footer/PDF naming is consistent.
+Verification now includes 40 Node and 10 Python checks, all 31 PDF pages, tagged-document structure and embedded Unicode fonts. In-app Chromium testing covers fictional profile creation, draft/navigation/reload recovery, timezone validation, checklist skipping and backup restore. The profile and field plan were checked at 320 px; a fictional HTTPS-preview profile also survives reload. Existing character branding and the approved palette/reading layout remain; browser/heading/footer/PDF naming is consistent.
 
 See [current implementation and release QA](PLANNER_RELEASE_QA_2026-10-13.md). Screen readers, actual zoom/touch, Firefox/Safari, browser/physical printing, formal PDF accessibility and exact production-origin migration/recovery remain manual release checks. No AI integration or public feedback campaign is included.
 

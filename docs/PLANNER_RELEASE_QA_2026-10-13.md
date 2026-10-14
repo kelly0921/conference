@@ -21,13 +21,14 @@ Storage keeps the existing conference-playbook-integrated-v5 key and migrates re
 
 ## Verification
 
-- **49 automated checks:** 39 Node behavior checks and 10 Python content/pipeline checks.
+- **50 automated checks:** 40 Node behavior checks and 10 Python content/pipeline checks. Shared draft listeners update the save announcement once while typing continues.
 - The canonical content digest remains 86a937b8c8af0f2f1529d10c44055c2ccc0d73c8fa829fd6c8208ae2a0cd7ca5.
 - **31 PDF pages:** 15 Letter, 15 A4, one fictional sample. Full approved text, template parity, paper size, character bounds, bookmarks, source metadata and sample privacy pass.
 - PDF checks also require marked text, page reading order, content-to-structure mappings, heading structure, language, embedded fonts/Unicode mappings and accessible source annotations. All pages were rendered with Poppler and reviewed in contact sheets; the dense funding page was inspected separately.
 - In-app Chromium browser testing used explicitly fictional records on localhost:4173, separate from the user's 127.0.0.1 plans. A multi-day online EUR profile was created; an unfinished debrief survived switching and reload; a valid appointment saved; not/a-zone was rejected and focus moved to the field; skipping/reincluding an action changed its denominator; a JSON backup restored an additional conference and its unfinished story without overwriting existing conferences.
 - At 320 CSS pixels, the profile form and personal field plan have no horizontal overflow. Form controls are at least 44 pixels high; checkbox labels and checklist actions provide larger hit areas. After a planner refresh, keyboard focus remains on the phase/checkbox/button that triggered it. Narrow-screen reflow is not evidence of actual OS touch or browser zoom testing.
 - Automated tests cover selected-plan deletion isolation and failed storage writes. Browser review confirmed the native confirmation dialog has a named heading, starts focus on “Keep plan,” and cancels without deleting the fictional plan. A fictional funding source also saved in the browser without changing its separate EUR 75 budget total.
+- Hosted development-preview review confirmed the new universal setup is deployed and a fictional multi-day online EUR profile survives reload on that HTTPS origin. GitHub source checks and Cloudflare deployment passed for the initial planner commit; exact production-origin migration still remains a separate release check.
 
 Reproduce:
 

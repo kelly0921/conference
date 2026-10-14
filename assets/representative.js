@@ -392,7 +392,7 @@ document.addEventListener("input", (event) => {
     currentGuideScratch().budget = Object.fromEntries(
       BUDGET_FIELDS.map(([k]) => [k, collectNumber(k)]),
     );
-  if (event.target.closest(".edbody, .inline-worksheet, .templatebody"))
+  if (event.target.closest(".edbody, .inline-worksheet, .templatebody") && !event.target.closest("[data-draft-scope]"))
     document
       .querySelectorAll(".save-state")
       .forEach((x) => {

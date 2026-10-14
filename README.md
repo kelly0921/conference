@@ -46,7 +46,7 @@ python scripts/build.py --check
 python scripts/validate_print.py
 ```
 
-The static site needs no build step to run. Current verification: ten Python tests, thirty-nine Node tests, all 31 PDF pages and deterministic regeneration pass. PDFs include semantic tags, logical order and embedded Unicode fonts; formal assistive-technology review remains outstanding. Four templates match Notion exactly; fourteen canonical source revisions are recorded for drift checks. New guide edits still require a reviewed structured freeze.
+The static site needs no build step to run. Current verification: ten Python tests, forty Node tests, all 31 PDF pages and deterministic regeneration pass. PDFs include semantic tags, logical order and embedded Unicode fonts; formal assistive-technology review remains outstanding. Four templates match Notion exactly; fourteen canonical source revisions are recorded for drift checks. New guide edits still require a reviewed structured freeze.
 
 ## Design direction
 
