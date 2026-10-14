@@ -8,3 +8,7 @@ node_modules/
 .qa-baseline/
 .qa-cache/
 tests/artifacts/
+.dev.vars
+.dev.vars.*
+.wrangler/
+dist/

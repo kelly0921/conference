@@ -28,7 +28,7 @@ function application(stored = {}, blocked = false) {
   });
   const html = fs.readFileSync(path.join(root,'index.html'),'utf8');
   vm.runInContext(html.match(/<script>([\s\S]*?)<\/script>/)[1],context);
-  for (const file of ['assets/planning.js','assets/representative.js','assets/app.js'])
+  for (const file of ['assets/planning.js','assets/representative.js','assets/assistant.js','assets/app.js'])
     vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
   return {run:code=>vm.runInContext(code,context),node,values,listeners,context};
 }

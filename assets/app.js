@@ -301,6 +301,7 @@ function render() {
   if (view === "guide" && GUIDE_BY_ID[target])
     html = renderGuide(GUIDE_BY_ID[target]);
   else if (view === "conference") html = renderConference();
+  else if (view === "assistant") html = PlaybookAssistant.renderWorkspace(getPlan(),target);
   else if (view === "templates") html = renderTemplates(target);
   else if (view === "plan") html = renderFieldPlan();
   else if (view === "downloads") html = renderDownloads();
@@ -309,12 +310,13 @@ function render() {
   restoreWorksheetDrafts();
   updateBudgetTotals();
   restorePlannerFocus(focusHint);
+  if(view === "assistant") PlaybookAssistant.afterRender();
   document
     .querySelectorAll("[data-nav]")
     .forEach((a) =>
       a.classList.toggle(
         "active",
-        view === "conference" || view === "plan"
+        view === "conference" || view === "plan" || view === "assistant"
           ? a.dataset.nav === "conference"
           : view === "templates" || view === "downloads"
             ? a.dataset.nav === "templates"
@@ -840,7 +842,7 @@ function fallbackCopy(s) {
 function delegatedClick(ev) {
   const target = ev.target.closest("button");
   if (!target) return;
-  if (handlePlannerClick(target) || handleWorksheetClick(target) || handleRepresentativeClick(target)) return;
+  if (PlaybookAssistant.handleClick(target) || handlePlannerClick(target) || handleWorksheetClick(target) || handleRepresentativeClick(target)) return;
   const d = target.dataset;
   if (d.importV4) {
     try {
@@ -1172,6 +1174,7 @@ window.addEventListener("afterprint", () => {
   });
 });
 window.addEventListener("hashchange", () => {
+  PlaybookAssistant.onNavigate();
   render();
   document.getElementById("main").focus({ preventScroll: true });
   window.scrollTo(0, 0);

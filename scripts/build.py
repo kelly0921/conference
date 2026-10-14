@@ -22,7 +22,7 @@ def web_source(html, data):
     if not re.match(r";\s*const GUIDES=",html[end:]):
         raise ValueError("Embedded source boundary is invalid; refusing HTML replacement")
     result=html[:start]+serialized+html[end:]
-    for name in ("assets/prototype.css", "assets/design.css", "assets/planning.js", "assets/representative.js", "assets/app.js"):
+    for name in ("assets/prototype.css", "assets/design.css", "assets/assistant.css", "assets/planning.js", "assets/representative.js", "assets/assistant.js", "assets/app.js"):
         result = re.sub('"'+re.escape(name)+r'(?:\?v=[^"]*)?"',
                         '"'+name+'?v='+asset_hash(ROOT/name)+'"',result)
     return result

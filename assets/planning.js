@@ -123,7 +123,7 @@ function keepWorksheetDraft(target) {
   if (!container || typeof container.getAttribute !== "function") return;
   const values = {};
   for (const field of container.querySelectorAll("input[id],textarea[id],select[id]")) {
-    if (field.type === "file" || field.dataset.access !== undefined || field.closest("[data-draft-scope]") !== container) continue;
+    if (field.type === "file" || field.dataset.access !== undefined || field.dataset.draftExclude !== undefined || field.closest("[data-draft-scope]") !== container) continue;
     values[field.id] = field.type === "checkbox" ? field.checked : field.value;
   }
   if (!Object.keys(values).length) return;
@@ -140,7 +140,7 @@ function restoreWorksheetDrafts() {
     const draft = draftStore(container.getAttribute("data-draft-owner"))?.[container.getAttribute("data-draft-scope")];
     if (!draft?.values) continue;
     for (const field of container.querySelectorAll("input[id],textarea[id],select[id]")) {
-      if (field.type === "file" || field.closest("[data-draft-scope]") !== container || !(field.id in draft.values)) continue;
+      if (field.type === "file" || field.dataset.draftExclude !== undefined || field.closest("[data-draft-scope]") !== container || !(field.id in draft.values)) continue;
       if (field.type === "checkbox") field.checked = !!draft.values[field.id];
       else field.value = String(draft.values[field.id]);
     }
@@ -325,6 +325,7 @@ function handlePlannerClick(button) {
     const scope=d.resumeDraft, [kind,id]=scope.split(":");
     editingProfile=kind==="profile";
     if (kind==="template") { navTo("templates/"+id); return true; }
+    if (kind==="assistant") { navTo("assistant/"+id); return true; }
     if (kind==="funding") { editingFunding={planId:p.id,id:id==="new" ? null : id}; selectedTask="budget"; }
     else if (kind==="note") { editingNote={planId:p.id,id:id==="new" ? null : id}; selectedTask="notes"; }
     else if (!editingProfile) {
