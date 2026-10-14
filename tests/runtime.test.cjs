@@ -235,7 +235,7 @@ test("template drafts remain local and event-specific", () => {
 
 test("blocked storage leaves setup usable and reports save failure", () => {
   const a = app({}, true);
-  assert.ok(a.run("renderSetup()").includes("Create custom plan"));
+  assert.ok(a.run("renderSetup()").includes("Create my plan"));
   assert.equal(a.run("save()"), false);
   assert.equal(a.run("storageAvailable"), false);
   assert.ok(a.node("status").innerHTML.includes("storage is unavailable"));

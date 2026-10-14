@@ -10,6 +10,11 @@ from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4, letter
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import reportlab
+
+from pdf_structure import tag_document
 from reportlab.platypus import Paragraph
 
 from content import ROOT, load_snapshot
@@ -19,6 +24,14 @@ SECONDARY = colors.HexColor("#596469")
 TEAL = colors.HexColor("#006d68")
 MINT = colors.HexColor("#e7f3ef")
 RULE = colors.HexColor("#7d8c8d")
+
+# Bundled redistributable Bitstream Vera fonts; embedded with Unicode mappings.
+FONT_DIR = Path(reportlab.__file__).parent / "fonts"
+for name, file in [("Playbook", "Vera.ttf"), ("Playbook-Bold", "VeraBd.ttf"),
+                   ("Playbook-Italic", "VeraIt.ttf"), ("Playbook-BoldItalic", "VeraBI.ttf")]:
+    pdfmetrics.registerFont(TTFont(name, str(FONT_DIR/file)))
+pdfmetrics.registerFontFamily("Playbook", normal="Playbook", bold="Playbook-Bold",
+    italic="Playbook-Italic", boldItalic="Playbook-BoldItalic")
 
 
 def printable(value):
@@ -32,59 +45,71 @@ def escaped(value):
 
 class Page:
     def __init__(self, path, size, snapshot, title):
+        self.path = path
+        self.records = []
         self.width, self.height = size
         self.snapshot = snapshot
         self.c = canvas.Canvas(str(path), pagesize=size, invariant=1, pageCompression=1)
         self.c.setTitle(title)
-        self.c.setAuthor("Conference Leverage")
+        self.c.setAuthor("The Conference Playbook")
         self.c.setSubject(f"Editorial {snapshot['snapshotVersion']}; SHA256 {snapshot['contentSha256']}")
-        self.c.setKeywords("Conference Leverage, internal review, fictional examples")
+        self.c.setKeywords("The Conference Playbook, internal review, fictional examples")
         self.margin = 42
         self.usable = self.width - 2*self.margin
         self.number = 0
 
     def start(self, caption, title, bookmark):
         self.number += 1
+        self.records.append([])
         self.y = self.height - self.margin
         self.c.bookmarkPage(bookmark)
         self.c.addOutlineEntry(printable(title), bookmark, level=0)
         self.c.setFillColor(TEAL)
-        self.c.setFont("Helvetica-Bold", 9)
+        self.c.setFont("Playbook-Bold", 9)
+        self.begin_tag("P")
         self.c.drawString(self.margin, self.y, printable(caption))
+        self.end_tag()
         self.y -= 16
-        self.paragraph(escaped(title), size=23, leading=27, bold=True, gap=11)
+        self.paragraph(escaped(title), size=23, leading=27, bold=True, gap=11, role="H1")
 
-    def paragraph(self, text, size=11.5, leading=15, bold=False, color=TEXT,
-                  gap=5, indent=0, width=None):
-        style = ParagraphStyle("body", fontName="Helvetica-Bold" if bold else "Helvetica",
+    def paragraph(self, text, size=11, leading=14.5, bold=False, color=TEXT,
+                  gap=5, indent=0, width=None, role="P"):
+        style = ParagraphStyle("body", fontName="Playbook-Bold" if bold else "Playbook",
             fontSize=size, leading=leading, textColor=color, alignment=TA_LEFT,
             spaceAfter=0, splitLongWords=True)
         p = Paragraph(text, style)
         _, height = p.wrap(width or self.usable-indent, 10000)
         if self.y-height < 48:
             raise ValueError(f"Page {self.number} overflow: {text[:90]}")
+        self.begin_tag("Link" if "<link " in text else role)
         p.drawOn(self.c, self.margin+indent, self.y-height)
+        self.end_tag()
         self.y -= height+gap
         return height
 
     def heading(self, text):
         self.y -= 4
-        self.paragraph(escaped(text), size=12, leading=15, bold=True, color=TEAL, gap=5)
+        self.paragraph(escaped(text), size=12, leading=15, bold=True, color=TEAL, gap=5, role="H2")
 
     def example(self, title, text):
-        style = ParagraphStyle("example", fontName="Helvetica", fontSize=11,
+        style = ParagraphStyle("example", fontName="Playbook", fontSize=11,
                                leading=14.5, textColor=TEXT)
         body = Paragraph(f"<b>{escaped(title)}</b><br/>{escaped(text)}", style)
         _, height = body.wrap(self.usable-24, 10000)
         box_height = height+24
         if self.y-box_height < 48:
             raise ValueError(f"Example overflows page {self.number}")
+        self.begin_tag("Artifact")
         self.c.setFillColor(MINT)
         self.c.roundRect(self.margin,self.y-box_height,self.usable,box_height,6,fill=1,stroke=0)
+        self.end_tag()
+        self.begin_tag("P")
         body.drawOn(self.c,self.margin+12,self.y-height-12)
+        self.end_tag()
         self.y -= box_height+7
 
     def writing_lines(self, count, spacing=20):
+        self.begin_tag("Artifact")
         self.c.setStrokeColor(RULE)
         self.c.setLineWidth(.5)
         for _ in range(count):
@@ -93,25 +118,40 @@ class Page:
             self.y -= spacing
             self.c.line(self.margin,self.y,self.width-self.margin,self.y)
         self.y -= 6
+        self.end_tag()
 
     def finish(self):
+        self.begin_tag("Artifact")
         self.c.setStrokeColor(colors.HexColor("#dde3e4"))
         self.c.setLineWidth(.5)
         self.c.line(self.margin,35,self.width-self.margin,35)
         self.c.setFillColor(SECONDARY)
-        self.c.setFont("Helvetica",8)
-        text = f"Conference Leverage | Editorial {self.snapshot['snapshotVersion']} | Sources checked {self.snapshot['sourceCheckedDate']}"
+        self.c.setFont("Playbook",8)
+        text = f"The Conference Playbook | Editorial {self.snapshot['snapshotVersion']} | Sources checked {self.snapshot['sourceCheckedDate']}"
         self.c.drawString(self.margin,23,text)
         self.c.drawRightString(self.width-self.margin,23,str(self.number))
+        self.end_tag()
         self.c.showPage()
+
+    def begin_tag(self, role):
+        if role == "Artifact":
+            self.c._code.append("/Artifact BMC")
+        else:
+            mcid = len(self.records[-1])
+            self.records[-1].append(role)
+            self.c._code.append(f"/{role} <</MCID {mcid}>> BDC")
+
+    def end_tag(self):
+        self.c._code.append("EMC")
 
     def save(self):
         self.c.save()
+        tag_document(self.path, self.records)
 
 
 def build_workbook(path, size, data):
-    pdf = Page(path,size,data,"Conference Leverage - Playbook and Workbook")
-    pdf.start("Make the conference yours", "Conference Leverage", "start")
+    pdf = Page(path,size,data,"The Conference Playbook - Playbook and Workbook")
+    pdf.start("Make the conference yours", "The Conference Playbook", "start")
     pdf.paragraph("Playbook + Workbook",size=20,leading=24,color=TEAL,gap=22)
     pdf.paragraph("One worthwhile opportunity.<br/>One realistic alternative.<br/>A useful next move.",
                   size=17,leading=25,gap=26)
@@ -134,7 +174,7 @@ def build_workbook(path, size, data):
             pdf.paragraph(f"<b>{i:02d}  {escaped(check['label'])}</b> {escaped(check['text'])}",gap=5)
         pdf.heading(g["detailsHeading"])
         for i,detail in enumerate(g["details"],1):
-            pdf.paragraph(f"{i}. {escaped(detail)}",size=11,leading=14.5,gap=3)
+            pdf.paragraph(f"{i}. {escaped(detail)}",size=10.5,leading=13.5,gap=3)
         pdf.y -= 4
         pdf.example("Fictional example - "+g["exampleTitle"],g["example"])
         pdf.heading(g["optionalHeading"])
@@ -174,10 +214,11 @@ def sample_payload():
 
 
 def build_sample(path, data, sample):
-    pdf = Page(path,letter,data,"Conference Leverage - Fictional Field Plan")
+    pdf = Page(path,letter,data,"The Conference Playbook - Fictional Field Plan")
     pdf.start("Fictional teaching sample",sample["event"]["name"],"sample-plan")
     event=sample["event"]
-    pdf.paragraph(escaped(f"{event['date']} | {event['location']} | {event['timezone']}"),color=SECONDARY,gap=10)
+    dates=event["date"] + (" - "+event["end"] if event.get("end") and event["end"]!=event["date"] else "")
+    pdf.paragraph(escaped(" | ".join(x for x in [dates,event.get("format"),event["location"],event["timezone"]] if x)),color=SECONDARY,gap=10)
     pdf.paragraph(f"<b>Goal:</b> {escaped(event['goal'])}",gap=12)
     pdf.example("All case details are hypothetical", "Cedar Labs, its role and URL, the meetings, rooms and peer exchange are invented teaching records. No real employer opportunity, invitation or appointment is confirmed.")
     for section in sample["sections"]:

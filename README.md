@@ -1,8 +1,8 @@
-# Conference Leverage
+# The Conference Playbook
 
-A resource-first, interactive conference playbook for students and early-career professionals. It supports **Before / During / After** guides, editable preparation plans, template drafting, and a portable field plan for events such as GHC, SHPE, and AFROTECH.
+A resource-first, interactive conference playbook for students and early-career professionals. It supports **Before / During / After** guides, saved checklists, editable worksheets, template drafting, and a portable field plan for any conference. GHC, SHPE and AFROTECH are optional starting presets.
 
-**Status: internal v5 prototype. Not deployed and not production-ready.** The main branch is intentionally minimal; proposed changes live in a draft pull request.
+**Status: hosted for review; public-launch QA remains incomplete.** [Production](https://conference-playbook.pages.dev/) serves the previously published version. New planner work is reviewed on the [development preview](https://develop-conference-playbook.conference-playbook.pages.dev/). See the [planner implementation and release QA](docs/PLANNER_RELEASE_QA_2026-10-13.md) for current evidence and outstanding manual checks.
 
 ## Preview locally
 
@@ -22,7 +22,7 @@ For a simple source validation check:
 
 ```bash
 python -m unittest discover -s tests -v
-node --test tests/runtime.test.cjs
+node --test tests/runtime.test.cjs tests/planning.test.cjs
 ```
 
 ## What's here
@@ -46,7 +46,7 @@ python scripts/build.py --check
 python scripts/validate_print.py
 ```
 
-The static site needs no build step to run. Current verification: ten Python tests, twenty Node tests, all 31 PDF pages and deterministic regeneration pass. Four templates match Notion exactly; fourteen canonical source revisions are recorded for drift checks. New guide edits still require a reviewed structured freeze.
+The static site needs no build step to run. Current verification: ten Python tests, thirty-nine Node tests, all 31 PDF pages and deterministic regeneration pass. PDFs include semantic tags, logical order and embedded Unicode fonts; formal assistive-technology review remains outstanding. Four templates match Notion exactly; fourteen canonical source revisions are recorded for drift checks. New guide edits still require a reviewed structured freeze.
 
 ## Design direction
 
@@ -56,9 +56,9 @@ The target is a **beautifully designed, interactive field guide**: warm, modern,
 
 - The [Notion editorial source registry](https://app.notion.com/p/3f7b144c6b99816285a3e00b9d81a596) is the living content reference. The committed JSON is a **manual reviewed freeze**, not a live Notion sync.
 - Fictional attendee, role, appointment and message examples are labeled as fictional; no real jobs or invitations are confirmed.
-- Plans are stored in the user's browser in the prototype. **Do not add telemetry, backend storage, real AI calls, or deployment without deliberate privacy and QA review.**
+- Plans and worksheet drafts stay in the user's browser. Private JSON backups provide off-browser recovery; restore preserves existing plans. There is no cloud sync, telemetry or live AI call.
 - Do not treat a talent profile as a job application or a pending RSVP as an accepted invitation.
 
 ## Release boundaries
 
-Do **not** publish, merge to main, or recruit attendees for feedback yet. Finish editorial-source synchronization, visual quality, accessibility, real-browser persistence, printable-asset integration and current-source checks first. External user feedback is the final phase.
+Review new planner work on the development preview before promoting it to production. Screen-reader, actual zoom/touch, Firefox/Safari, personal browser printing, formal PDF accessibility and production-origin recovery checks remain open. External attendee feedback is the final phase.

@@ -51,4 +51,4 @@ For changed sources, reconcile the structured fields in a new reviewed version, 
 
 ## Checks and limits
 
-CI verifies content/runtime behavior, audit safeguards, reproducible artifacts, full PDF text parity, page bounds/sizes, bookmarks and sample/export consistency. Poppler renders support separate visual review. PDFs have selectable text and bookmarks but are untagged; no PDF/UA or WCAG certification is claimed. Screen readers, browser Print dialogs, physical printers, production-origin storage and organizer freshness remain release QA.
+CI verifies content/runtime behavior, audit safeguards, reproducible artifacts, full PDF text parity, page bounds/sizes, bookmarks and sample/export consistency. Poppler renders support separate visual review. PDFs now include semantic tags, logical reading order, language, annotated source links and embedded Unicode-mapped fonts; no PDF/UA or WCAG certification is claimed. Actual screen-reader review, browser Print dialogs, physical printers, production-origin storage and organizer freshness remain release QA. See [the current planner/release evidence](PLANNER_RELEASE_QA_2026-10-13.md).

@@ -189,7 +189,7 @@ function priorityWorksheet(p, inline = false) {
       : inline
         ? currentGuideScratch().target
         : {};
-  return `<div class="priority-form" data-guide-tool="${inline ? "target" : ""}">
+  return `<div class="priority-form" ${draftAttributes(p,worksheetScope("targets"))} data-guide-tool="${inline ? "target" : ""}">
     <div class="formrow"><label for="target-name">What are you considering? <span class="required-note">Required</span></label><input id="target-name" required maxlength="140" value="${esc(z?.name || "")}" placeholder="A real opportunity or a specific research task" aria-describedby="form-warning"></div>
     <div class="formrow"><label for="target-action">What will you do first? <span class="required-note">Required</span></label><textarea id="target-action" required rows="2" placeholder="Find the official posting and check eligibility" aria-describedby="form-warning">${esc(z?.action || "")}</textarea></div>
     <div class="fg2"><div class="formrow"><label for="target-link">Official source URL</label><input id="target-link" type="url" value="${esc(z?.source || "")}" placeholder="https://… or leave blank if unverified"></div>
@@ -210,15 +210,15 @@ function fundingWorksheet(p, inline = false) {
       inline && Object.keys(currentGuideScratch().budget).length
         ? currentGuideScratch().budget
         : p?.budget || {},
-    q = budgetCalc(b);
+    q = budgetCalc(b), currency=p?.currency || "USD";
   const field = ([k, label]) =>
-    `<div class="formrow"><label for="budget-${k}">${esc(label)}</label><div class="money-input"><span aria-hidden="true">$</span><input id="budget-${k}" inputmode="decimal" type="number" min="0" max="10000000" step="0.01" value="${esc(b[k] ?? "")}" placeholder="0"></div></div>`;
-  return `<div class="funding-form" data-guide-tool="${inline ? "budget" : ""}"><fieldset><legend>1. The full trip <span>USD</span></legend><div class="fg2">${BUDGET_FIELDS.slice(0, 6).map(field).join("")}</div><p class="helper">Include taxes, fees and care/access needs in the relevant expense or buffer.</p></fieldset>
+    `<div class="formrow"><label for="budget-${k}">${esc(label)}</label><div class="money-input"><span aria-hidden="true">${esc(currencySymbol(currency))}</span><input id="budget-${k}" inputmode="decimal" type="number" min="0" max="10000000" step="${Math.pow(10,-currencyPlaces(currency))}" value="${esc(b[k] ?? "")}" placeholder="0"></div></div>`;
+  return `<div class="funding-form" ${draftAttributes(p,"budget")} data-guide-tool="${inline ? "budget" : ""}"><fieldset><legend>1. The full trip <span>${esc(currency)}</span></legend><div class="fg2">${BUDGET_FIELDS.slice(0, 6).map(field).join("")}</div><p class="helper">Include taxes, fees and care/access needs in the relevant expense or buffer.</p></fieldset>
     <fieldset><legend>2. Support &amp; timing</legend>${BUDGET_FIELDS.slice(6).map(field).join("")}<p class="helper">Count each confirmed contribution once. Direct payment reduces upfront cash; later reimbursement does not.</p></fieldset>
-    <div class="worksheet-totals" aria-live="polite" aria-atomic="true"><div class="total-cost"><span>Full trip cost</span><strong id="budget-total">${fmt(q.total)}</strong></div><div><span>Estimated personal cost</span><strong id="budget-net">${fmt(q.net)}</strong><small>After confirmed support</small></div><div class="cash-result"><span>Possible upfront cash</span><strong id="budget-upfront">${fmt(q.upfront)}</strong><small>Before reimbursement</small></div><p id="budget-pending-summary">${fmt(q.pending)} pending · Not subtracted</p></div>
+    <div class="worksheet-totals" aria-live="polite" aria-atomic="true"><div class="total-cost"><span>Full trip cost</span><strong id="budget-total">${fmt(q.total,currency)}</strong></div><div><span>Estimated personal cost</span><strong id="budget-net">${fmt(q.net,currency)}</strong><small>After confirmed support</small></div><div class="cash-result"><span>Possible upfront cash</span><strong id="budget-upfront">${fmt(q.upfront,currency)}</strong><small>Before reimbursement</small></div><p id="budget-pending-summary">${fmt(q.pending,currency)} pending · Not subtracted</p></div>
     <p class="helper">Assumes listed costs are paid unless directly covered, and reimbursement comes later. Confirm booking, payment and refund terms. This is an estimate, not a funding approval.</p>
     <p class="error" id="budget-warning" role="alert"></p><div class="linkrow">${p ? '<button class="btn primary" data-save-budget="1">Save budget</button>' : '<a class="btn primary" href="#/conference">Choose an event to save →</a>'}<a class="plainlink" href="#/templates/funding">Draft a funding request →</a></div>
-    ${!p ? '<p class="helper scratch-note">These estimates last until reload. Return to this guide after choosing an event to save them.</p>' : ""}</div>`;
+    ${p && !inline ? renderFundingSources(p) : ""}${!p ? '<p class="helper scratch-note">These estimates last until reload. Return to this guide after choosing an event to save them.</p>' : ""}</div>`;
 }
 
 function plannerPhase(p) {
@@ -244,11 +244,11 @@ function renderPlannerWorkspace() {
     end = daysTo(p.end || p.date);
   if (n <= 0 && taskPhase === "now") taskPhase = end >= 0 ? "onsite" : "after";
   const eligible = TASKS.filter((t) => taskFilter(t, taskPhase));
-  const next = eligible.find((t) => !p.tasks[t.id]);
+  const next = eligible.find((t) => !p.tasks[t.id] && !p.skippedTasks[t.id]);
   const saved = storageAvailable
     ? "Saved in this browser"
     : "Storage unavailable · Copy or print";
-  return `<div class="planner-heading"><div><div class="section-caption"><span class="edition-dot" aria-hidden="true"></span> My Conference</div><h1>${esc(p.name)}</h1><p>${esc(prettyDate(p.date))}${p.location ? " · " + esc(p.location) : ""}</p></div>
+  return `<div class="planner-heading"><div><div class="section-caption"><span class="edition-dot" aria-hidden="true"></span> My Conference</div><h1>${esc(p.name)}</h1><p>${esc(planDateRange(p))}${p.format ? " · " + esc(p.format) : ""}${p.location ? " · " + esc(p.location) : ""}${p.timezone ? " · " + esc(zoneLabel(p.timezone)) : ""}</p><button class="plainlink profile-edit" data-edit-profile="1">Edit conference details</button></div>
     <div class="event-switcher"><label for="switch-event">Your conferences</label><div class="chooser"><select id="switch-event">${Object.values(
       db.plans,
     )
@@ -259,8 +259,8 @@ function renderPlannerWorkspace() {
       .join(
         "",
       )}</select><button class="btn" data-show-add="1">+ Add</button></div><span class="save-state" role="status">${saved}</span></div></div>
-    <div class="planner-context"><span class="event-pill">${n > 0 ? n + " days to go" : n === 0 ? "Starts today" : end >= 0 ? "At the conference" : "After the event"}</span><span>${plannerPhase(p)}</span><div class="planner-goal"><label for="plan-goal">I’m here for</label><select id="plan-goal" data-plan-goal="1"><option value="">Choose a main goal</option>${["Recruiting / career", "Technical learning", "People / community", "Build / share a project"].map((x) => `<option ${p.goal === x ? "selected" : ""}>${x}</option>`).join("")}</select></div><a href="#/plan" class="plainlink">My field plan ↗</a></div>
-    <section class="next-move" aria-label="Suggested next step"><span class="next-icon" aria-hidden="true">↗</span><div><span class="section-caption">${next ? "A good place to start" : "Room to adjust"}</span><h2>${next ? esc(next.label) : "Your suggested steps are checked off."}</h2><p>${next ? esc(next.sub) + "." : "Recheck changing details and leave space for a useful conversation."}</p></div>${next ? `<button class="btn" data-task="${next.id}" data-focus-editor="1">Open this step →</button>` : '<a class="btn" href="#/plan">Read my field plan →</a>'}</section>
+    ${renderDraftResume(p)}<div class="planner-context"><span class="event-pill">${n > 0 ? n + " days to go" : n === 0 ? "Starts today" : end >= 0 ? "At the conference" : "After the event"}</span><span>${plannerPhase(p)}</span><div class="planner-goal"><label for="plan-goal">I’m here for</label><select id="plan-goal" data-plan-goal="1"><option value="">Choose a main goal</option>${["Recruiting / career", "Technical learning", "People / community", "Build / share a project"].map((x) => `<option ${p.goal === x ? "selected" : ""}>${x}</option>`).join("")}</select></div><a href="#/plan" class="plainlink">My field plan ↗</a></div>
+    <section class="next-move" aria-label="Suggested next step"><span class="next-icon" aria-hidden="true">↗</span><div><span class="section-caption">${next ? "A good place to start" : "Room to adjust"}</span><h2>${next ? esc(next.label) : "Your suggested steps are prepared or marked not needed."}</h2><p>${next ? esc(next.sub) + "." : "Recheck changing details and leave space for a useful conversation."}</p></div>${next ? `<button class="btn" data-task="${next.id}" data-focus-editor="1">Open this step →</button>` : '<a class="btn" href="#/plan">Read my field plan →</a>'}</section>
     <div class="conference-grid"><section class="planner-sidebar" aria-label="Planning steps"><details class="planner-menu" ${window.matchMedia("(min-width: 801px)").matches ? "open" : ""}><summary>Browse planning steps <span aria-hidden="true">+</span></summary><h2>Your next moves</h2><p class="helper">Suggested timing, not organizer deadlines. Use the steps that fit your goal.</p><div class="phasebuttons" role="group" aria-label="Planning phase">${[
       ["now", "Now"],
       ["week", "Final week"],
@@ -276,23 +276,10 @@ function renderPlannerWorkspace() {
       )}</div><div id="timeline-tasks">${renderPlannerTasks(p)}</div></details>
     <div class="planner-side-note"><p>One thoughtful priority.<br>One realistic backup.<br><strong>Plenty of room to be human.</strong></p></div></section>
     <section class="edbox" id="planner-editor" tabindex="-1" aria-label="Current planning worksheet">${renderEditor(p)}</section></div>
-    <div class="planner-footer no-print"><div class="linkrow"><button class="btn" data-review="1">Review my plan</button><a href="#/templates" class="plainlink">Editable templates →</a><a href="#/plan" class="plainlink">Print &amp; privacy options →</a></div><p class="helper">Review uses a rules-based checklist, not AI. Your records stay in this browser; clearing browser data may remove them. Access is self-reported; verify changing details with official sources.</p></div>`;
+    <div class="planner-footer no-print"><div class="linkrow"><button class="btn" data-review="1">Review my plan</button><a href="#/templates" class="plainlink">Editable templates →</a><a href="#/plan" class="plainlink">Print &amp; privacy options →</a></div><p class="helper">Review uses a rules-based checklist, not AI. Your records stay in this browser; download a backup before clearing browser data. Access is self-reported; verify changing details with official sources.</p></div>${renderDataControls(p)}`;
 }
 
-function renderPlannerTasks(p) {
-  const eligible = TASKS.filter((t) => taskFilter(t, taskPhase));
-  const other = TASKS.filter((t) => !taskFilter(t, taskPhase));
-  if (!TASKS.some((t) => t.id === selectedTask))
-    selectedTask = eligible[0]?.id || "access";
-  const rows = (tasks) =>
-    tasks
-      .map(
-        (t, i) =>
-          `<div class="taskrow ${selectedTask === t.id ? "active" : ""}"><input type="checkbox" data-task-check="${t.id}" ${p.tasks[t.id] ? "checked" : ""} aria-label="Mark ${esc(t.label)} done"><button class="titlebutton" data-task="${t.id}" ${selectedTask === t.id ? 'aria-current="step"' : ""}><strong>${esc(t.label)}</strong><small>${esc(t.sub)}</small></button></div>`,
-      )
-      .join("");
-  return `${rows(eligible)}<details class="other-steps" ${other.some((t) => t.id === selectedTask) ? "open" : ""}><summary>All other planning steps</summary>${rows(other)}</details>`;
-}
+function renderPlannerTasks(p) { return renderChecklistRows(p); }
 
 function collectTargetDraft() {
   return {

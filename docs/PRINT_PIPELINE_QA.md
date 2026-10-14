@@ -1,5 +1,7 @@
 # Print, source and accessibility checks - October 13, 2026
 
+This records the earlier print integration. The [subsequent planner/release pass](PLANNER_RELEASE_QA_2026-10-13.md) adds PDF tags, logical order, language, tagged links and embedded Unicode fonts; its rebuilt editions retain all 31 pages and approved content. The original untagged/Helvetica limitation below describes the earlier artifacts. Actual PDF assistive-technology and browser/physical printing checks remain open.
+
 ## Automated verification
 
 30 checks pass: ten Python content/pipeline tests and twenty Node runtime tests. Byte-for-byte artifact regeneration also passes. PDF validation covers all 31 pages: 15 Letter, 15 A4 and the one-page fictional sample.
