@@ -275,7 +275,8 @@ var PlaybookAssistant = (() => {
       c.s.usedInput = input;
       if (current()?.s === c.s) {
         results.innerHTML = resultsHTML(c.s);
-        results.focus();
+        results.focus({ preventScroll: true });
+        results.scrollIntoView?.({ block: "start", behavior: "auto" });
       }
     } catch (error) {
       if (current()?.s === c.s) {
@@ -328,8 +329,10 @@ var PlaybookAssistant = (() => {
       c.s.result = example();
       c.s.example = true;
       message("");
-      document.getElementById("ai-results").innerHTML = resultsHTML(c.s);
-      document.getElementById("ai-results").focus();
+      const results = document.getElementById("ai-results");
+      results.innerHTML = resultsHTML(c.s);
+      results.focus({ preventScroll: true });
+      results.scrollIntoView?.({ block: "start", behavior: "auto" });
       return true;
     }
     if (d.aiUse !== void 0) {

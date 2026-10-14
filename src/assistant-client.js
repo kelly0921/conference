@@ -82,7 +82,7 @@ async function send(c) {
     const response=await fetch('/api/assistant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({consent:true,input}),signal:c.s.controller.signal});
     const body=await response.json();if(!response.ok)throw Error(body.error||'AI is unavailable. Try again later.');
     c.s.result=validateResult(body.result,input);c.s.example=false;c.s.usedInput=input;
-    if(current()?.s===c.s) {results.innerHTML=resultsHTML(c.s);results.focus();}
+    if(current()?.s===c.s) {results.innerHTML=resultsHTML(c.s);results.focus({preventScroll:true});results.scrollIntoView?.({block:'start',behavior:'auto'});}
   } catch(error) {if(current()?.s===c.s){results.innerHTML='';message(error.name==='AbortError'?'Request cancelled or timed out. Your plan is unchanged.':error.message);}}
   finally {clearTimeout(timer);c.s.pending=false;if(current()?.s===c.s){results.removeAttribute('aria-busy');document.querySelectorAll('#assistant-input input,#assistant-input textarea').forEach(f=>f.disabled=false);const b=document.getElementById('ai-send');if(b)b.disabled=false;const cancel=document.querySelector('[data-ai-cancel]');if(cancel)cancel.hidden=true;}}
 }
@@ -91,7 +91,7 @@ export function handleClick(button) {
   if(d.aiPreview) {if(c.s.pending){message('Wait for this request or cancel it first.');return true;}try {c.s.prepared=buildInput(c.p,c.mode,valuesFromForm());document.getElementById('ai-preview').innerHTML=previewHTML(c.s.prepared);message('');}catch(error){message(error.message);}return true;}
   if(d.aiSend){void send(c);return true;}
   if(d.aiCancel){c.s.controller?.abort();return true;}
-  if(d.aiExample) {if(c.s.pending){message('Wait for this request or cancel it first.');return true;}c.s.result=example();c.s.example=true;message('');document.getElementById('ai-results').innerHTML=resultsHTML(c.s);document.getElementById('ai-results').focus();return true;}
+  if(d.aiExample) {if(c.s.pending){message('Wait for this request or cancel it first.');return true;}c.s.result=example();c.s.example=true;message('');const results=document.getElementById('ai-results');results.innerHTML=resultsHTML(c.s);results.focus({preventScroll:true});results.scrollIntoView?.({block:'start',behavior:'auto'});return true;}
   if(d.aiUse!==undefined) {
     const suggestion=c.s.result?.suggestions[Number(d.aiUse)];if(!suggestion||c.s.example)return true;
     let latest;try{latest=buildInput(c.p,c.mode,valuesFromForm());}catch{message('Your details changed. Preview and ask again before using these suggestions.');return true;}

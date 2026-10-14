@@ -12,6 +12,8 @@ The Cloudflare Pages project is `conference-playbook`. Its Git preview branch is
 
 The repository's `wrangler.jsonc` already configures the preview model, enable flag and `AI_LIMITS` database binding. Database `conference-playbook-ai-limits` was created for this feature. It holds request counters only; the handler initializes its own table. Production remains disabled until the release is reviewed. Setting a production key alone does not enable production AI.
 
+The Pages project build command is configured as `npm run build`, with output `dist`. An empty build command skips dependency installation/building and leaves that folder missing; keep the command when updating this project's settings.
+
 Use fictional input for the initial provider smoke test. Check both modes, a small pasted agenda, a changed request, a worksheet draft and reload. Model usefulness and hallucination checks need actual provider responses; mocked tests establish integration behavior, not model quality.
 
 ## Privacy and limits
