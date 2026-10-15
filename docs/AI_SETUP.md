@@ -8,11 +8,19 @@ The Cloudflare Pages project is `conference-playbook`. Its Git preview branch is
 
 1. Open [Cloudflare Workers & Pages](https://dash.cloudflare.com/287d7ca568f2cce8a0325468d1722265/workers-and-pages), select **conference-playbook**, then **Settings → Variables and Secrets**.
 2. Select the **Preview** environment. Add a **Secret** named `OPENAI_API_KEY`, using your OpenAI project API key. Enter it directly in Cloudflare; never put it in chat, Git, a frontend file or a URL.
-3. Redeploy the latest **preview** deployment after saving the secret. Reload the preview site. The AI page should say **Live AI is available**. `/api/assistant` also returns `available: true` when all required bindings exist.
+3. Redeploy the latest **preview** deployment on `develop/conference-playbook-v5` after saving the secret. Do not retry the older `main` deployment to test AI: that commit predates the AI feature and its `package.json`. Reload the preview site. The AI page should say **Live AI is available**. `/api/assistant` also returns `available: true` when all required bindings exist.
 
 The repository's `wrangler.jsonc` already configures the preview model, enable flag and `AI_LIMITS` database binding. Database `conference-playbook-ai-limits` was created for this feature. It holds request counters only; the handler initializes its own table. Production remains disabled until the release is reviewed. Setting a production key alone does not enable production AI.
 
-The Pages project build command is configured as `npm run build`, with output `dist`. An empty build command skips dependency installation/building and leaves that folder missing; keep the command when updating this project's settings.
+The shared Pages output directory is `dist`. Its build command handles both the current preview and the older static production commit, which has no `package.json`:
+
+```sh
+if [ -f package.json ]; then npm run build; else mkdir -p dist/output && cp index.html favicon.ico dist/ && cp -R assets design dist/ && cp -R output/pdf dist/output/; fi
+```
+
+The legacy branch copies only public assets. An empty build command leaves `dist` missing; an unconditional `npm run build` fails on the old production commit. Once both branches contain the package-based build, this can be simplified to `npm run build`.
+
+Secrets are environment-specific. Adding `OPENAI_API_KEY` in **Production** does not make it available to **Preview**. Cloudflare will not reveal an existing encrypted value for copying; add the key directly in Preview using your privately saved value. Never paste it into chat.
 
 Use fictional input for the initial provider smoke test. Check both modes, a small pasted agenda, a changed request, a worksheet draft and reload. Model usefulness and hallucination checks need actual provider responses; mocked tests establish integration behavior, not model quality.
 
@@ -34,4 +42,4 @@ Use fictional input for the initial provider smoke test. Check both modes, a sma
 
 `wrangler.local.jsonc` is only an input for generating binding declarations (`wrangler types types/assistant-env.d.ts --config wrangler.local.jsonc --strict-vars=false --include-runtime=false`); Pages dev uses normal configuration and CLI bindings. Do not deploy the local declaration config. `.dev.vars*`, `.env*`, runtime state and QA artifacts are ignored and excluded from static uploads.
 
-The committed client bundle is reproducible from `src/assistant-client.js` and the shared contract. Build/test modules live under ignored `.qa-cache`. CI checks parity with the bundle, endpoint types, security/limit behavior and all existing editorial/print checks. `npm run build` prepares the allowlisted public assets in `dist`. Cloudflare's dependency-install step also prepares these assets through `postinstall`. `.node-version` selects Node 22 for hosted builds. `wrangler.jsonc` selects `dist` as the output directory. If changing the Pages build settings, use build command `npm run build`. Server sources, dependencies, QA files and secrets are never copied into the public directory.
+The committed client bundle is reproducible from `src/assistant-client.js` and the shared contract. Build/test modules live under ignored `.qa-cache`. CI checks parity with the bundle, endpoint types, security/limit behavior and all existing editorial/print checks. `npm run build` prepares the allowlisted public assets in `dist`. Cloudflare's dependency-install step also prepares these assets through `postinstall`. `.node-version` selects Node 22 for hosted builds. `wrangler.jsonc` selects `dist` as the output directory. Keep the shared legacy-compatible build command above until the production branch also contains `package.json`. Server sources, dependencies, QA files and secrets are never copied into the public directory.
