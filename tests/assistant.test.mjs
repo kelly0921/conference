@@ -74,6 +74,21 @@ test('cross-origin and missing-consent requests never call the provider',async()
   assert.equal((await handleRequest(request(undefined,'https://other.example.org'),active,provider)).status,403);
   assert.equal((await handleRequest(request({input}),active,provider)).status,400);assert.equal(calls,0);
 });
+
+test('a redacted public URL followed by a new line reaches the provider without changing the approved input',async()=>{
+  const {mf,db}=await database();try {
+    const multiline={...input,agenda:redact('https://example.org/session\nFictional workshop starts at 14:00. Contact test@example.org.')};
+    let calls=0;
+    const provider=async(url,options)=>{calls++;assert.deepEqual(JSON.parse(JSON.parse(options.body).input[0].content),multiline);return Response.json({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(result)}]}]});};
+    const response=await handleRequest(request({consent:true,input:multiline}),{...env,AI_LIMITS:db},provider);
+    assert.equal(response.status,200);assert.equal(calls,1);
+    for(const privateText of ['test@example.org','https://example.org/?token=private']) {
+      const unsafe={...multiline,context:[{id:'profile',label:'Conference profile',text:privateText}]};
+      assert.equal((await handleRequest(request({consent:true,input:unsafe}),{...env,AI_LIMITS:db},provider)).status,400);
+    }
+    assert.equal(calls,1);
+  }finally{await mf.dispose();}
+});
 test('real SQLite quotas cap concurrent requests, share a daily bound and roll over',async()=>{
   const {mf,db}=await database();try {
     const now=Date.UTC(2027,2,8,10);

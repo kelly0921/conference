@@ -22,6 +22,14 @@ The legacy branch copies only public assets. An empty build command leaves `dist
 
 Secrets are environment-specific. Adding `OPENAI_API_KEY` in **Production** does not make it available to **Preview**. Cloudflare will not reveal an existing encrypted value for copying; add the key directly in Preview using your privately saved value. Never paste it into chat.
 
+If the dashboard environment selector is hard to find, run this from the project folder and enter the value only at Wrangler's private prompt:
+
+```powershell
+npx.cmd wrangler pages secret put OPENAI_API_KEY --project-name conference-playbook --env preview
+```
+
+Then redeploy the preview. `wrangler pages secret list --project-name conference-playbook --env preview` lists names only. The Preview secret and live deployment were verified on October 15; see the [live review](AI_LIVE_REVIEW_2026-10-15.md) for the tested behavior and remaining quality issues.
+
 Use fictional input for the initial provider smoke test. Check both modes, a small pasted agenda, a changed request, a worksheet draft and reload. Model usefulness and hallucination checks need actual provider responses; mocked tests establish integration behavior, not model quality.
 
 ## Privacy and limits
