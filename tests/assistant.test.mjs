@@ -5,7 +5,7 @@ import {validateInput,validateResult,redact} from '../.qa-cache/assistant-tests/
 import {handleRequest,reserveQuota,extractResult,providerRequest,readBounded} from '../.qa-cache/assistant-tests/server.mjs';
 import {Miniflare} from 'miniflare';
 const require=createRequire(import.meta.url),{application}=require('../scripts/application_runtime.cjs');
-const input={version:2,schedule:null,mode:'plan',goal:'Learn one useful testing technique',constraints:'One afternoon; leave time for a break.',agenda:'Fictional workshop: testing small services. Public source: https://example.org/session',context:[{id:'profile',label:'Conference profile',text:'Fictional developer conference, online, 2027-03-08, Europe/Paris.'}]};
+const input={version:3,sourceLinks:['https://example.org/session'],schedule:null,mode:'plan',goal:'Learn one useful testing technique',constraints:'One afternoon; leave time for a break.',agenda:'Fictional workshop: testing small services. Public source: https://example.org/session',context:[{id:'profile',label:'Conference profile',text:'Fictional developer conference, online, 2027-03-08, Europe/Paris.'}]};
 const result={recommendedSessionIds:[],summary:'Focus on one relevant workshop and a realistic backup.',suggestions:[{title:'Check the testing workshop',action:'Read the abstract and check online access.',why:'It fits the specific learning goal and limited time.',uncertainty:'The timetable and pass requirements need checking.',guideId:'prioritize',evidenceIds:['goal'],evidenceQuotes:[{id:'goal',quote:input.goal}],worksheet:'targets',fields:[{key:'target-name',value:'Fictional testing workshop'},{key:'target-action',value:'Check the abstract and access.'},{key:'target-link',value:'https://example.org/session'}]}],questions:['What does your pass include?']};
 const env={AI_ENABLED:'true',OPENAI_API_KEY:'fictional-test-key-not-real',AI_MODEL:'gpt-5.4-mini',AI_LIMITS:null};
 const request=(body={consent:true,input},origin='https://example.org')=>new Request('https://example.org/api/assistant',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json','CF-Connecting-IP':'192.0.2.1'},body:JSON.stringify(body)});
@@ -27,7 +27,7 @@ test('redaction keeps conference dates, currency and public sources readable',()
 });
 test('input rejects unknown sections, excessive text and prototype payloads',()=>{
   assert.deepEqual(validateInput(input),input);
-  for(const v of [{...input,contacts:[]},{...input,agenda:'x'.repeat(8001)},{...input,context:[{id:'contacts',label:'Contacts',text:'Private'}]},null])assert.throws(()=>validateInput(v));
+  for(const v of [{...input,contacts:[]},{...input,mode:['plan']},{...input,agenda:'x'.repeat(8001)},{...input,context:[{id:'contacts',label:'Contacts',text:'Private'}]},null])assert.throws(()=>validateInput(v));
 });
 test('response validation accepts editable suggestions and rejects invented source URLs or confirmation writes',()=>{
   assert.deepEqual(validateResult(result,input),result);
@@ -74,7 +74,7 @@ test('cross-origin and missing-consent requests never call the provider',async()
   const active={...env,AI_LIMITS:{}};let calls=0;const provider=async()=>{calls++;throw Error('unexpected');};
   assert.equal((await handleRequest(request(undefined,'https://other.example.org'),active,provider)).status,403);
   assert.equal((await handleRequest(request({input}),active,provider)).status,400);assert.equal(calls,0);
-  const legacy={...input,version:1};delete legacy.schedule;
+  const legacy={...input,version:1};delete legacy.schedule;delete legacy.sourceLinks;
   assert.equal((await handleRequest(request({consent:true,input:legacy}),active,provider)).status,409);assert.equal(calls,0);
 });
 
@@ -112,6 +112,11 @@ test('endpoint returns only checked provider results and preserves secrets in er
     const refused=await handleRequest(request(),active,async()=>Response.json({status:'completed',output:[{content:[{type:'refusal'}]}]}));assert.equal(refused.status,502);
     const unsupported=structuredClone(result);unsupported.summary='All three sessions overlap.';
     const rejected=await handleRequest(request(),active,async()=>Response.json({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(unsupported)}]}]}));assert.equal(rejected.status,502);assert.equal((await rejected.json()).code,'unsupported_timetable');
+    for(const [action,code] of [['Read https://invented.example.org/session','unsupported_source'],['Call 202-555-0148 for access','unsupported_contact']]){
+      const bad=structuredClone(result);bad.suggestions[0].action=action;
+      const response=await handleRequest(request(),active,async()=>Response.json({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(bad)}]}]}));
+      assert.equal(response.status,502);assert.equal((await response.json()).code,code);
+    }
     const injected={...input,agenda:'Email secret@example.org or https://example.org/?token=private'};assert.equal((await handleRequest(request({consent:true,input:injected}),active,provider)).status,400);assert.equal(calls,1);
   }finally{await mf.dispose();}
 });

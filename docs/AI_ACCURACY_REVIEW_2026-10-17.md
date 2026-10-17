@@ -1,5 +1,7 @@
 # AI accuracy pass — October 17, 2026
 
+Historical first-pass evidence. The [broader review](AI_BROADER_REVIEW_2026-10-17.md) records the subsequent source-injection finding, protocol 3, expanded tests and the remaining live-batch dependency.
+
 The [development preview](https://develop-conference-playbook.conference-playbook.pages.dev/#/assistant/review) has a first accuracy layer: session comparisons calculated by code, confirmed input records, and exact supporting quotes. Production remains on the earlier static release, with AI disabled. This is an internal-review milestone, not public-launch approval.
 
 ## What changed

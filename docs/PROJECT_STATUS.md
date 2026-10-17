@@ -1,8 +1,10 @@
 # Project status — October 17, 2026
 
+Latest update: protocol 3 separates approved source links from untrusted agenda text and constrains evidence excerpts. The broader pass found a real source-promotion failure despite schema acceptance, fixed it, and passed a targeted live retest. There are 138 passing automated checks and a prepared 16-case human-review suite. The larger repeated live batch awaits a private local test key or later hosted quota windows; it has not been claimed complete. See the [broader AI review](AI_BROADER_REVIEW_2026-10-17.md).
+
 The previously reviewed v5 site is hosted at https://conference-playbook.pages.dev/. The current planner upgrade is prepared for internal review on the development preview. It is not a finalized or attendee-tested product.
 
-Optional AI planning and review now work on the development preview. The current accuracy layer calculates session comparisons in code, requires confirmed timing inputs and exact supporting quotes, and rejects unsupported results. Verification includes 107 automated checks and the existing 31-page print validation. One initial recruiting response was rejected during live testing. After respecting the normal quota reset, the recruiting retest and a fresh browser review passed on the final build. Seven of eight fictional provider attempts returned checked results; this is a small smoke test, not an accuracy certification. See the [current accuracy review](AI_ACCURACY_REVIEW_2026-10-17.md) for evidence and remaining limits. Production AI is disabled. The historical rollout sections below retain their original context and counts.
+Optional AI planning and review work on the development preview. The initial calculated-schedule pass and its earlier live smoke tests are recorded in the [first accuracy review](AI_ACCURACY_REVIEW_2026-10-17.md); the subsequent source/excerpt protocol and current limits are in the broader review above. Production AI is disabled. The historical rollout sections below retain their original context and counts.
 
 ## Current planner pass
 

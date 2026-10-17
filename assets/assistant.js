@@ -167,7 +167,7 @@ var PlaybookAssistant = (() => {
     return list;
   }
   function checkGroundedResult(result, input) {
-    if (input.version !== 2) return;
+    if (input.version < 2) return;
     const known = new Map(evidenceFor(input).map((e) => [e.id, e]));
     const identities = /* @__PURE__ */ new Map();
     const identity = (name, id) => {
@@ -186,9 +186,24 @@ var PlaybookAssistant = (() => {
         if (!e || !q || !q.quote.trim() || !e.text.includes(q.quote) || q.quote.length < Math.min(8, e.text.length)) throw Error("The supporting text was not supplied.");
       }
       const named = [s.title, ...s.fields.filter((f) => ["target-name", "experience-name"].includes(f.key)).map((f) => f.value)];
-      for (const [name, ids2] of identities) {
-        const mentioned = named.some((t) => t === name || name.length >= 8 && t.toLowerCase().includes(name.toLowerCase()));
-        if (mentioned && !s.evidenceIds.some((id) => ids2.has(id))) throw Error("A named session or priority needs its own evidence reference.");
+      for (const text2 of named) {
+        const spans = [];
+        for (const [name, ids2] of identities) {
+          if (name.length < 8) {
+            if (text2.replace(/^["'“”‘’]+|["'“”‘’]+$/g, "").toLowerCase() === name.toLowerCase()) spans.push({ start: 0, end: text2.length, ids: ids2 });
+            continue;
+          }
+          const expression = new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "giu");
+          for (const match of text2.matchAll(expression)) {
+            const start = match.index, end = start + match[0].length;
+            if (start && /[\p{L}\p{N}_]/u.test(text2[start - 1]) || end < text2.length && /[\p{L}\p{N}_]/u.test(text2[end])) continue;
+            spans.push({ start, end, ids: ids2 });
+          }
+        }
+        for (const span of spans) {
+          if (spans.some((other) => other !== span && other.start <= span.start && other.end >= span.end && (other.start < span.start || other.end > span.end))) continue;
+          if (!s.evidenceIds.some((id) => span.ids.has(id))) throw Error("A named session or priority needs its own evidence reference.");
+        }
       }
     }
     const ids = result.recommendedSessionIds || [];
@@ -198,9 +213,15 @@ var PlaybookAssistant = (() => {
       const selected = { ...input.schedule, sessions: input.schedule.sessions.filter((s) => ids.includes(s.id)) };
       if (inspectSchedule(selected).length) throw Error("The selected sessions do not meet the checked constraints.");
     }
-    const suppliedNames = new Set(input.schedule?.sessions.map((s) => s.label) || []);
+    const suppliedNames = new Set(identities.keys());
     const texts = [result.summary, ...result.questions, ...result.suggestions.flatMap((s) => [...suppliedNames.has(s.title) ? [] : [s.title], s.action, s.why, s.uncertainty, ...s.fields.filter((f) => !["target-link", "experience-source"].includes(f.key) && !(["target-name", "experience-name"].includes(f.key) && suppliedNames.has(f.value))).map((f) => f.value)])];
-    if (texts.some((t) => /\b\d{1,2}:\d{2}\b|\b\d{4}-\d{2}-\d{2}\b|\b(?:overlap\w*|conflict\w*|simultaneous\w*|double[ -]?book\w*)\b/i.test(t))) throw Error("Timetable claims must use the calculated session checks.");
+    const prose = texts.map((t) => {
+      for (const name of [...suppliedNames].sort((a, b) => b.length - a.length)) t = t.replace(new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "giu"), "[supplied item]");
+      return t.replace(/https?:\/\/[^\s<>"'\\`]+/gi, "[source]").replace(/\bconflict[- ](?:resolution|management|free)\b/gi, "[topic]").replace(/\boverlap(?:ping)?(?: in)? (?:interests|topics|skills|expertise|areas)\b/gi, "[topic]");
+    });
+    const clock = /\b\d{1,2}:\d{2}\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}[/-]\d{1,2}[/-]\d{4}\b|\b\d{1,2}h\d{2}\b|\b(?:\d{1,2}(?:[.:]\d{2})?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s*[ap]\.?m\.?(?!\p{L})|\b(?:noon|midnight)\b/iu;
+    const relation = /\b(?:overlap\w*|simultaneous\w*|double[ -]?book\w*|back[ -]to[ -]back|at the same time)\b|\b(?:time|timing|schedule|scheduling)[ -]+conflict\w*\b|\b(?:sessions?|talks?|activities|appointments?)\s+(?:(?:all|both)\s+)?(?:conflict|clash)\w*\b|\b(?:conflicting|clashing)\s+(?:sessions?|talks?|activities|appointments?)\b/i;
+    if (prose.some((t) => clock.test(t) || relation.test(t))) throw Error("Timetable claims must use the calculated session checks.");
   }
 
   // src/assistant-contract.ts
@@ -229,13 +250,35 @@ var PlaybookAssistant = (() => {
       return "";
     }
   }
+  function textURLs(text2) {
+    return text2.match(/https?:\/\/[^\s<>"'\\`]+/gi) || [];
+  }
+  function sourceVariants(raw) {
+    let clean = raw, previous = "";
+    while (previous !== clean) {
+      previous = clean;
+      clean = clean.replace(/[.,;:!?]+$/, "");
+      for (const [open, close] of [["(", ")"], ["[", "]"], ["{", "}"]]) if (clean.endsWith(close) && clean.split(close).length > clean.split(open).length) clean = clean.slice(0, -1);
+    }
+    return [...new Set([publicURL(raw), publicURL(clean)].filter(Boolean))];
+  }
   function redact(text2) {
     return text2.replace(/https?:\/\/[^\s<>"']+/gi, (url) => publicURL(url) || "[private link removed]").replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[email removed]").replace(/\b(?:sk|ghp|gho|github_pat)[-_][a-zA-Z0-9_-]{12,}\b/g, "[secret removed]").replace(/(?:\+\d{1,3}[ .-]?)?(?:\(\d{3}\)|\b\d{3})[ .-]\d{3}[ .-]\d{4}\b/g, "[phone removed]");
   }
   function validateInput(raw) {
     if (!record(raw)) throw Error("Invalid request.");
-    exact(raw, ["version", "mode", "goal", "constraints", "agenda", "context", ...raw.version === 2 ? ["schedule"] : []]);
-    if (![1, 2].includes(raw.version) || !["plan", "review"].includes(String(raw.mode)) || !Array.isArray(raw.context) || raw.context.length > 6) throw Error("Invalid request.");
+    exact(raw, ["version", "mode", "goal", "constraints", "agenda", "context", ...raw.version === 2 || raw.version === 3 ? ["schedule"] : [], ...raw.version === 3 ? ["sourceLinks"] : []]);
+    if (![1, 2, 3].includes(raw.version) || typeof raw.mode !== "string" || !["plan", "review"].includes(raw.mode) || !Array.isArray(raw.context) || raw.context.length > 6) throw Error("Invalid request.");
+    let sourceLinks;
+    if (raw.version === 3) {
+      if (!Array.isArray(raw.sourceLinks) || raw.sourceLinks.length > 32) throw Error("Use at most thirty-two approved public source links.");
+      sourceLinks = raw.sourceLinks.map((v) => {
+        const u = publicURL(string(v, 500, true));
+        if (!u) throw Error("Use public source links without private parameters.");
+        return u;
+      });
+      if (new Set(sourceLinks).size !== sourceLinks.length) throw Error("Remove duplicate source links.");
+    }
     const seen = /* @__PURE__ */ new Set();
     const context = raw.context.map((c) => {
       if (!record(c)) throw Error("Invalid context.");
@@ -246,20 +289,20 @@ var PlaybookAssistant = (() => {
       return { id, label: string(c.label, 80, true), text: string(c.text, 4e3) };
     });
     if (!seen.has("profile")) throw Error("Conference context is required.");
-    return { version: raw.version, ...raw.version === 2 ? { schedule: validateSchedule(raw.schedule) } : {}, mode: raw.mode, goal: string(raw.goal, 600, true), constraints: string(raw.constraints, 2e3), agenda: string(raw.agenda, 8e3), context };
+    return { version: raw.version, ...sourceLinks ? { sourceLinks } : {}, ...raw.version !== 1 ? { schedule: validateSchedule(raw.schedule) } : {}, mode: raw.mode, goal: string(raw.goal, 600, true), constraints: string(raw.constraints, 2e3), agenda: string(raw.agenda, 8e3), context };
   }
   function allowedSources(input) {
-    const urls = (JSON.stringify(input).match(/https?:\/\/[^\s<>"\\]+/gi) || []).map(publicURL).filter(Boolean);
-    return new Set(urls);
+    if (input.version === 3) return new Set(input.sourceLinks);
+    return new Set(textURLs(JSON.stringify(input)).flatMap(sourceVariants));
   }
   function validateResult(raw, input) {
     if (!record(raw)) throw Error("The response could not be checked.");
-    exact(raw, ["summary", "suggestions", "questions", ...input.version === 2 ? ["recommendedSessionIds"] : []]);
+    exact(raw, ["summary", "suggestions", "questions", ...input.version >= 2 ? ["recommendedSessionIds"] : []]);
     if (!Array.isArray(raw.suggestions) || raw.suggestions.length < 1 || raw.suggestions.length > 4 || !Array.isArray(raw.questions) || raw.questions.length > 4) throw Error("Invalid suggestions.");
-    const evidence = new Set(input.version === 2 ? evidenceFor(input).map((e) => e.id) : ["goal", "constraints", "agenda", ...input.context.map((c) => c.id)]), sources = allowedSources(input);
+    const evidence = new Set(input.version >= 2 ? evidenceFor(input).map((e) => e.id) : ["goal", "constraints", "agenda", ...input.context.map((c) => c.id)]), sources = allowedSources(input);
     const suggestions = raw.suggestions.map((s) => {
       if (!record(s)) throw Error("Invalid suggestion.");
-      exact(s, ["title", "action", "why", "uncertainty", "guideId", "evidenceIds", "worksheet", "fields", ...input.version === 2 ? ["evidenceQuotes"] : []]);
+      exact(s, ["title", "action", "why", "uncertainty", "guideId", "evidenceIds", "worksheet", "fields", ...input.version >= 2 ? ["evidenceQuotes"] : []]);
       const worksheet = string(s.worksheet, 30);
       if (!Object.hasOwn(worksheetFields, worksheet) || !guideIds.includes(s.guideId) || !Array.isArray(s.fields) || !s.fields.length || s.fields.length > 6 || !Array.isArray(s.evidenceIds) || !s.evidenceIds.length || s.evidenceIds.length > 6 || s.evidenceIds.some((id) => !evidence.has(String(id)))) throw Error("Unsupported suggestion.");
       const seen = /* @__PURE__ */ new Set();
@@ -273,7 +316,7 @@ var PlaybookAssistant = (() => {
         return { key: key2, value };
       });
       if (worksheet === "targets" && ["target-name", "target-action"].some((k) => !fields.find((f) => f.key === k)?.value)) throw Error("Incomplete priority.");
-      const quotes = input.version === 2 ? (() => {
+      const quotes = input.version >= 2 ? (() => {
         if (!Array.isArray(s.evidenceQuotes) || s.evidenceQuotes.length > 6) throw Error("Unsupported references.");
         return s.evidenceQuotes.map((q) => {
           if (!record(q)) throw Error("Invalid reference.");
@@ -283,11 +326,18 @@ var PlaybookAssistant = (() => {
       })() : void 0;
       return { ...quotes ? { evidenceQuotes: quotes } : {}, title: string(s.title, 140, true), action: string(s.action, 1200, true), why: string(s.why, 1200, true), uncertainty: string(s.uncertainty, 1200, true), guideId: String(s.guideId), evidenceIds: s.evidenceIds.map(String), worksheet, fields };
     });
-    const selected = input.version === 2 ? (() => {
+    const selected = input.version >= 2 ? (() => {
       if (!Array.isArray(raw.recommendedSessionIds) || raw.recommendedSessionIds.length > 18) throw Error("Invalid session selection.");
       return raw.recommendedSessionIds.map((id) => string(id, 32, true));
     })() : void 0;
     const result = { summary: string(raw.summary, 1600, true), suggestions, questions: raw.questions.map((q) => string(q, 600, true)), ...selected ? { recommendedSessionIds: selected } : {} };
+    if (input.version >= 2) {
+      const text2 = [result.summary, ...result.questions, ...result.suggestions.flatMap((s) => [s.title, s.action, s.why, s.uncertainty, ...s.fields.map((f) => f.value)])];
+      for (const t of text2) {
+        if (redact(t) !== t) throw Error("Generated contact details or private links are unsupported.");
+        if (textURLs(t).some((url) => !sourceVariants(url).some((v) => sources.has(v)))) throw Error("Unprovided source URL.");
+      }
+    }
     checkGroundedResult(result, input);
     return result;
   }
@@ -373,7 +423,14 @@ var PlaybookAssistant = (() => {
   function buildInput(p, mode, values) {
     const context = [{ id: "profile", label: labels.profile, text: safe(contextText(p, "profile")) }];
     for (const id of ["priorities", "schedule", "budget", "learning", "notes"]) if (values["ai-share-" + id]) context.push({ id, label: labels[id], text: safe(contextText(p, id)) });
-    return validateInput({ version: 2, schedule: scheduleFromForm(p, values), mode: mode === "review" ? "review" : "plan", goal: safe(values["ai-goal"], 600), constraints: safe(values["ai-constraints"], 2e3), agenda: safe(values["ai-agenda"], 8e3), context });
+    const schedule = scheduleFromForm(p, values), typed = String(values["ai-sources"] || "").split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    const approved = typed.map((u) => {
+      const url = publicURL(u);
+      if (!url || redact(url) !== url) throw Error("Use one public source URL per line, without private links or contact details.");
+      return url;
+    });
+    const sourceLinks = [...new Set([publicURL(p.organizerUrl || ""), ...values["ai-share-priorities"] ? p.targets.slice(0, 12).map((t) => publicURL(t.source || "")) : [], ...schedule?.sessions.map((s) => s.source) || [], ...approved].filter(Boolean))];
+    return validateInput({ version: 3, sourceLinks, schedule, mode: mode === "review" ? "review" : "plan", goal: safe(values["ai-goal"], 600), constraints: safe(values["ai-constraints"], 2e3), agenda: safe(values["ai-agenda"], 8e3), context });
   }
   function valuesFromForm() {
     const values = {};
@@ -388,11 +445,11 @@ var PlaybookAssistant = (() => {
     const mode = requested === "review" ? "review" : "plan", s = stateFor(p, mode);
     return `<section class="assistant-workspace"><a class="plainlink" href="#/conference">\u2190 My Conference</a><div class="section-caption">Optional AI planning \xB7 ${esc(p.name)}</div><h1>${mode === "review" ? "Review my plan" : "Help me plan"}</h1><p class="lead">${mode === "review" ? "Find the gaps, see the tradeoffs, and choose what to adjust." : "Choose one worthwhile priority, a realistic backup, and your next action."}</p><div class="linkrow assistant-modes"><a class="btn ${mode === "plan" ? "primary" : ""}" href="#/assistant/plan" ${mode === "plan" ? 'aria-current="page"' : ""}>Help me plan</a><a class="btn ${mode === "review" ? "primary" : ""}" href="#/assistant/review" ${mode === "review" ? 'aria-current="page"' : ""}>Review my plan</a></div>
     <p id="ai-availability" class="helper" role="status">Checking live AI availability\u2026</p>
-    <div class="assistant-columns"><section class="assistant-input" id="assistant-input" ${draftAttributes(p, "assistant:" + mode)}><h2>Your direction</h2><p class="helper save-state" role="status">${storageAvailable ? "Inputs are kept as a draft in this browser." : "Browser storage is unavailable. Copy your input before leaving."}</p><div class="formrow"><label for="ai-goal">What would make this conference worthwhile? *</label><textarea id="ai-goal" rows="2" maxlength="600" required>${esc(p.goal || "")}</textarea></div><div class="formrow"><label for="ai-constraints">Time, budget or other limits (optional)</label><textarea id="ai-constraints" rows="3" maxlength="2000" placeholder="I have one afternoon and want to leave time for a break."></textarea></div><div class="formrow"><label for="ai-agenda">Relevant agenda or opportunity details (optional)</label><textarea id="ai-agenda" rows="5" maxlength="8000" placeholder="Paste a few sessions, opportunities or public links. Sources are not opened or verified."></textarea></div>${scheduleControlsHTML(p)}<fieldset class="assistant-sharing"><legend>Also include from my saved plan</legend><p class="helper">Conference profile is included. Additional sections are your choice.</p>${["priorities", "schedule", "budget", "learning", "notes"].map((id) => `<label><input id="ai-share-${id}" type="checkbox" ${id === "priorities" ? "checked" : ""}> ${esc(labels[id])}</label>`).join("")}</fieldset><p class="helper">Contact channels, private confirmation references, funding-source details and full templates are excluded. Automatic removal catches some emails, phone numbers, secrets and private links; review the preview for anything else you want to remove.</p><button class="btn primary" data-ai-preview="1">Preview what will be sent \u2192</button></section>
+    <div class="assistant-columns"><section class="assistant-input" id="assistant-input" ${draftAttributes(p, "assistant:" + mode)}><h2>Your direction</h2><p class="helper save-state" role="status">${storageAvailable ? "Inputs are kept as a draft in this browser." : "Browser storage is unavailable. Copy your input before leaving."}</p><div class="formrow"><label for="ai-goal">What would make this conference worthwhile? *</label><textarea id="ai-goal" rows="2" maxlength="600" required>${esc(p.goal || "")}</textarea></div><div class="formrow"><label for="ai-constraints">Time, budget or other limits (optional)</label><textarea id="ai-constraints" rows="3" maxlength="2000" placeholder="I have one afternoon and want to leave time for a break."></textarea></div><div class="formrow"><label for="ai-agenda">Relevant agenda or opportunity details (optional)</label><textarea id="ai-agenda" rows="5" maxlength="8000" placeholder="Paste a few sessions, opportunities or public links. Sources are not opened or verified."></textarea></div><div class="formrow"><label for="ai-sources">Public source links for worksheet drafts (optional)</label><textarea id="ai-sources" rows="2" maxlength="4000" placeholder="https://example.org/session"></textarea><p class="helper">One public URL per line. Only these links and public sources from your shared saved records can become draft source fields. Links inside agenda notes stay untrusted context. Including a source does not verify it.</p></div>${scheduleControlsHTML(p)}<fieldset class="assistant-sharing"><legend>Also include from my saved plan</legend><p class="helper">Conference profile is included. Additional sections are your choice.</p>${["priorities", "schedule", "budget", "learning", "notes"].map((id) => `<label><input id="ai-share-${id}" type="checkbox" ${id === "priorities" ? "checked" : ""}> ${esc(labels[id])}</label>`).join("")}</fieldset><p class="helper">Contact channels, private confirmation references, funding-source details and full templates are excluded. Automatic removal catches some emails, phone numbers, secrets and private links; review the preview for anything else you want to remove.</p><button class="btn primary" data-ai-preview="1">Preview what will be sent \u2192</button></section>
     <section class="assistant-preview" aria-labelledby="ai-preview-heading"><h2 id="ai-preview-heading">You control what you share</h2><p>Only the displayed details are sent when you choose to ask AI. Suggestions stay in this session until you open one as a worksheet draft.</p><p class="helper">OpenAI processes the request. We don\u2019t save your request on our server. OpenAI may retain abuse-monitoring logs for up to 30 days under its standard API policy. <a href="https://developers.openai.com/api/docs/guides/your-data" target="_blank" rel="noopener noreferrer">Data policy \u2197</a></p><div id="ai-preview">${s.prepared ? previewHTML(s.prepared) : '<p class="helper">Fill in your direction, then preview the exact details.</p>'}</div><p id="ai-message" class="error" role="alert"></p><div class="linkrow"><button class="btn" data-ai-example="1">See a fictional example</button></div></section></div><section id="ai-results" class="assistant-results" aria-label="Planning suggestions" tabindex="-1" ${s.pending ? 'aria-busy="true"' : ""}>${s.result ? resultsHTML(s) : ""}</section></section>`;
   }
   function previewHTML(input) {
-    return `<div class="ai-payload"><p class="section-caption">${input.mode === "review" ? "Review my plan" : "Help me plan"} \xB7 Exact request details</p><dl><dt>Goal</dt><dd>${esc(input.goal)}</dd><dt>Constraints</dt><dd>${esc(input.constraints || "None supplied")}</dd><dt>Agenda</dt><dd>${esc(input.agenda || "None supplied")}</dd>${input.context.map((c) => `<dt>${esc(c.label)}</dt><dd>${esc(c.text)}</dd>`).join("")}</dl>${scheduleFactsHTML(input.schedule)}</div><label class="ai-consent"><input type="checkbox" id="ai-consent" data-draft-exclude="1"> I approve sending these displayed details to OpenAI.</label><div class="linkrow"><button class="btn primary" id="ai-send" data-ai-send="1">Ask AI for suggestions</button><button class="btn" data-ai-cancel="1" hidden>Cancel request</button></div><p class="helper">Up to six attempts per hour per visitor, with a shared daily limit. Requests are never retried automatically.</p>`;
+    return `<div class="ai-payload"><p class="section-caption">${input.mode === "review" ? "Review my plan" : "Help me plan"} \xB7 Exact request details</p><dl><dt>Goal</dt><dd>${esc(input.goal)}</dd><dt>Constraints</dt><dd>${esc(input.constraints || "None supplied")}</dd><dt>Agenda</dt><dd>${esc(input.agenda || "None supplied")}</dd><dt>Source links eligible for worksheet drafts</dt><dd>${esc((input.sourceLinks || []).join("\n") || "None approved")}</dd>${input.context.map((c) => `<dt>${esc(c.label)}</dt><dd>${esc(c.text)}</dd>`).join("")}</dl>${scheduleFactsHTML(input.schedule)}</div><label class="ai-consent"><input type="checkbox" id="ai-consent" data-draft-exclude="1"> I approve sending these displayed details to OpenAI.</label><div class="linkrow"><button class="btn primary" id="ai-send" data-ai-send="1">Ask AI for suggestions</button><button class="btn" data-ai-cancel="1" hidden>Cancel request</button></div><p class="helper">Up to six attempts per hour per visitor, with a shared daily limit. Requests are never retried automatically.</p>`;
   }
   function resultsHTML(s) {
     return `<div class="assistant-results-heading"><span class="section-caption">${s.example ? "Fictional example \xB7 no AI request was made" : "AI suggestions \xB7 check before using"}</span><h2>A little focus goes a long way.</h2><p>${esc(s.result.summary)}</p><p class="helper">${s.example ? "This shows the experience with an invented event. These example suggestions cannot be added to your real plan." : "AI can be wrong. Dates, eligibility, funding and access still need confirmation from official sources. These suggestions do not change your saved plan."}</p></div>${s.example ? "" : scheduleFactsHTML(s.usedInput?.schedule, s.result.recommendedSessionIds)}${s.result.suggestions.map((x, i) => `<article class="assistant-card"><span class="section-caption">${String(i + 1).padStart(2, "0")} \xB7 ${esc(worksheetNames[x.worksheet])}</span><h3>${esc(x.title)}</h3><p class="ai-action">${esc(x.action)}</p><dl><dt>Why this fits</dt><dd>${esc(x.why)}</dd><dt>Needs checking</dt><dd>${esc(x.uncertainty)}</dd></dl>${x.evidenceQuotes ? `<details class="ai-evidence"><summary>Supporting details</summary><dl>${x.evidenceQuotes.map((q) => {

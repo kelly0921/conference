@@ -92,7 +92,7 @@ export function evidenceFor(input:AssistantInput):Evidence[] {
   return list;
 }
 export function checkGroundedResult(result:AssistantResult,input:AssistantInput):void {
-  if(input.version!==2)return;
+  if(input.version<2)return;
   const known=new Map(evidenceFor(input).map(e=>[e.id,e]));
   const identities=new Map<string,Set<string>>();
   const identity=(name:string,id:string)=>{if(!identities.has(name))identities.set(name,new Set());identities.get(name)!.add(id);};
@@ -102,9 +102,23 @@ export function checkGroundedResult(result:AssistantResult,input:AssistantInput)
     if(!s.evidenceQuotes?.length||s.evidenceQuotes.length!==s.evidenceIds.length||new Set(s.evidenceIds).size!==s.evidenceIds.length)throw Error('Each reference needs supporting text.');
     for(const id of s.evidenceIds){const e=known.get(id),q=s.evidenceQuotes.find(q=>q.id===id);if(!e||!q||!q.quote.trim()||!e.text.includes(q.quote)||q.quote.length<Math.min(8,e.text.length))throw Error('The supporting text was not supplied.');}
     const named=[s.title,...s.fields.filter(f=>['target-name','experience-name'].includes(f.key)).map(f=>f.value)];
-    for(const [name,ids] of identities){
-      const mentioned=named.some(t=>t===name||(name.length>=8&&t.toLowerCase().includes(name.toLowerCase())));
-      if(mentioned&&!s.evidenceIds.some(id=>ids.has(id)))throw Error('A named session or priority needs its own evidence reference.');
+    for(const text of named){
+      const spans:{start:number;end:number;ids:Set<string>}[]=[];
+      for(const [name,ids] of identities){
+        if(name.length<8){if(text.replace(/^["'“”‘’]+|["'“”‘’]+$/g,'').toLowerCase()===name.toLowerCase())spans.push({start:0,end:text.length,ids});continue;}
+        const expression=new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'giu');
+        for(const match of text.matchAll(expression)){
+          const start=match.index!,end=start+match[0].length;
+          if((start&&/[\p{L}\p{N}_]/u.test(text[start-1]))||(end<text.length&&/[\p{L}\p{N}_]/u.test(text[end])))continue;
+          spans.push({start,end,ids});
+        }
+      }
+      // A longer supplied name can contain another session's complete name.
+      // Referencing the longer item must not require a citation for the shorter one.
+      for(const span of spans){
+        if(spans.some(other=>other!==span&&other.start<=span.start&&other.end>=span.end&&(other.start<span.start||other.end>span.end)))continue;
+        if(!s.evidenceIds.some(id=>span.ids.has(id)))throw Error('A named session or priority needs its own evidence reference.');
+      }
     }
   }
   const ids=result.recommendedSessionIds||[];
@@ -116,7 +130,13 @@ export function checkGroundedResult(result:AssistantResult,input:AssistantInput)
   }
   // Timetable facts are rendered from the checked session records, never generated
   // as free text. This catches the reproduced clock-change and overlap claims.
-  const suppliedNames=new Set(input.schedule?.sessions.map(s=>s.label)||[]);
+  const suppliedNames=new Set(identities.keys());
   const texts=[result.summary,...result.questions,...result.suggestions.flatMap(s=>[...(suppliedNames.has(s.title)?[]:[s.title]),s.action,s.why,s.uncertainty,...s.fields.filter(f=>!['target-link','experience-source'].includes(f.key)&&!(['target-name','experience-name'].includes(f.key)&&suppliedNames.has(f.value))).map(f=>f.value)])];
-  if(texts.some(t=>/\b\d{1,2}:\d{2}\b|\b\d{4}-\d{2}-\d{2}\b|\b(?:overlap\w*|conflict\w*|simultaneous\w*|double[ -]?book\w*)\b/i.test(t)))throw Error('Timetable claims must use the calculated session checks.');
+  const prose=texts.map(t=>{
+    for(const name of [...suppliedNames].sort((a,b)=>b.length-a.length))t=t.replace(new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'giu'),'[supplied item]');
+    return t.replace(/https?:\/\/[^\s<>"'\\`]+/gi,'[source]').replace(/\bconflict[- ](?:resolution|management|free)\b/gi,'[topic]').replace(/\boverlap(?:ping)?(?: in)? (?:interests|topics|skills|expertise|areas)\b/gi,'[topic]');
+  });
+  const clock=/\b\d{1,2}:\d{2}\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}[/-]\d{1,2}[/-]\d{4}\b|\b\d{1,2}h\d{2}\b|\b(?:\d{1,2}(?:[.:]\d{2})?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s*[ap]\.?m\.?(?!\p{L})|\b(?:noon|midnight)\b/iu;
+  const relation=/\b(?:overlap\w*|simultaneous\w*|double[ -]?book\w*|back[ -]to[ -]back|at the same time)\b|\b(?:time|timing|schedule|scheduling)[ -]+conflict\w*\b|\b(?:sessions?|talks?|activities|appointments?)\s+(?:(?:all|both)\s+)?(?:conflict|clash)\w*\b|\b(?:conflicting|clashing)\s+(?:sessions?|talks?|activities|appointments?)\b/i;
+  if(prose.some(t=>clock.test(t)||relation.test(t)))throw Error('Timetable claims must use the calculated session checks.');
 }
