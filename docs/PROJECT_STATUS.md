@@ -1,6 +1,8 @@
-# Project status — October 13, 2026
+# Project status — October 17, 2026
 
 The previously reviewed v5 site is hosted at https://conference-playbook.pages.dev/. The current planner upgrade is prepared for internal review on the development preview. It is not a finalized or attendee-tested product.
+
+Optional AI planning and review now work on the development preview. The current accuracy layer calculates session comparisons in code, requires confirmed timing inputs and exact supporting quotes, and rejects unsupported results. Verification includes 107 automated checks and the existing 31-page print validation. One recruiting response was rejected during live testing; its retest reached the normal quota. The final evidence-boundary/reference hardening still needs a fresh provider run. See the [current accuracy review](AI_ACCURACY_REVIEW_2026-10-17.md) for evidence and remaining limits. Production AI is disabled. The historical rollout sections below retain their original context and counts.
 
 ## Current planner pass
 
@@ -8,7 +10,7 @@ Priorities 1–4 from the product review are implemented: persistent worksheet d
 
 Verification now includes 40 Node and 10 Python checks, all 31 PDF pages, tagged-document structure and embedded Unicode fonts. In-app Chromium testing covers fictional profile creation, draft/navigation/reload recovery, timezone validation, checklist skipping and backup restore. The profile and field plan were checked at 320 px; a fictional HTTPS-preview profile also survives reload. Existing character branding and the approved palette/reading layout remain; browser/heading/footer/PDF naming is consistent.
 
-See [current implementation and release QA](PLANNER_RELEASE_QA_2026-10-13.md). Screen readers, actual zoom/touch, Firefox/Safari, browser/physical printing, formal PDF accessibility and exact production-origin migration/recovery remain manual release checks. No AI integration or public feedback campaign is included.
+See [planner implementation and release QA](PLANNER_RELEASE_QA_2026-10-13.md). Screen readers, actual zoom/touch, Firefox/Safari, browser/physical printing, formal PDF accessibility and exact production-origin migration/recovery remain manual release checks. The AI preview is documented above; no public feedback campaign has begun.
 
 The sections below preserve evidence from the earlier design rollout and print integration. Their historical test counts and original limitations are superseded where the current planner report records a completed change.
 
@@ -40,7 +42,7 @@ See [full rollout review](../design/ROLLOUT_REVIEW.md), [initial screenshot revi
 4. Complete tagged-PDF accessibility and browser/physical print QA; generated workbook and exporter-based sample parity are now checked.
 5. Extend the completed localhost persistence/keyboard/layout checks to production-origin migration, screen readers, touch/zoom, A4/Letter pagination and cross-browser print behavior.
 6. Refresh organizer links and current access facts before any public distribution. Dynamic role/scholarship/meeting availability is not confirmed.
-7. Consider live AI only as an **explicit opt-in** plan reviewer after core product quality; currently none.
+7. Complete the optional AI preview's accuracy and public-rollout gates in the current review linked above.
 8. **Last phase:** voluntary attendee feedback only after hosted near-final build and internal QA.
 
 ## Development references

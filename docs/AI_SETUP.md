@@ -1,6 +1,6 @@
 # AI planning preview
 
-The saved planner now offers **Help me plan** and **Review my plan**. Both use an optional, explicit preview of the request. Only a user-approved request reaches OpenAI. Suggestions include an action, reason, uncertainty, relevant guide and proposed worksheet text. “Use in worksheet” creates a recoverable draft; the user reviews it and saves through the normal editor. Existing drafts cannot be overwritten by AI.
+The saved planner now offers **Help me plan** and **Review my plan**. Both use an optional, explicit preview of the request. Only a user-approved request reaches OpenAI. Suggestions include an action, reason, uncertainty, relevant guide, exact supporting quotes and proposed worksheet text. “Use in worksheet” creates a recoverable draft; the user reviews it and saves through the normal editor. Existing drafts cannot be overwritten by AI. See the [current accuracy review](AI_ACCURACY_REVIEW_2026-10-17.md) for tested behavior and open quality gates.
 
 ## Enable the development preview
 
@@ -44,7 +44,25 @@ Use fictional input for the initial provider smoke test. Check both modes, a sma
 
 ## Local development and checks
 
-`npm ci`, `npm run build:assistant`, `npm run typecheck`, `npm run test:assistant`.
+### Session comparison
+
+Open **Check session times (optional)**. Enter `Session name | 14:00 | 15:00`, one per line, using the chosen session date and IANA timezone. Optional columns are `| timezone | public URL | reset minutes`. For overnight or different-date sessions, use a full local date in both columns, for example `2027-03-08T23:30 | 2027-03-09T00:30`. Up to eighteen combined pasted/saved sessions can be compared. Complete saved appointments can also be included through **Saved schedule**. Plain agenda notes and incomplete appointments are not converted into checked session records.
+
+Use **Check session times**, review the displayed original details and calculated findings, then confirm the session details before previewing the request. Changing timing, availability, break, activity-limit or saved-schedule controls invalidates that confirmation. The separate OpenAI sharing consent is still required. A repeated or nonexistent daylight-saving local time must be corrected; the checker will not silently choose an offset. Optional availability is a window on the selected date.
+
+The model proposes an ID selection; code checks its feasibility and renders times from the input. Supporting quotes match supplied source text but do not prove correct reasoning or independently verified facts. No schedule, access, cash, status or checklist write is performed by AI. Old AI tabs get a reload message before consuming a request reservation.
+
+### Offline and live evaluations
+
+`npm ci`, `npm run build:assistant`, `npm run typecheck`, `npm run test:assistant`, `npm run test:accuracy`, `npm run eval:assistant`.
+
+The default evaluation is offline. An explicit fictional provider run uses the deployed preview and its normal quota:
+
+```powershell
+npm.cmd run eval:assistant -- --live --base https://develop-conference-playbook.conference-playbook.pages.dev --limit 5
+```
+
+To retest one case, add `--case recruiting-goal-with-unknown-access --limit 1`. A run accepts one to six attempts, never retries, and stops on quota or unavailable-service responses. Reports are saved under ignored `.qa-cache`; copy a report there before a new run if retaining multiple runs. Do not replace fictional fixtures with real personal plans. Use the report's source fingerprint to distinguish implementation versions. Assess usefulness and factual claims manually as well as checking schema/evidence/selection acceptance. The two baseline replays are constructed from observed claims, not newly generated baseline model responses.
 
 `npm run dev:assistant` serves the full Pages app at `http://127.0.0.1:4174`. Live calls are disabled by default. Static port 4173 can show the interface and fictional example but cannot run the API. No key is required for tests: they use fictional provider responses and local Cloudflare SQLite.
 

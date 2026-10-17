@@ -7,4 +7,5 @@ else await writeFile('assets/assistant.js',output);
 await mkdir('.qa-cache/assistant-tests',{recursive:true});
 await build({entryPoints:['functions/api/assistant.ts'],bundle:true,platform:'neutral',format:'esm',outfile:'.qa-cache/assistant-tests/server.mjs'});
 await build({entryPoints:['src/assistant-contract.ts'],bundle:true,platform:'neutral',format:'esm',outfile:'.qa-cache/assistant-tests/contract.mjs'});
+await build({entryPoints:['src/assistant-grounding.ts'],bundle:true,platform:'neutral',format:'esm',outfile:'.qa-cache/assistant-tests/grounding.mjs'});
 console.log('AI client and test modules checked.');

@@ -26,6 +26,7 @@ jobs:
           npm run check:assistant
           npm run typecheck
           npm run test:assistant
+          npm run test:accuracy
       - name: Check application syntax
         run: |
           node --check assets/app.js

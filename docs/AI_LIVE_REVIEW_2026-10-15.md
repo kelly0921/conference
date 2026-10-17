@@ -1,5 +1,7 @@
 # Live AI preview review — October 15, 2026
 
+Historical smoke-test evidence. See the [October 17 accuracy pass](AI_ACCURACY_REVIEW_2026-10-17.md) for calculated session checks, precise references, new evaluations and current limits.
+
 Live OpenAI requests now work on the [development preview](https://develop-conference-playbook.conference-playbook.pages.dev/#/conference). The Preview secret was added privately and a new deployment loaded it. Production AI remains disabled; the public production branch still serves the earlier static release.
 
 Five fictional requests were made, without automatic retries: two initial endpoint cases, one schedule retest, and both browser modes. All returned supported suggestions through the server/client validators. This is a smoke test, not a model-quality certification.

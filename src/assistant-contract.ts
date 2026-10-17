@@ -1,3 +1,4 @@
+import {validateSchedule, evidenceFor, checkGroundedResult, type Schedule} from './assistant-grounding';
 export const guideIds = ["worth", "funding", "prepare", "prioritize", "time", "conversations", "explore", "followup", "learning"] as const;
 export const worksheetFields = {
   targets: ["target-name", "target-action", "target-backup", "target-question", "target-link"],
@@ -6,9 +7,9 @@ export const worksheetFields = {
   learning: ["insight-goal", "insight-use", "insight-action"]
 } as const;
 export type Worksheet = keyof typeof worksheetFields;
-export type AssistantInput = {version:1; mode:"plan"|"review"; goal:string; constraints:string; agenda:string; context:{id:string;label:string;text:string}[]};
-export type Suggestion = {title:string; action:string; why:string; uncertainty:string; guideId:string; evidenceIds:string[]; worksheet:Worksheet; fields:{key:string;value:string}[]};
-export type AssistantResult = {summary:string; suggestions:Suggestion[]; questions:string[]};
+export type AssistantInput = {version:1|2; schedule?:Schedule|null; mode:"plan"|"review"; goal:string; constraints:string; agenda:string; context:{id:string;label:string;text:string}[]};
+export type Suggestion = {title:string; action:string; why:string; uncertainty:string; guideId:string; evidenceIds:string[]; worksheet:Worksheet; evidenceQuotes?:{id:string;quote:string}[]; fields:{key:string;value:string}[]};
+export type AssistantResult = {summary:string; suggestions:Suggestion[]; questions:string[]; recommendedSessionIds?:string[]};
 const contextIds = ["profile", "priorities", "schedule", "budget", "learning", "notes"];
 const record = (v:unknown):v is Record<string,unknown> => !!v && typeof v==="object" && !Array.isArray(v);
 function exact(v:Record<string,unknown>, keys:string[]) { if(Object.keys(v).some(k=>!keys.includes(k)) || keys.some(k=>!(k in v))) throw Error("Unexpected fields."); }
@@ -27,8 +28,8 @@ export function redact(text:string):string {
 }
 export function validateInput(raw:unknown):AssistantInput {
   if(!record(raw)) throw Error("Invalid request.");
-  exact(raw,["version","mode","goal","constraints","agenda","context"]);
-  if(raw.version!==1 || !["plan","review"].includes(String(raw.mode)) || !Array.isArray(raw.context) || raw.context.length>6) throw Error("Invalid request.");
+  exact(raw,["version","mode","goal","constraints","agenda","context",...(raw.version===2?["schedule"]:[])]);
+  if(![1,2].includes(raw.version as number) || !["plan","review"].includes(String(raw.mode)) || !Array.isArray(raw.context) || raw.context.length>6) throw Error("Invalid request.");
   const seen=new Set<string>();
   const context=raw.context.map(c=>{
     if(!record(c)) throw Error("Invalid context."); exact(c,["id","label","text"]);
@@ -36,18 +37,18 @@ export function validateInput(raw:unknown):AssistantInput {
     return {id,label:string(c.label,80,true),text:string(c.text,4000)};
   });
   if(!seen.has("profile")) throw Error("Conference context is required.");
-  return {version:1,mode:raw.mode as "plan"|"review",goal:string(raw.goal,600,true),constraints:string(raw.constraints,2000),agenda:string(raw.agenda,8000),context};
+  return {version:raw.version as 1|2,...(raw.version===2?{schedule:validateSchedule(raw.schedule)}:{}),mode:raw.mode as "plan"|"review",goal:string(raw.goal,600,true),constraints:string(raw.constraints,2000),agenda:string(raw.agenda,8000),context};
 }
 export function allowedSources(input:AssistantInput):Set<string> {
   const urls=(JSON.stringify(input).match(/https?:\/\/[^\s<>"\\]+/gi)||[]).map(publicURL).filter(Boolean);
   return new Set(urls);
 }
 export function validateResult(raw:unknown,input:AssistantInput):AssistantResult {
-  if(!record(raw)) throw Error("The response could not be checked."); exact(raw,["summary","suggestions","questions"]);
+  if(!record(raw)) throw Error("The response could not be checked."); exact(raw,["summary","suggestions","questions",...(input.version===2?["recommendedSessionIds"]:[])]);
   if(!Array.isArray(raw.suggestions) || raw.suggestions.length<1 || raw.suggestions.length>4 || !Array.isArray(raw.questions) || raw.questions.length>4) throw Error("Invalid suggestions.");
-  const evidence=new Set(["goal","constraints","agenda",...input.context.map(c=>c.id)]), sources=allowedSources(input);
+  const evidence=new Set(input.version===2?evidenceFor(input).map(e=>e.id):["goal","constraints","agenda",...input.context.map(c=>c.id)]), sources=allowedSources(input);
   const suggestions=raw.suggestions.map(s=>{
-    if(!record(s)) throw Error("Invalid suggestion."); exact(s,["title","action","why","uncertainty","guideId","evidenceIds","worksheet","fields"]);
+    if(!record(s)) throw Error("Invalid suggestion."); exact(s,["title","action","why","uncertainty","guideId","evidenceIds","worksheet","fields",...(input.version===2?["evidenceQuotes"]:[])]);
     const worksheet=string(s.worksheet,30) as Worksheet;
     if(!Object.hasOwn(worksheetFields,worksheet) || !guideIds.includes(s.guideId as typeof guideIds[number]) || !Array.isArray(s.fields) || !s.fields.length || s.fields.length>6 || !Array.isArray(s.evidenceIds) || !s.evidenceIds.length || s.evidenceIds.length>6 || s.evidenceIds.some(id=>!evidence.has(String(id)))) throw Error("Unsupported suggestion.");
     const seen=new Set<string>();
@@ -59,9 +60,12 @@ export function validateResult(raw:unknown,input:AssistantInput):AssistantResult
       return {key,value};
     });
     if(worksheet==="targets" && ["target-name","target-action"].some(k=>!fields.find(f=>f.key===k)?.value)) throw Error("Incomplete priority.");
-    return {title:string(s.title,140,true),action:string(s.action,1200,true),why:string(s.why,1200,true),uncertainty:string(s.uncertainty,1200,true),guideId:String(s.guideId),evidenceIds:s.evidenceIds.map(String),worksheet,fields};
+    const quotes=input.version===2?(()=>{if(!Array.isArray(s.evidenceQuotes)||s.evidenceQuotes.length>6)throw Error("Unsupported references.");return s.evidenceQuotes.map(q=>{if(!record(q))throw Error("Invalid reference.");exact(q,["id","quote"]);return {id:string(q.id,40,true),quote:string(q.quote,500,true)};});})():undefined;
+    return {...(quotes?{evidenceQuotes:quotes}:{}),title:string(s.title,140,true),action:string(s.action,1200,true),why:string(s.why,1200,true),uncertainty:string(s.uncertainty,1200,true),guideId:String(s.guideId),evidenceIds:s.evidenceIds.map(String),worksheet,fields};
   });
-  return {summary:string(raw.summary,1600,true),suggestions,questions:raw.questions.map(q=>string(q,600,true))};
+  const selected=input.version===2?(()=>{if(!Array.isArray(raw.recommendedSessionIds)||raw.recommendedSessionIds.length>18)throw Error("Invalid session selection.");return raw.recommendedSessionIds.map(id=>string(id,32,true));})():undefined;
+  const result={summary:string(raw.summary,1600,true),suggestions,questions:raw.questions.map(q=>string(q,600,true)),...(selected?{recommendedSessionIds:selected}:{})};
+  checkGroundedResult(result,input);return result;
 }
 const text={type:"string"};
 const fieldSchema={type:"object",additionalProperties:false,required:["key","value"],properties:{
@@ -76,4 +80,10 @@ const suggestionSchema={type:"object",additionalProperties:false,
 };
 export const resultSchema={type:"object",additionalProperties:false,required:["summary","suggestions","questions"],properties:{
   summary:text,questions:{type:"array",items:text,maxItems:4},suggestions:{type:"array",minItems:1,maxItems:4,items:suggestionSchema}
+}};
+
+const evidenceQuoteSchema={type:"object",additionalProperties:false,required:["id","quote"],properties:{id:text,quote:text}};
+export const groundedResultSchema={...resultSchema,required:[...resultSchema.required,"recommendedSessionIds"],properties:{...resultSchema.properties,
+  recommendedSessionIds:{type:"array",items:text,maxItems:18},
+  suggestions:{...resultSchema.properties.suggestions,items:{...suggestionSchema,required:[...suggestionSchema.required,"evidenceQuotes"],properties:{...suggestionSchema.properties,evidenceQuotes:{type:"array",minItems:1,maxItems:6,items:evidenceQuoteSchema}}}}
 }};

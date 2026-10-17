@@ -29,8 +29,179 @@ var PlaybookAssistant = (() => {
     onNavigate: () => onNavigate,
     renderEntry: () => renderEntry,
     renderWorkspace: () => renderWorkspace,
+    scheduleFromForm: () => scheduleFromForm,
     stageSuggestion: () => stageSuggestion
   });
+
+  // src/assistant-grounding.ts
+  var obj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+  function keys(v, expected) {
+    if (Object.keys(v).length !== expected.length || expected.some((k) => !Object.hasOwn(v, k))) throw Error("Unsupported schedule fields.");
+  }
+  function bounded(v, max) {
+    if (typeof v !== "string" || v.length > max) throw Error("Invalid session text.");
+    return v.trim();
+  }
+  function integer(v, max, min = 0) {
+    if (typeof v !== "number" || !Number.isInteger(v) || v < min || v > max) throw Error("Invalid activity or break limit.");
+    return v;
+  }
+  var parts = (stamp, format) => Object.fromEntries(format.formatToParts(stamp).filter((p) => p.type !== "literal").map((p) => [p.type, Number(p.value)]));
+  function localInstant(date, time, timezone) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) throw Error("Use a complete date and a 24-hour time.");
+    const [y, m, d] = date.split("-").map(Number), [h, min] = time.split(":").map(Number), naive = Date.UTC(y, m - 1, d, h, min);
+    if (y < 2e3 || y > 2100 || new Date(naive).toISOString().slice(0, 10) !== date) throw Error("Invalid session date.");
+    let format;
+    try {
+      format = new Intl.DateTimeFormat("en-GB", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
+    } catch {
+      throw Error("Use a valid event timezone.");
+    }
+    const offsets = /* @__PURE__ */ new Set();
+    for (let delta = -36; delta <= 36; delta += 6) {
+      const stamp = naive + delta * 36e5, p = parts(stamp, format);
+      offsets.add(Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - stamp);
+    }
+    const matches = [...offsets].map((offset) => naive - offset).filter((stamp) => {
+      const p = parts(stamp, format);
+      return p.year === y && p.month === m && p.day === d && p.hour === h && p.minute === min;
+    });
+    if (matches.length !== 1) throw Error(matches.length ? "This local time occurs twice during a clock change. Choose an unambiguous time before comparing it." : "This local time does not exist during a clock change. Check the organizer timetable.");
+    return matches[0];
+  }
+  function interval(s) {
+    const start = localInstant(s.date, s.start, s.timezone), end = localInstant(s.endDate, s.end, s.timezone);
+    if (end <= start || end - start > 7 * 864e5) throw Error("The end must be after the start, within seven days. Use full dates for overnight sessions.");
+    return [start, end];
+  }
+  function validateSchedule(raw) {
+    if (raw === null) return null;
+    if (!obj(raw)) throw Error("Invalid session details.");
+    keys(raw, ["sessions", "availability", "breakMinutes", "maxActivities"]);
+    if (!Array.isArray(raw.sessions) || raw.sessions.length < 1 || raw.sessions.length > 18) throw Error("Check between one and eighteen sessions.");
+    function window(v) {
+      if (!obj(v)) throw Error("Invalid time window.");
+      const w = { date: bounded(v.date, 10), endDate: bounded(v.endDate, 10), start: bounded(v.start, 5), end: bounded(v.end, 5), timezone: bounded(v.timezone, 80) };
+      interval(w);
+      return w;
+    }
+    const seen = /* @__PURE__ */ new Set();
+    const sessions2 = raw.sessions.map((v) => {
+      if (!obj(v)) throw Error("Invalid session.");
+      keys(v, ["id", "label", "date", "endDate", "start", "end", "timezone", "buffer", "source"]);
+      const id = bounded(v.id, 32), label = bounded(v.label, 140), source = bounded(v.source, 500);
+      if (!/^(?:session|saved):[1-9]\d*$/.test(id) || seen.has(id) || !label) throw Error("Invalid session identity.");
+      seen.add(id);
+      if (source) {
+        const u = new URL(source);
+        if (!["http:", "https:"].includes(u.protocol) || u.username || u.password || u.search || u.hash) throw Error("Use a public source URL without private parameters.");
+      }
+      return { ...window(v), id, label, source, buffer: integer(v.buffer, 600) };
+    });
+    if (raw.availability !== null) {
+      if (!obj(raw.availability)) throw Error("Invalid availability.");
+      keys(raw.availability, ["date", "endDate", "start", "end", "timezone"]);
+    }
+    return { sessions: sessions2, availability: raw.availability === null ? null : window(raw.availability), breakMinutes: integer(raw.breakMinutes, 600), maxActivities: integer(raw.maxActivities, 18, 1) };
+  }
+  function parseSessionLines(text2, date, timezone) {
+    const lines = text2.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    if (lines.length > 18) throw Error("Use at most eighteen session lines.");
+    return lines.map((line, i) => {
+      const c = line.split("|").map((s) => s.trim());
+      if (c.length < 3 || c.length > 6) throw Error(`Line ${i + 1}: use Session | start | end, with optional timezone | public URL | buffer minutes.`);
+      const stamp = (s) => {
+        const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})$/.exec(s);
+        return m ? [m[1], m[2]] : [date, s];
+      };
+      const [startDate, start] = stamp(c[1]), [endDate, end] = stamp(c[2]);
+      return { id: "session:" + (i + 1), label: c[0], date: startDate, endDate, start, end, timezone: c[3] || timezone, source: c[4] || "", buffer: c[5] ? Number(c[5]) : 0 };
+    });
+  }
+  function inspectSchedule(schedule) {
+    const result = [], ranges = schedule.sessions.map(interval), window = schedule.availability ? interval(schedule.availability) : null;
+    schedule.sessions.forEach((s, i) => {
+      const [start, end] = ranges[i];
+      if (window && (start < window[0] || end > window[1])) result.push({ kind: "outside", ids: [s.id] });
+      for (let j = i + 1; j < ranges.length; j++) {
+        const [otherStart, otherEnd] = ranges[j], other = schedule.sessions[j];
+        if (start < otherEnd && otherStart < end) {
+          result.push({ kind: "overlap", ids: [s.id, other.id] });
+          continue;
+        }
+        const first = end <= otherStart ? s : other, second = first === s ? other : s;
+        const gap = ((first === s ? otherStart : start) - (first === s ? end : otherEnd)) / 6e4;
+        if (gap < Math.max(schedule.breakMinutes, first.buffer)) result.push({ kind: "buffer", ids: [first.id, second.id], minutes: gap });
+      }
+    });
+    return result;
+  }
+  function findingText(f, schedule) {
+    const name = (id) => schedule.sessions.find((s) => s.id === id).label;
+    if (f.kind === "outside") return `${name(f.ids[0])} is outside your stated availability.`;
+    if (f.kind === "overlap") return `${name(f.ids[0])} and ${name(f.ids[1])} overlap. Choose one if planning to attend in full.`;
+    return `${name(f.ids[0])} \u2192 ${name(f.ids[1])}: ${f.minutes} minutes between sessions; less than the requested break or reset buffer. The sessions do not overlap.`;
+  }
+  function evidenceFor(input) {
+    const list = [{ id: "goal", label: "Your goal", text: input.goal, kind: "supplied" }];
+    for (const id of ["constraints", "agenda"]) if (input[id]) list.push({ id, label: id === "agenda" ? "Your agenda notes" : "Your limits", text: input[id], kind: "supplied" });
+    for (const c of input.context) {
+      if (c.id === "priorities") {
+        try {
+          const rows = JSON.parse(c.text);
+          if (Array.isArray(rows)) {
+            rows.forEach((v, i) => {
+              if (obj(v)) list.push({ id: "priority:" + (i + 1), label: "Saved priority " + (i + 1), text: JSON.stringify(v), kind: "supplied" });
+            });
+            continue;
+          }
+        } catch {
+        }
+      }
+      if (c.text && c.text !== "[]") list.push({ id: c.id, label: c.label, text: c.text, kind: "supplied" });
+    }
+    if (input.schedule) {
+      for (const s of input.schedule.sessions) list.push({ id: s.id, label: s.label, text: JSON.stringify(s), kind: "supplied" });
+      list.push({ id: "schedule-checks", label: "Calculated session checks", text: JSON.stringify({ findings: inspectSchedule(input.schedule), availability: input.schedule.availability, breakMinutes: input.schedule.breakMinutes, maxActivities: input.schedule.maxActivities }), kind: "calculated" });
+    }
+    return list;
+  }
+  function checkGroundedResult(result, input) {
+    if (input.version !== 2) return;
+    const known = new Map(evidenceFor(input).map((e) => [e.id, e]));
+    const identities = /* @__PURE__ */ new Map();
+    const identity = (name, id) => {
+      if (!identities.has(name)) identities.set(name, /* @__PURE__ */ new Set());
+      identities.get(name).add(id);
+    };
+    for (const session of input.schedule?.sessions || []) identity(session.label, session.id);
+    for (const e of known.values()) if (e.id.startsWith("priority:")) {
+      const row = JSON.parse(e.text);
+      if (typeof row.name === "string" && row.name.trim()) identity(row.name, e.id);
+    }
+    for (const s of result.suggestions) {
+      if (!s.evidenceQuotes?.length || s.evidenceQuotes.length !== s.evidenceIds.length || new Set(s.evidenceIds).size !== s.evidenceIds.length) throw Error("Each reference needs supporting text.");
+      for (const id of s.evidenceIds) {
+        const e = known.get(id), q = s.evidenceQuotes.find((q2) => q2.id === id);
+        if (!e || !q || !q.quote.trim() || !e.text.includes(q.quote) || q.quote.length < Math.min(8, e.text.length)) throw Error("The supporting text was not supplied.");
+      }
+      const named = [s.title, ...s.fields.filter((f) => ["target-name", "experience-name"].includes(f.key)).map((f) => f.value)];
+      for (const [name, ids2] of identities) {
+        const mentioned = named.some((t) => t === name || name.length >= 8 && t.toLowerCase().includes(name.toLowerCase()));
+        if (mentioned && !s.evidenceIds.some((id) => ids2.has(id))) throw Error("A named session or priority needs its own evidence reference.");
+      }
+    }
+    const ids = result.recommendedSessionIds || [];
+    if (new Set(ids).size !== ids.length || !input.schedule && ids.length) throw Error("Unsupported session selection.");
+    if (input.schedule) {
+      if (ids.length > input.schedule.maxActivities || ids.some((id) => !input.schedule.sessions.some((s) => s.id === id))) throw Error("Unsupported session selection.");
+      const selected = { ...input.schedule, sessions: input.schedule.sessions.filter((s) => ids.includes(s.id)) };
+      if (inspectSchedule(selected).length) throw Error("The selected sessions do not meet the checked constraints.");
+    }
+    const suppliedNames = new Set(input.schedule?.sessions.map((s) => s.label) || []);
+    const texts = [result.summary, ...result.questions, ...result.suggestions.flatMap((s) => [...suppliedNames.has(s.title) ? [] : [s.title], s.action, s.why, s.uncertainty, ...s.fields.filter((f) => !["target-link", "experience-source"].includes(f.key) && !(["target-name", "experience-name"].includes(f.key) && suppliedNames.has(f.value))).map((f) => f.value)])];
+    if (texts.some((t) => /\b\d{1,2}:\d{2}\b|\b\d{4}-\d{2}-\d{2}\b|\b(?:overlap\w*|conflict\w*|simultaneous\w*|double[ -]?book\w*)\b/i.test(t))) throw Error("Timetable claims must use the calculated session checks.");
+  }
 
   // src/assistant-contract.ts
   var guideIds = ["worth", "funding", "prepare", "prioritize", "time", "conversations", "explore", "followup", "learning"];
@@ -42,8 +213,8 @@ var PlaybookAssistant = (() => {
   };
   var contextIds = ["profile", "priorities", "schedule", "budget", "learning", "notes"];
   var record = (v) => !!v && typeof v === "object" && !Array.isArray(v);
-  function exact(v, keys) {
-    if (Object.keys(v).some((k) => !keys.includes(k)) || keys.some((k) => !(k in v))) throw Error("Unexpected fields.");
+  function exact(v, keys2) {
+    if (Object.keys(v).some((k) => !keys2.includes(k)) || keys2.some((k) => !(k in v))) throw Error("Unexpected fields.");
   }
   function string(v, max, required = false) {
     if (typeof v !== "string" || v.length > max || required && !v.trim()) throw Error("Text is missing or too long.");
@@ -63,8 +234,8 @@ var PlaybookAssistant = (() => {
   }
   function validateInput(raw) {
     if (!record(raw)) throw Error("Invalid request.");
-    exact(raw, ["version", "mode", "goal", "constraints", "agenda", "context"]);
-    if (raw.version !== 1 || !["plan", "review"].includes(String(raw.mode)) || !Array.isArray(raw.context) || raw.context.length > 6) throw Error("Invalid request.");
+    exact(raw, ["version", "mode", "goal", "constraints", "agenda", "context", ...raw.version === 2 ? ["schedule"] : []]);
+    if (![1, 2].includes(raw.version) || !["plan", "review"].includes(String(raw.mode)) || !Array.isArray(raw.context) || raw.context.length > 6) throw Error("Invalid request.");
     const seen = /* @__PURE__ */ new Set();
     const context = raw.context.map((c) => {
       if (!record(c)) throw Error("Invalid context.");
@@ -75,7 +246,7 @@ var PlaybookAssistant = (() => {
       return { id, label: string(c.label, 80, true), text: string(c.text, 4e3) };
     });
     if (!seen.has("profile")) throw Error("Conference context is required.");
-    return { version: 1, mode: raw.mode, goal: string(raw.goal, 600, true), constraints: string(raw.constraints, 2e3), agenda: string(raw.agenda, 8e3), context };
+    return { version: raw.version, ...raw.version === 2 ? { schedule: validateSchedule(raw.schedule) } : {}, mode: raw.mode, goal: string(raw.goal, 600, true), constraints: string(raw.constraints, 2e3), agenda: string(raw.agenda, 8e3), context };
   }
   function allowedSources(input) {
     const urls = (JSON.stringify(input).match(/https?:\/\/[^\s<>"\\]+/gi) || []).map(publicURL).filter(Boolean);
@@ -83,12 +254,12 @@ var PlaybookAssistant = (() => {
   }
   function validateResult(raw, input) {
     if (!record(raw)) throw Error("The response could not be checked.");
-    exact(raw, ["summary", "suggestions", "questions"]);
+    exact(raw, ["summary", "suggestions", "questions", ...input.version === 2 ? ["recommendedSessionIds"] : []]);
     if (!Array.isArray(raw.suggestions) || raw.suggestions.length < 1 || raw.suggestions.length > 4 || !Array.isArray(raw.questions) || raw.questions.length > 4) throw Error("Invalid suggestions.");
-    const evidence = /* @__PURE__ */ new Set(["goal", "constraints", "agenda", ...input.context.map((c) => c.id)]), sources = allowedSources(input);
+    const evidence = new Set(input.version === 2 ? evidenceFor(input).map((e) => e.id) : ["goal", "constraints", "agenda", ...input.context.map((c) => c.id)]), sources = allowedSources(input);
     const suggestions = raw.suggestions.map((s) => {
       if (!record(s)) throw Error("Invalid suggestion.");
-      exact(s, ["title", "action", "why", "uncertainty", "guideId", "evidenceIds", "worksheet", "fields"]);
+      exact(s, ["title", "action", "why", "uncertainty", "guideId", "evidenceIds", "worksheet", "fields", ...input.version === 2 ? ["evidenceQuotes"] : []]);
       const worksheet = string(s.worksheet, 30);
       if (!Object.hasOwn(worksheetFields, worksheet) || !guideIds.includes(s.guideId) || !Array.isArray(s.fields) || !s.fields.length || s.fields.length > 6 || !Array.isArray(s.evidenceIds) || !s.evidenceIds.length || s.evidenceIds.length > 6 || s.evidenceIds.some((id) => !evidence.has(String(id)))) throw Error("Unsupported suggestion.");
       const seen = /* @__PURE__ */ new Set();
@@ -102,9 +273,23 @@ var PlaybookAssistant = (() => {
         return { key: key2, value };
       });
       if (worksheet === "targets" && ["target-name", "target-action"].some((k) => !fields.find((f) => f.key === k)?.value)) throw Error("Incomplete priority.");
-      return { title: string(s.title, 140, true), action: string(s.action, 1200, true), why: string(s.why, 1200, true), uncertainty: string(s.uncertainty, 1200, true), guideId: String(s.guideId), evidenceIds: s.evidenceIds.map(String), worksheet, fields };
+      const quotes = input.version === 2 ? (() => {
+        if (!Array.isArray(s.evidenceQuotes) || s.evidenceQuotes.length > 6) throw Error("Unsupported references.");
+        return s.evidenceQuotes.map((q) => {
+          if (!record(q)) throw Error("Invalid reference.");
+          exact(q, ["id", "quote"]);
+          return { id: string(q.id, 40, true), quote: string(q.quote, 500, true) };
+        });
+      })() : void 0;
+      return { ...quotes ? { evidenceQuotes: quotes } : {}, title: string(s.title, 140, true), action: string(s.action, 1200, true), why: string(s.why, 1200, true), uncertainty: string(s.uncertainty, 1200, true), guideId: String(s.guideId), evidenceIds: s.evidenceIds.map(String), worksheet, fields };
     });
-    return { summary: string(raw.summary, 1600, true), suggestions, questions: raw.questions.map((q) => string(q, 600, true)) };
+    const selected = input.version === 2 ? (() => {
+      if (!Array.isArray(raw.recommendedSessionIds) || raw.recommendedSessionIds.length > 18) throw Error("Invalid session selection.");
+      return raw.recommendedSessionIds.map((id) => string(id, 32, true));
+    })() : void 0;
+    const result = { summary: string(raw.summary, 1600, true), suggestions, questions: raw.questions.map((q) => string(q, 600, true)), ...selected ? { recommendedSessionIds: selected } : {} };
+    checkGroundedResult(result, input);
+    return result;
   }
   var text = { type: "string" };
   var fieldSchema = { type: "object", additionalProperties: false, required: ["key", "value"], properties: {
@@ -126,6 +311,17 @@ var PlaybookAssistant = (() => {
       fields: { type: "array", minItems: 1, maxItems: 6, items: fieldSchema }
     }
   };
+  var resultSchema = { type: "object", additionalProperties: false, required: ["summary", "suggestions", "questions"], properties: {
+    summary: text,
+    questions: { type: "array", items: text, maxItems: 4 },
+    suggestions: { type: "array", minItems: 1, maxItems: 4, items: suggestionSchema }
+  } };
+  var evidenceQuoteSchema = { type: "object", additionalProperties: false, required: ["id", "quote"], properties: { id: text, quote: text } };
+  var groundedResultSchema = { ...resultSchema, required: [...resultSchema.required, "recommendedSessionIds"], properties: {
+    ...resultSchema.properties,
+    recommendedSessionIds: { type: "array", items: text, maxItems: 18 },
+    suggestions: { ...resultSchema.properties.suggestions, items: { ...suggestionSchema, required: [...suggestionSchema.required, "evidenceQuotes"], properties: { ...suggestionSchema.properties, evidenceQuotes: { type: "array", minItems: 1, maxItems: 6, items: evidenceQuoteSchema } } } }
+  } };
 
   // src/assistant-client.js
   var sessions = /* @__PURE__ */ new Map();
@@ -150,10 +346,34 @@ var PlaybookAssistant = (() => {
     if (id === "notes") return JSON.stringify(p.notes.slice(0, 10).map((n) => ({ action: n.action, status: n.status, response: n.response, due: n.due })));
     return "";
   }
+  function scheduleFromForm(p, v, requireConfirmation = true) {
+    const date = String(v["ai-session-date"] || p.date || ""), timezone = String(v["ai-session-zone"] || p.timezone || "");
+    const lines = String(v["ai-session-lines"] || "");
+    const sessions2 = parseSessionLines(lines, date, timezone).map((s) => ({ ...s, label: safe(s.label, 140), source: publicURL(s.source) }));
+    if (v["ai-share-schedule"]) p.activities.slice(0, 18).forEach((a, i) => {
+      if (a.date && a.start && a.end && a.timezone) sessions2.push({ id: "saved:" + (i + 1), label: safe(a.label, 140), date: a.date, endDate: a.date, start: a.start, end: a.end, timezone: a.timezone, buffer: Number(a.buffer || 0), source: publicURL(a.source || "") });
+    });
+    if (!sessions2.length) return null;
+    const start = String(v["ai-available-start"] || ""), end = String(v["ai-available-end"] || "");
+    const schedule = validateSchedule({ sessions: sessions2, availability: start || end ? { date, endDate: date, start, end, timezone } : null, breakMinutes: v["ai-break"] === "" ? 0 : Number(v["ai-break"] ?? 15), maxActivities: Number(v["ai-max-activities"] || 2) });
+    if (requireConfirmation && !v["ai-times-confirm"]) throw Error("Check session times below and confirm the displayed details before previewing.");
+    return schedule;
+  }
+  function sessionListHTML(schedule) {
+    return `<ul class="ai-session-list">${schedule.sessions.map((s) => `<li><strong>${esc(s.label)}</strong><span>${esc(s.date)} ${esc(s.start)} \u2192 ${s.endDate !== s.date ? esc(s.endDate) + " " : ""}${esc(s.end)} \xB7 ${esc(s.timezone)} \xB7 Reset buffer: ${s.buffer} minutes</span>${s.source ? `<span>Supplied public source: ${esc(s.source)}</span>` : ""}</li>`).join("")}</ul>`;
+  }
+  function scheduleFactsHTML(schedule, selected) {
+    if (!schedule) return '<p class="helper">No session times confirmed for calculation. AI can suggest research actions; timetable claims are not supported.</p>';
+    const findings = inspectSchedule(schedule), chosen = selected ? { ...schedule, sessions: schedule.sessions.filter((s) => selected.includes(s.id)) } : null;
+    return `<section class="ai-schedule-facts" aria-label="Calculated session checks"><h3>Session checks</h3><p class="helper">Calculated from the listed details. Access and organizer changes still need checking. Comparisons below apply if you choose both sessions.</p>${sessionListHTML(schedule)}${findings.length ? `<ul>${findings.map((f) => `<li>${esc(findingText(f, schedule))}</li>`).join("")}</ul>` : "<p>No overlaps, insufficient buffers or availability violations found among the listed sessions.</p>"}<p class="helper">Requested break: ${schedule.breakMinutes} minutes \xB7 Activity limit: ${schedule.maxActivities}${schedule.availability ? ` \xB7 Available ${esc(schedule.availability.date)} ${esc(schedule.availability.start)}\u2013${esc(schedule.availability.end)} ${esc(schedule.availability.timezone)}` : " \xB7 Availability not supplied"}. Untimed activities and unstructured agenda notes are not compared.</p>${chosen ? `<h3>Suggested session selection</h3>${chosen.sessions.length ? sessionListHTML(chosen) : "<p>No timed selection proposed. Use the suggestions to check missing details.</p>"}` : ""}</section>`;
+  }
+  function scheduleControlsHTML(p) {
+    return `<details class="ai-schedule-controls"><summary>Check session times (optional)</summary><p>For timetable advice, enter sessions here or include your saved schedule. These details are only for this AI request; they do not create appointments.</p><div class="fg2"><div class="formrow"><label for="ai-session-date">Session date</label><input type="date" id="ai-session-date" value="${esc(p.date || "")}"></div><div class="formrow"><label for="ai-session-zone">Session timezone</label><input id="ai-session-zone" value="${esc(p.timezone || "")}" placeholder="Europe/Paris"></div></div><div class="formrow"><label for="ai-session-lines">Session times to compare</label><textarea id="ai-session-lines" rows="4" maxlength="6000" placeholder="Testing workshop | 14:00 | 15:00&#10;Architecture talk | 14:30 | 15:30"></textarea><p class="helper">One session per line: name | start | end. Use 24-hour times. You can add | timezone | public URL | reset minutes. For another date or an overnight session use YYYY-MM-DDTHH:mm in each time column. Other agenda notes belong above.</p></div><div class="fg2"><div class="formrow"><label for="ai-available-start">Available from (optional)</label><input type="time" id="ai-available-start"></div><div class="formrow"><label for="ai-available-end">Available until (optional)</label><input type="time" id="ai-available-end"></div><div class="formrow"><label for="ai-break">Minimum break between sessions (minutes)</label><input type="number" id="ai-break" min="0" max="600" value="15"></div><div class="formrow"><label for="ai-max-activities">Maximum activities</label><input type="number" id="ai-max-activities" min="1" max="18" value="2"></div></div><button class="btn" data-ai-check-times="1">Check session times</button><div id="ai-times-review" role="status"></div></details>`;
+  }
   function buildInput(p, mode, values) {
     const context = [{ id: "profile", label: labels.profile, text: safe(contextText(p, "profile")) }];
     for (const id of ["priorities", "schedule", "budget", "learning", "notes"]) if (values["ai-share-" + id]) context.push({ id, label: labels[id], text: safe(contextText(p, id)) });
-    return validateInput({ version: 1, mode: mode === "review" ? "review" : "plan", goal: safe(values["ai-goal"], 600), constraints: safe(values["ai-constraints"], 2e3), agenda: safe(values["ai-agenda"], 8e3), context });
+    return validateInput({ version: 2, schedule: scheduleFromForm(p, values), mode: mode === "review" ? "review" : "plan", goal: safe(values["ai-goal"], 600), constraints: safe(values["ai-constraints"], 2e3), agenda: safe(values["ai-agenda"], 8e3), context });
   }
   function valuesFromForm() {
     const values = {};
@@ -168,14 +388,17 @@ var PlaybookAssistant = (() => {
     const mode = requested === "review" ? "review" : "plan", s = stateFor(p, mode);
     return `<section class="assistant-workspace"><a class="plainlink" href="#/conference">\u2190 My Conference</a><div class="section-caption">Optional AI planning \xB7 ${esc(p.name)}</div><h1>${mode === "review" ? "Review my plan" : "Help me plan"}</h1><p class="lead">${mode === "review" ? "Find the gaps, see the tradeoffs, and choose what to adjust." : "Choose one worthwhile priority, a realistic backup, and your next action."}</p><div class="linkrow assistant-modes"><a class="btn ${mode === "plan" ? "primary" : ""}" href="#/assistant/plan" ${mode === "plan" ? 'aria-current="page"' : ""}>Help me plan</a><a class="btn ${mode === "review" ? "primary" : ""}" href="#/assistant/review" ${mode === "review" ? 'aria-current="page"' : ""}>Review my plan</a></div>
     <p id="ai-availability" class="helper" role="status">Checking live AI availability\u2026</p>
-    <div class="assistant-columns"><section class="assistant-input" id="assistant-input" ${draftAttributes(p, "assistant:" + mode)}><h2>Your direction</h2><p class="helper save-state" role="status">${storageAvailable ? "Inputs are kept as a draft in this browser." : "Browser storage is unavailable. Copy your input before leaving."}</p><div class="formrow"><label for="ai-goal">What would make this conference worthwhile? *</label><textarea id="ai-goal" rows="2" maxlength="600" required>${esc(p.goal || "")}</textarea></div><div class="formrow"><label for="ai-constraints">Time, budget or other limits (optional)</label><textarea id="ai-constraints" rows="3" maxlength="2000" placeholder="I have one afternoon and want to leave time for a break."></textarea></div><div class="formrow"><label for="ai-agenda">Relevant agenda or opportunity details (optional)</label><textarea id="ai-agenda" rows="5" maxlength="8000" placeholder="Paste a few sessions, opportunities or public links. Sources are not opened or verified."></textarea></div><fieldset class="assistant-sharing"><legend>Also include from my saved plan</legend><p class="helper">Conference profile is included. Additional sections are your choice.</p>${["priorities", "schedule", "budget", "learning", "notes"].map((id) => `<label><input id="ai-share-${id}" type="checkbox" ${id === "priorities" ? "checked" : ""}> ${esc(labels[id])}</label>`).join("")}</fieldset><p class="helper">Contact channels, private confirmation references, funding-source details and full templates are excluded. Automatic removal catches some emails, phone numbers, secrets and private links; review the preview for anything else you want to remove.</p><button class="btn primary" data-ai-preview="1">Preview what will be sent \u2192</button></section>
+    <div class="assistant-columns"><section class="assistant-input" id="assistant-input" ${draftAttributes(p, "assistant:" + mode)}><h2>Your direction</h2><p class="helper save-state" role="status">${storageAvailable ? "Inputs are kept as a draft in this browser." : "Browser storage is unavailable. Copy your input before leaving."}</p><div class="formrow"><label for="ai-goal">What would make this conference worthwhile? *</label><textarea id="ai-goal" rows="2" maxlength="600" required>${esc(p.goal || "")}</textarea></div><div class="formrow"><label for="ai-constraints">Time, budget or other limits (optional)</label><textarea id="ai-constraints" rows="3" maxlength="2000" placeholder="I have one afternoon and want to leave time for a break."></textarea></div><div class="formrow"><label for="ai-agenda">Relevant agenda or opportunity details (optional)</label><textarea id="ai-agenda" rows="5" maxlength="8000" placeholder="Paste a few sessions, opportunities or public links. Sources are not opened or verified."></textarea></div>${scheduleControlsHTML(p)}<fieldset class="assistant-sharing"><legend>Also include from my saved plan</legend><p class="helper">Conference profile is included. Additional sections are your choice.</p>${["priorities", "schedule", "budget", "learning", "notes"].map((id) => `<label><input id="ai-share-${id}" type="checkbox" ${id === "priorities" ? "checked" : ""}> ${esc(labels[id])}</label>`).join("")}</fieldset><p class="helper">Contact channels, private confirmation references, funding-source details and full templates are excluded. Automatic removal catches some emails, phone numbers, secrets and private links; review the preview for anything else you want to remove.</p><button class="btn primary" data-ai-preview="1">Preview what will be sent \u2192</button></section>
     <section class="assistant-preview" aria-labelledby="ai-preview-heading"><h2 id="ai-preview-heading">You control what you share</h2><p>Only the displayed details are sent when you choose to ask AI. Suggestions stay in this session until you open one as a worksheet draft.</p><p class="helper">OpenAI processes the request. We don\u2019t save your request on our server. OpenAI may retain abuse-monitoring logs for up to 30 days under its standard API policy. <a href="https://developers.openai.com/api/docs/guides/your-data" target="_blank" rel="noopener noreferrer">Data policy \u2197</a></p><div id="ai-preview">${s.prepared ? previewHTML(s.prepared) : '<p class="helper">Fill in your direction, then preview the exact details.</p>'}</div><p id="ai-message" class="error" role="alert"></p><div class="linkrow"><button class="btn" data-ai-example="1">See a fictional example</button></div></section></div><section id="ai-results" class="assistant-results" aria-label="Planning suggestions" tabindex="-1" ${s.pending ? 'aria-busy="true"' : ""}>${s.result ? resultsHTML(s) : ""}</section></section>`;
   }
   function previewHTML(input) {
-    return `<div class="ai-payload"><p class="section-caption">${input.mode === "review" ? "Review my plan" : "Help me plan"} \xB7 Exact request details</p><dl><dt>Goal</dt><dd>${esc(input.goal)}</dd><dt>Constraints</dt><dd>${esc(input.constraints || "None supplied")}</dd><dt>Agenda</dt><dd>${esc(input.agenda || "None supplied")}</dd>${input.context.map((c) => `<dt>${esc(c.label)}</dt><dd>${esc(c.text)}</dd>`).join("")}</dl></div><label class="ai-consent"><input type="checkbox" id="ai-consent" data-draft-exclude="1"> I approve sending these displayed details to OpenAI.</label><div class="linkrow"><button class="btn primary" id="ai-send" data-ai-send="1">Ask AI for suggestions</button><button class="btn" data-ai-cancel="1" hidden>Cancel request</button></div><p class="helper">Up to six attempts per hour per visitor, with a shared daily limit. Requests are never retried automatically.</p>`;
+    return `<div class="ai-payload"><p class="section-caption">${input.mode === "review" ? "Review my plan" : "Help me plan"} \xB7 Exact request details</p><dl><dt>Goal</dt><dd>${esc(input.goal)}</dd><dt>Constraints</dt><dd>${esc(input.constraints || "None supplied")}</dd><dt>Agenda</dt><dd>${esc(input.agenda || "None supplied")}</dd>${input.context.map((c) => `<dt>${esc(c.label)}</dt><dd>${esc(c.text)}</dd>`).join("")}</dl>${scheduleFactsHTML(input.schedule)}</div><label class="ai-consent"><input type="checkbox" id="ai-consent" data-draft-exclude="1"> I approve sending these displayed details to OpenAI.</label><div class="linkrow"><button class="btn primary" id="ai-send" data-ai-send="1">Ask AI for suggestions</button><button class="btn" data-ai-cancel="1" hidden>Cancel request</button></div><p class="helper">Up to six attempts per hour per visitor, with a shared daily limit. Requests are never retried automatically.</p>`;
   }
   function resultsHTML(s) {
-    return `<div class="assistant-results-heading"><span class="section-caption">${s.example ? "Fictional example \xB7 no AI request was made" : "AI suggestions \xB7 check before using"}</span><h2>A little focus goes a long way.</h2><p>${esc(s.result.summary)}</p><p class="helper">${s.example ? "This shows the experience with an invented event. These example suggestions cannot be added to your real plan." : "AI can be wrong. Dates, eligibility, funding and access still need confirmation from official sources. These suggestions do not change your saved plan."}</p></div>${s.result.suggestions.map((x, i) => `<article class="assistant-card"><span class="section-caption">${String(i + 1).padStart(2, "0")} \xB7 ${esc(worksheetNames[x.worksheet])}</span><h3>${esc(x.title)}</h3><p class="ai-action">${esc(x.action)}</p><dl><dt>Why this fits</dt><dd>${esc(x.why)}</dd><dt>Needs checking</dt><dd>${esc(x.uncertainty)}</dd></dl><p class="helper">Based on: ${x.evidenceIds.map((id) => esc(labels[id] || id)).join(", ")}.</p><details><summary>Proposed worksheet draft</summary><dl>${x.fields.map((f) => `<dt>${esc(fieldLabels[f.key])}</dt><dd>${esc(f.value)}</dd>`).join("")}</dl></details><div class="linkrow">${s.example ? "" : `<button class="btn primary" data-ai-use="${i}">Use in worksheet \u2192</button>`}<a class="plainlink" href="#/guide/${x.guideId}">${esc(GUIDE_BY_ID[x.guideId].title)} \u2192</a></div></article>`).join("")}${s.result.questions.length ? `<div class="assistant-questions"><h3>Before you commit</h3><ul>${s.result.questions.map((q) => `<li>${esc(q)}</li>`).join("")}</ul></div>` : ""}`;
+    return `<div class="assistant-results-heading"><span class="section-caption">${s.example ? "Fictional example \xB7 no AI request was made" : "AI suggestions \xB7 check before using"}</span><h2>A little focus goes a long way.</h2><p>${esc(s.result.summary)}</p><p class="helper">${s.example ? "This shows the experience with an invented event. These example suggestions cannot be added to your real plan." : "AI can be wrong. Dates, eligibility, funding and access still need confirmation from official sources. These suggestions do not change your saved plan."}</p></div>${s.example ? "" : scheduleFactsHTML(s.usedInput?.schedule, s.result.recommendedSessionIds)}${s.result.suggestions.map((x, i) => `<article class="assistant-card"><span class="section-caption">${String(i + 1).padStart(2, "0")} \xB7 ${esc(worksheetNames[x.worksheet])}</span><h3>${esc(x.title)}</h3><p class="ai-action">${esc(x.action)}</p><dl><dt>Why this fits</dt><dd>${esc(x.why)}</dd><dt>Needs checking</dt><dd>${esc(x.uncertainty)}</dd></dl>${x.evidenceQuotes ? `<details class="ai-evidence"><summary>Supporting details</summary><dl>${x.evidenceQuotes.map((q) => {
+      const e = evidenceFor(s.usedInput).find((e2) => e2.id === q.id);
+      return `<dt>${esc(e?.label || q.id)} \xB7 ${e?.kind === "calculated" ? "Calculated" : "You supplied"}</dt><dd>${esc(q.quote)}</dd>`;
+    }).join("")}</dl><p class="helper">Matching a quote confirms its source, not independent verification or whether the reasoning is correct.</p></details>` : `<p class="helper">Based on: ${x.evidenceIds.map((id) => esc(labels[id] || id)).join(", ")}.</p>`}<details><summary>Proposed worksheet draft</summary><dl>${x.fields.map((f) => `<dt>${esc(fieldLabels[f.key])}</dt><dd>${esc(f.value)}</dd>`).join("")}</dl></details><div class="linkrow">${s.example ? "" : `<button class="btn primary" data-ai-use="${i}">Use in worksheet \u2192</button>`}<a class="plainlink" href="#/guide/${x.guideId}">${esc(GUIDE_BY_ID[x.guideId].title)} \u2192</a></div></article>`).join("")}${s.result.questions.length ? `<div class="assistant-questions"><h3>Before you commit</h3><ul>${s.result.questions.map((q) => `<li>${esc(q)}</li>`).join("")}</ul></div>` : ""}`;
   }
   function showAvailability() {
     const out = document.getElementById("ai-availability");
@@ -208,13 +431,19 @@ var PlaybookAssistant = (() => {
     const mode = r[1] === "review" ? "review" : "plan";
     return { p, mode, s: stateFor(p, mode) };
   }
-  function invalidate() {
+  function invalidate(changedId) {
     const c = current();
     if (!c) return;
     c.s.prepared = null;
     const consent = document.getElementById("ai-consent");
     if (consent) consent.checked = false;
     message("");
+    if (changedId && /^(ai-session-|ai-available-|ai-break$|ai-max-activities$|ai-share-schedule$)/.test(changedId)) {
+      const check = document.getElementById("ai-times-confirm");
+      if (check) check.checked = false;
+      const review = document.getElementById("ai-times-review");
+      if (review) review.innerHTML = "<p>Session details changed. Check them again before confirming.</p>";
+    }
     const out = document.getElementById("ai-preview");
     if (out) out.innerHTML = '<p class="helper">Details changed. Preview again before sending.</p>';
   }
@@ -299,6 +528,18 @@ var PlaybookAssistant = (() => {
   function handleClick(button) {
     const d = button.dataset, c = current();
     if (!c) return false;
+    if (d.aiCheckTimes) {
+      if (c.s.pending) return true;
+      try {
+        const schedule = scheduleFromForm(c.p, valuesFromForm(), false);
+        document.getElementById("ai-times-review").innerHTML = schedule ? scheduleFactsHTML(schedule) + `<label class="ai-consent"><input id="ai-times-confirm" type="checkbox" data-draft-exclude="1"> These are the session details I want compared.</label>` : "<p>Add session times, or select a saved schedule with complete dates, times and timezones.</p>";
+        invalidate();
+        message("");
+      } catch (error) {
+        message(error.message);
+      }
+      return true;
+    }
     if (d.aiPreview) {
       if (c.s.pending) {
         message("Wait for this request or cancel it first.");
@@ -383,7 +624,7 @@ var PlaybookAssistant = (() => {
     ], questions: ["What is the actual session timetable?", "Which sessions does your pass include?"] };
   }
   if (typeof document !== "undefined") document.addEventListener("input", (event) => {
-    if (event.target.closest?.("#assistant-input")) invalidate();
+    if (event.target.closest?.("#assistant-input")) invalidate(event.target.id);
   });
   return __toCommonJS(assistant_client_exports);
 })();

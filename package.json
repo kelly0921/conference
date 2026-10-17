@@ -7,6 +7,8 @@
     "build:assistant": "node scripts/build_assistant.mjs",
     "check:assistant": "node scripts/build_assistant.mjs --check",
     "test:assistant": "node scripts/build_assistant.mjs --check && node --test tests/assistant.test.mjs",
+    "test:accuracy": "node scripts/build_assistant.mjs --check && node --test tests/assistant-accuracy.test.mjs",
+    "eval:assistant": "node scripts/build_assistant.mjs --check && node scripts/evaluate_assistant.mjs",
     "typecheck": "tsc --noEmit",
     "dev:assistant": "node scripts/dev_assistant.mjs"
   },
