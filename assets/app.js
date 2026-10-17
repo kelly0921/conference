@@ -134,9 +134,9 @@ function oldPlanAvailable() {
 let db = { activeId: null, plans: {} };
 try {
   const v = JSON.parse(localStorage.getItem(STORAGE) || "null");
-  if (v && typeof v === "object" && v.plans && typeof v.plans === "object")
-    db = { activeId: v.activeId || null, plans: v.plans };
-} catch (e) {}
+  if (v && typeof v === "object" && v.plans && typeof v.plans === "object") db = v;
+} catch (e) { storageAvailable = false; }
+db = normalizePlannerDatabase(db);
 let selectedTask = "access",
   taskPhase = "now",
   editingTarget = -1,
@@ -151,12 +151,7 @@ const esc = (s) =>
       ],
   );
 const nl = (s) => esc(s).replace(/\n/g, "<br>");
-const fmt = (n) =>
-  "USD " +
-  (Number(n) || 0).toLocaleString("en-US", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  });
+const fmt = (n, currency = "USD") => currency + " " + (Number(n) || 0).toLocaleString("en-US", {minimumFractionDigits:0, maximumFractionDigits:currencyPlaces(currency)});
 function save() {
   try {
     const p = getPlan();
@@ -179,6 +174,9 @@ function save() {
   }
 }
 let noticeTimeout;
+function notifySaved(message) {
+  notify(storageAvailable ? message : "Changes are in memory only. Download a private backup before leaving.");
+}
 function notify(msg) {
   const s = document.getElementById("status");
   s.innerHTML = '<div class="live">' + esc(msg) + "</div>";
@@ -186,9 +184,15 @@ function notify(msg) {
   noticeTimeout = setTimeout(() => (s.innerHTML = ""), 4000);
 }
 function todayUTC() {
-  let d = new Date();
-  return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  const tz=getPlan()?.timezone;
+  if (validTimeZone(tz)) {
+    const parts=new Intl.DateTimeFormat("en-US",{timeZone:tz,year:"numeric",month:"numeric",day:"numeric"}).formatToParts(new Date());
+    const value=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+    return Date.UTC(Number(value.year),Number(value.month)-1,Number(value.day));
+  }
+  const d=new Date(); return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());
 }
+
 function dateUTC(s) {
   const a = String(s || "")
     .split("-")
@@ -220,6 +224,7 @@ function makePlan(id, name, date, location, end) {
     end: end || date,
     timezone: EVENTS[id]?.timezone || "",
     currency: "USD",
+    format: "", organizerUrl: "", presetId: EVENTS[id] ? id : "", skippedTasks: {}, worksheetDrafts: {},
     goal: "",
     tasks: {},
     decision: {},
@@ -246,36 +251,29 @@ function getPlan() {
   return db.activeId ? db.plans[db.activeId] : null;
 }
 function ensurePreset(id) {
+  if (!EVENTS[id]) return;
   if (!db.plans[id]) {
-    const e = EVENTS[id];
-    db.plans[id] = makePlan(id, e.name, e.date, e.location, e.end);
+    const e=EVENTS[id], urls={ghc:"https://ghc.anitab.org/",shpe:"https://shpe.org/2026/",afrotech:"https://afrotechconference.com/"};
+    db.plans[id]=makePlan(id,e.name,e.date,e.location,e.end);
+    Object.assign(db.plans[id],{format:"In person",organizerUrl:urls[id]});
   }
-  db.plans[id].timezone = db.plans[id].timezone || EVENTS[id]?.timezone || "";
-  db.activeId = id;
-  currentGuideScratch();
-  save();
-  editingTarget = -1;
-  location.hash = "#/conference";
-  render();
+  db.activeId=id; activatePlannerPlan(getPlan()); currentGuideScratch(); save();
+  editingTarget=-1; location.hash="#/conference"; render();
 }
+
 function createCustom() {
-  const name = document.getElementById("custom-name")?.value.trim();
-  const date = document.getElementById("custom-date")?.value;
-  if (!name || !date) {
-    notify("Enter a conference name and start date.");
-    return;
-  }
-  const id = "custom-" + Date.now();
-  db.plans[id] = makePlan(id, name, date, "", date);
-  db.activeId = id;
-  currentGuideScratch();
-  save();
-  location.hash = "#/conference";
-  render();
+  const profile=profileValues(), error=profileValidation(profile);
+  if (error) { formError("profile-warning",...error); return; }
+  const id=freshPlanId("custom");
+  db.plans[id]=Object.assign(makePlan(id,profile.name,profile.date,profile.location,profile.end),profile);
+  db.activeId=id; delete db.setupDraft.profile; activatePlannerPlan(getPlan()); currentGuideScratch(); save();
+  location.hash="#/conference"; render();
 }
+
 function switchPlan(id) {
   if (!db.plans[id]) return;
   db.activeId = id;
+  activatePlannerPlan(getPlan());
   currentGuideScratch();
   save();
   editingTarget = -1;
@@ -294,6 +292,7 @@ function navTo(route) {
   window.scrollTo(0, 0);
 }
 function render() {
+  const focusHint=rememberPlannerFocus();
   const r = routeHash(),
     view = r[0] || "playbook",
     target = r[1] || "";
@@ -302,17 +301,22 @@ function render() {
   if (view === "guide" && GUIDE_BY_ID[target])
     html = renderGuide(GUIDE_BY_ID[target]);
   else if (view === "conference") html = renderConference();
+  else if (view === "assistant") html = PlaybookAssistant.renderWorkspace(getPlan(),target);
   else if (view === "templates") html = renderTemplates(target);
   else if (view === "plan") html = renderFieldPlan();
   else if (view === "downloads") html = renderDownloads();
   else html = renderHome(STAGES[target] ? target : "before");
   document.getElementById("main").innerHTML = html;
+  restoreWorksheetDrafts();
+  updateBudgetTotals();
+  restorePlannerFocus(focusHint);
+  if(view === "assistant") PlaybookAssistant.afterRender();
   document
     .querySelectorAll("[data-nav]")
     .forEach((a) =>
       a.classList.toggle(
         "active",
-        view === "conference" || view === "plan"
+        view === "conference" || view === "plan" || view === "assistant"
           ? a.dataset.nav === "conference"
           : view === "templates" || view === "downloads"
             ? a.dataset.nav === "templates"
@@ -326,7 +330,7 @@ function render() {
   document.title =
     (view === "guide" && GUIDE_BY_ID[target]
       ? GUIDE_BY_ID[target].title + " · "
-      : "") + "Conference Leverage";
+      : "") + "The Conference Playbook";
 }
 function renderHome(stage) {
   selectedStage = stage;
@@ -373,80 +377,35 @@ const GUIDE_TASK = {
 function renderGuide(g) {
   return renderEditorialGuide(g);
 }
-function renderSetup() {
-  return `<section class="setup"><div class="eyebrow">My Conference</div><h1>Choose the conference you're preparing for</h1><p class="lead" style="margin-top:13px">Create a private planning workspace only when you need it. The Playbook is free to read without choosing an event.</p>${oldPlanAvailable() ? `<div class="quiet-card"><p><strong>Have an earlier v4 plan?</strong> You can import it into a new separate v5 workspace. Event access still needs rechecking.</p><button class="btn" data-import-v4="1">Import my v4 plans</button></div>` : ""}<div class="setuplist">${Object.entries(
-    EVENTS,
-  )
-    .map(
-      ([id, e]) =>
-        `<button class="select-card" data-create-event="${id}"><strong>${esc(e.name)}</strong><span>${esc(prettyDate(e.date))}</span><span>${esc(e.location)}</span></button>`,
-    )
-    .join(
-      "",
-    )}</div><div class="quiet-card"><h3>Another conference</h3><p>Add a name and date; the planning format stays the same. We won't invent an official event program.</p><div class="fg2"><div class="formrow"><label for="custom-name">Conference name</label><input id="custom-name" placeholder="Conference or event name" maxlength="100"></div><div class="formrow"><label for="custom-date">Start date</label><input type="date" id="custom-date"></div></div><button class="btn primary" data-create-custom>Create custom plan</button></div></section>`;
-}
+function renderSetup() { return renderUniversalSetup(); }
+
 function renderConference() {
   return renderPlannerWorkspace();
 }
 function taskFilter(t, phase) {
-  const p = getPlan(),
-    n = daysTo(p?.date),
-    g = p?.goal || "";
-  const recruiting = g.includes("Recruiting");
-  if (phase === "now") {
-    if (n > 30)
-      return [
-        "decision",
-        "budget",
-        "access",
-        "targets",
-        "story",
-        "experience",
-      ].includes(t.id);
-    if (n > 14)
-      return [
-        "budget",
-        "access",
-        "targets",
-        "story",
-        "outreach",
-        "experience",
-      ].includes(t.id);
-    return (
-      [
-        "access",
-        "targets",
-        "story",
-        "outreach",
-        "experience",
-        "schedule",
-      ].includes(t.id) ||
-      (n > 7 && t.id === "budget")
-    );
+  const p=getPlan(), n=daysTo(p?.date);
+  if (!taskAppliesToProfile(t,p)) return false;
+  if (["online","travel","applications"].includes(t.id)) return phase==="now" || phase==="week";
+  if (phase==="now") {
+    const ids=n>30 ? ["decision","budget","access","targets","story","experience"] :
+      n>14 ? ["budget","access","targets","story","outreach","experience"] :
+      ["access","targets","story","outreach","experience","schedule",...(n>7?["budget"]:[])];
+    return ids.includes(t.id);
   }
-  if (phase === "week")
-    return [
-      "access",
-      "outreach",
-      "targets",
-      "experience",
-      "schedule",
-      "story",
-    ].includes(t.id);
-  if (phase === "onsite")
-    return ["schedule", "daychoice", "experience", "notes", "targets"].includes(
-      t.id,
-    );
-  return ["followup", "learning", "notes"].includes(t.id);
+  if(phase==="week") return ["access","outreach","targets","experience","schedule","story"].includes(t.id);
+  if(phase==="onsite") return ["schedule","daychoice","experience","notes","targets"].includes(t.id);
+  return ["followup","learning","notes"].includes(t.id);
 }
+
 function renderTaskList(p) {
   return renderPlannerTasks(p);
 }
 function renderEditor(p) {
+  if (editingProfile) return renderProfileEditor(p,false);
   const t = TASKS.find((x) => x.id === selectedTask) || TASKS[0];
-  let h = `<div class="edhead"><div class="eyebrow">Worksheet · ${esc(t.stage)}</div><h2>${esc(t.label)}</h2><p>${esc(t.sub)}.</p></div><div class="edbody">`;
+  let h = `<div class="edhead"><div class="eyebrow">Worksheet · ${esc(t.stage)}</div><h2>${esc(t.label)}</h2><p>${esc(t.sub)}.</p></div><div class="edbody" ${draftAttributes(p,worksheetScope(t.id))}>`;
   let b = "";
-  switch (t.id) {
+  switch (t.editor || t.id) {
     case "decision":
       b = editorDecision(p);
       break;
@@ -478,7 +437,7 @@ function renderEditor(p) {
       b = editorNotes(p);
       break;
     case "followup":
-      b = `<p class="muted small">First close the loop on any actual promise or official application instruction. Then write an appropriate follow-up, if needed.</p><a class="btn primary" href="#/templates/follow">Open follow-up template →</a>`;
+      b = editorNotes(p) + '<div class="linkrow"><a class="plainlink" href="#/templates/follow">Open follow-up template →</a></div>';
       break;
     case "learning":
       b = editorLearning(p);
@@ -508,14 +467,15 @@ function editorAccess(p) {
         ]
       : []),
     ["session", "Session / gathering RSVP"],
-    ["invitation", "Interview or invitation confirmation"],
+    ...(career ? [["invitation", "Interview or invitation confirmation"]] : []),
+    ...(!p.format || ["Online","Hybrid"].includes(p.format) ? [["online","Online platform / join access"]] : []),
   ];
   return `<p class="form-help small muted">Your statuses are self-reported. A talent profile is not an application. Requested is not confirmed.</p>${rows.map(([k, label]) => `<div class="statusline"><span>${esc(label)}</span><select data-access="${k}" aria-label="${esc(label)} status">${ACCESS_STATUS.map((x) => `<option ${p.access?.[k] === x ? "selected" : ""}>${esc(x)}</option>`).join("")}</select></div>`).join("")}<div class="tip">For the organizer's current routes and actual deadlines, use the original event site; a checked profile does not establish admission or an interview.</div><p class="helper">Recruiting fields follow your main goal and are also shown before a goal is chosen.</p>${officialLinks(p)}`;
 }
 function officialLinks(p) {
   const e = EVENTS[p.id];
   if (!e?.links?.length)
-    return '<p class="helper">For this custom event, find its official website and current attendee instructions.</p>';
+    return p.organizerUrl && validWebURL(p.organizerUrl) ? '<div class="linkrow"><a class="plainlink" href="'+esc(p.organizerUrl)+'" target="_blank" rel="noopener noreferrer">Organizer website ↗</a></div><p class="helper">Check the current edition and actual attendee instructions. A saved URL does not verify access.</p>' : '<p class="helper">Add the organizer URL in conference details, then check its current attendee instructions.</p>';
   return `<details class="organizer-references"><summary>Organizer references &amp; access routes</summary><div class="linkrow">${e.links.map(([name, url]) => `<a target="_blank" rel="noopener noreferrer" href="${esc(url)}">${esc(name)} ↗</a>`).join("")}</div><p class="helper">Reference links do not verify personal access or eligibility.</p></details>`;
 }
 function editorTargets(p) {
@@ -584,17 +544,12 @@ function budgetCalc(b) {
 function editorBudget(p) {
   return fundingWorksheet(p);
 }
-function editorExperience(p) {
-  const x = p.experience || {};
-  return `<p class="muted small">A session, community conversation or break can be part of a successful conference. Check whether the activity is open to you.</p><div class="formrow"><label for="experience-name">Session or community</label><input id="experience-name" value="${esc(x.name || "")}" placeholder="Specific session or bounded discovery task"></div><div class="formrow"><label for="experience-access">Access status</label><select id="experience-access">${ACCESS_STATUS.map((a) => `<option ${x.access === a ? "selected" : ""}>${esc(a)}</option>`).join("")}</select></div><div class="formrow"><label for="experience-action">Next action</label><textarea id="experience-action" rows="2" placeholder="Check registration instructions, ask a specific question, or attend">${esc(x.action || "")}</textarea></div><div class="formrow"><label for="experience-backup">Alternative</label><input id="experience-backup" value="${esc(x.backup || "")}" placeholder="One useful alternative"></div><button class="btn primary" data-save-experience="1">Save activity</button>`;
-}
-function editorNotes(p) {
-  return `<p class="muted small">Capture context and a promise only when appropriate. Private contact channels are excluded from printing unless you opt in.</p><div class="formrow"><label for="note-context">Conversation context *</label><input id="note-context" placeholder="Actual conversation topic"></div><div class="formrow"><label for="note-next">Real next action *</label><textarea id="note-next" rows="2" placeholder="Action within your control"></textarea></div><div class="fg2"><div class="formrow"><label for="note-channel">Preferred route (private)</label><input id="note-channel" placeholder="Official employer portal or appropriate contact channel"></div><div class="formrow"><label for="note-due">Agreed next-action date (optional)</label><input type="date" id="note-due"></div></div><button class="btn primary" data-save-note="1">Save private commitment</button>${p.notes?.length ? `<ul class="detail-list">${p.notes.map((x, i) => `<li><div><b>${esc(x.context)}</b><small>${esc(x.action)}${x.due ? " · Due " + esc(x.due) : ""}</small></div><div class="linkrow"><button class="btn sm" data-toggle-note="${i}">${x.done ? "Undo done" : "Mark done"}</button><button class="btn sm danger" data-remove-note="${i}">Remove</button></div></li>`).join("")}</ul>` : ""}`;
-}
-function editorLearning(p) {
-  const x = p.insight || {};
-  return `<div class="formrow"><label for="insight-learning">One thing you learned</label><textarea id="insight-learning" rows="2" placeholder="A specific useful idea or changed assumption">${esc(x.learning || "")}</textarea></div><div class="formrow"><label for="insight-use">Where you might apply it</label><input id="insight-use" value="${esc(x.use || "")}" placeholder="Project, career decision, community or question"></div><div class="formrow"><label for="insight-action">Next practical action</label><input id="insight-action" value="${esc(x.action || "")}" placeholder="Something you can try or check"></div><button class="btn primary" data-save-insight="1">Save learning</button><div class="linkrow"><a href="#/templates/recap" class="plainlink">Optional recap template →</a></div>`;
-}
+function editorExperience(p) { return renderCommunityEditor(p); }
+
+function editorNotes(p) { return renderCommitmentEditor(p); }
+
+function editorLearning(p) { return renderDebriefEditor(p); }
+
 function renderTemplates(requested) {
   const keys = Object.keys(TEMPLATE_DATA),
     k = TEMPLATE_DATA[requested] ? requested : activeTemplate;
@@ -606,7 +561,7 @@ function renderTemplates(requested) {
     <div class="templayout"><nav class="tlist" aria-label="Message templates"><p class="rail-caption">Choose a template</p>
       ${keys.map((id) => `<a href="#/templates/${id}" class="${id === k ? "active" : ""}" ${id === k ? 'aria-current="page"' : ""}>${esc(TEMPLATE_DATA[id].name)}</a>`).join("")}
       <a class="template-resources" href="#/downloads">Printable resources ↓</a></nav>
-    <section class="templatebody" aria-labelledby="template-title"><div class="section-caption">${esc(t.stage)} <span class="caption-divider">/</span> Editable template</div>
+    <section class="templatebody" aria-labelledby="template-title" ${draftAttributes(p,"template:"+k)}><div class="section-caption">${esc(t.stage)} <span class="caption-divider">/</span> Editable template</div>
       <h2 id="template-title">${esc(t.name)}</h2><p class="template-check">${esc(t.check)}</p>
       <div class="template-state"><span>${p ? `For <strong>${esc(p.name)}</strong>` : 'Copy a draft here, or <a href="#/conference">choose an event</a> to save it.'}</span>
       <span class="save-state" role="status">${p?.drafts?.[k] !== undefined ? "Saved in this browser" : "Not saved yet"}</span></div>
@@ -627,12 +582,16 @@ function defaultPrintPreferences() {
   };
 }
 function printPrefs(p) {
-  return { ...defaultPrintPreferences(), ...(p.printPreferences || {}) };
+  return Object.fromEntries(Object.keys(defaultPrintPreferences()).map(k=>[k,p.printPreferences?.[k]===true]));
 }
 function sensitiveLink(url) {
-  return /[?&](?:access_token|token|secret|key|signature|invite_token|auth|ticket)=|\/invite\/[A-Za-z0-9_-]{7,}/i.test(
-    String(url || ""),
-  );
+  const text=String(url || ""), privateKey=/^(?:access_token|auth_token|id_token|token|secret|api_key|apikey|key|signature|invite_token|auth|ticket|password|credential)$/i;
+  try {
+    const value=new URL(text);
+    if(value.username || value.password || [...value.searchParams.keys()].some(k=>privateKey.test(k))) return true;
+    if([...new URLSearchParams(value.hash.replace(/^#/,"")).keys()].some(k=>privateKey.test(k))) return true;
+  } catch (_) {}
+  return /[?&#](?:access_token|auth_token|token|secret|key|signature|invite_token|auth|ticket)=|\/invite\/[A-Za-z0-9_-]{7,}/i.test(text);
 }
 function showPublicSource(url, p) {
   if (!url) return "";
@@ -682,9 +641,9 @@ function exportSections(p) {
   add(
     "Confirmed commitments",
     a
-      .filter((x) => x.fixed && x.status === "User-reported confirmed")
+      .filter((x) => x.fixed && x.status === "User-reported confirmed" && validTimeZone(x.timezone || p.timezone) && validISODate(x.date) && x.start && x.end && validLocalTime(x.start) && validLocalTime(x.end) && x.end>x.start && x.venue)
       .flatMap((x) => [
-        `${x.date || ""} ${x.start || "?"}–${x.end || "?"} ${x.timezone || p.timezone || "local time"} · ${x.label}`,
+        `${x.date || ""} ${x.start || "?"}–${x.end || "?"} ${zoneLabel(x.timezone || p.timezone) || "Timezone needs checking"} · ${x.label}`,
         `Venue: ${x.venue || "Not supplied"}`,
         x.source ? `Public source: ${showPublicSource(x.source, p)}` : "",
         x.buffer ? `Buffer: ${x.buffer} min` : "",
@@ -693,9 +652,9 @@ function exportSections(p) {
   add(
     "Flexible or unverified activities",
     a
-      .filter((x) => !x.fixed || x.status !== "User-reported confirmed")
+      .filter((x) => !x.fixed || x.status !== "User-reported confirmed" || !validTimeZone(x.timezone || p.timezone) || !validISODate(x.date) || !x.start || !x.end || !validLocalTime(x.start) || !validLocalTime(x.end) || x.end<=x.start || !x.venue)
       .flatMap((x) => [
-        `${x.date || ""} ${x.start || ""} ${x.label} · Access: ${x.status}`,
+        `${x.date || ""} ${x.start || ""} ${x.label} · Access: ${x.status}${x.fixed ? " · Schedule needs rechecking" : ""}`,
         x.venue ? `Location (unconfirmed if access pending): ${x.venue}` : "",
         x.source ? `Public source: ${showPublicSource(x.source, p)}` : "",
         x.backup ? `Backup: ${x.backup}` : "",
@@ -704,6 +663,11 @@ function exportSections(p) {
   if (p.experience?.name)
     add("Learning and community", [
       `${p.experience.name} · Status: ${p.experience.access || "Needs checking"}`,
+      p.experience.purpose ? "Goal: " + p.experience.purpose : "",
+      p.experience.source ? "Source: " + showPublicSource(p.experience.source,p) : "",
+      [p.experience.date,p.experience.time,zoneLabel(p.experience.timezone)].filter(Boolean).join(" · "),
+      p.experience.venue ? "Place: " + p.experience.venue : "",
+      p.experience.question ? "Question: " + p.experience.question : "",
       p.experience.action || "",
       p.experience.backup ? `Backup: ${p.experience.backup}` : "",
     ]);
@@ -715,28 +679,42 @@ function exportSections(p) {
   add(
     "Follow-through",
     (p.notes || []).flatMap((x) => [
-      `${x.context}: ${x.action}${x.due ? " (by " + x.due + ")" : ""} · Your status: ${x.done ? "Done" : "To do"}`,
+      `${x.context}: ${x.action}${x.due ? " (by " + x.due + ")" : ""} · Your status: ${x.status || (x.done ? "Done" : "To do")}`,
+      x.response || x.reply ? "Response: " + (x.response || x.reply) : "",
+      x.outcome ? "Outcome: " + x.outcome : "",
+      x.source ? "Source: " + showPublicSource(x.source,p) : "",
       pref.includeContacts && x.channel ? `Private channel: ${x.channel}` : "",
     ]),
   );
-  if (p.insight?.action)
+  if (p.insight?.action || p.insight?.learning)
     add("Apply one insight", [
+      p.insight.goal ? "Original goal: " + p.insight.goal : "",
+      p.insight.observed ? "Observed: " + p.insight.observed : "",
       p.insight.learning || "",
       p.insight.use ? `Where: ${p.insight.use}` : "",
-      `Next: ${p.insight.action}`,
+      p.insight.decision ? "Choice: " + p.insight.decision : "",
+      p.insight.action ? "Next: " + p.insight.action : "",
+      p.insight.reviewDate ? "Review: " + p.insight.reviewDate : "",
+      p.insight.outcome ? "Outcome: " + p.insight.outcome : "",
     ]);
   if (
     pref.includeFunding &&
-    Object.values(p.budget || {}).some(
-      (x) => x !== "" && x !== null && x !== undefined,
-    )
+    BUDGET_FIELDS.some(([k]) => p.budget[k] !== "" && p.budget[k] !== null && p.budget[k] !== undefined)
   )
     add("Private budget figures", [
-      `Estimated total: ${fmt(q.total)}`,
-      `After confirmed support: ${fmt(q.net)}`,
-      `Potential upfront cash: ${fmt(q.upfront)}`,
-      q.pending ? `Pending not counted: ${fmt(q.pending)}` : "",
+      `Estimated total: ${fmt(q.total,p.currency || "USD")}`,
+      `After confirmed support: ${fmt(q.net,p.currency || "USD")}`,
+      `Potential upfront cash: ${fmt(q.upfront,p.currency || "USD")}`,
+      q.pending ? `Pending not counted: ${fmt(q.pending,p.currency || "USD")}` : "",
     ]);
+  if(pref.includeFunding) add("Private funding sources", (p.budget.sources || []).flatMap(x=>[
+    x.name + " · " + (x.status || "Needs checking"),
+    x.source ? "Source: " + showPublicSource(x.source,p) : "",
+    x.expense ? "Terms: " + x.expense : "", x.edition ? "Edition: " + x.edition : "",
+    x.deadline ? "Deadline: " + [x.deadline,x.deadlineTime,zoneLabel(x.timezone)].filter(Boolean).join(" · ") : "",
+    x.paymentMethod ? "Payment: " + x.paymentMethod : "",
+    x.reimbursementDate ? "Expected payment: " + x.reimbursementDate : "", x.next ? "Next: " + x.next : ""
+  ]));
   if (pref.includeDrafts)
     add(
       "Private message drafts",
@@ -749,10 +727,12 @@ function exportSections(p) {
 function fieldPlanText(p) {
   return [
     p.name + " — Field plan (v" + SNAPSHOT.snapshotVersion + ")",
-    prettyDate(p.date) +
+    planDateRange(p) +
+      (p.format ? " · " + p.format : "") +
       (p.location ? " · " + p.location : "") +
-      (p.timezone ? " · " + p.timezone : ""),
+      (p.timezone ? " · " + zoneLabel(p.timezone) : ""),
     "Goal: " + (p.goal || "Not specified"),
+    ...(p.organizerUrl ? ["Organizer: " + showPublicSource(p.organizerUrl,p)] : []),
     ...exportSections(p).flatMap((x) => ["", x.title + ":", ...x.lines]),
     "",
     `Generated ${new Date().toLocaleDateString()} from your notes. Source checked by user unless otherwise stated. Recheck official details; fictional demos are not real.`,
@@ -768,25 +748,29 @@ function renderFieldPlan() {
     <div class="linkrow"><button class="btn primary" data-print="plan">Print / Save as PDF</button><button class="btn" data-copy-plan="1">Copy plan</button><a class="plainlink" href="#/conference">Edit My Conference →</a></div></section>
     <div class="field-plan-layout"><aside class="privacy-controls no-print" aria-labelledby="privacy-heading"><h2 id="privacy-heading">Optional private fields in this export</h2>
       <p>Only this event is printed. Choose sensitive sections deliberately; they are OFF by default.</p><div class="privacy-options">${[
-        ["includeFunding", "Funding numbers"], ["includeContacts", "Private follow-up channels"],
+        ["includeFunding", "Funding numbers and terms"], ["includeContacts", "Private follow-up channels"],
         ["includeDrafts", "Full edited message drafts"], ["includePrivateLinks", "Private/token-bearing source links"],
       ].map(([k, l]) => `<label class="privacyline"><input type="checkbox" data-print-pref="${k}" ${pref[k] ? "checked" : ""}> <span>${esc(l)}</span></label>`).join("")}</div></aside>
     <article class="planbox" id="print-plan" aria-labelledby="plan-event-title"><div class="planhead"><div><div class="eyebrow">Conference field plan · v${esc(SNAPSHOT.snapshotVersion)}</div>
-      <h2 id="plan-event-title">${esc(p.name)}</h2><p>${esc(prettyDate(p.date))}${p.location ? " · " + esc(p.location) : ""}${p.timezone ? " · " + esc(p.timezone) : ""}</p>${p.goal ? `<p class="plan-goal"><b>Goal:</b> ${esc(p.goal)}</p>` : ""}</div><span class="plan-badge">Browser-local · Self-reported</span></div>
+      <h2 id="plan-event-title">${esc(p.name)}</h2><p>${esc(planDateRange(p))}${p.format ? " · " + esc(p.format) : ""}${p.location ? " · " + esc(p.location) : ""}${p.timezone ? " · " + esc(zoneLabel(p.timezone)) : ""}</p>${p.organizerUrl ? `<p class="plan-organizer">Organizer: ${esc(showPublicSource(p.organizerUrl,p))}</p>` : ""}${p.goal ? `<p class="plan-goal"><b>Goal:</b> ${esc(p.goal)}</p>` : ""}</div><span class="plan-badge">Browser-local · Self-reported</span></div>
       ${sections.length ? sections.map((x) => `<section class="plansect"><h3>${esc(x.title)}</h3>${x.lines.map((line) => `<p class="plan-line">${esc(line)}</p>`).join("")}</section>`).join("") : '<p class="plan-empty">No items yet. Choose one real target or action to begin.</p>'}
       <div class="printnote">Generated ${esc(new Date().toLocaleDateString())} from your selected event plan. Times, sources and access are user-entered/self-reported; verify official changes before acting. Private contact, money and drafts excluded unless selected.</div></article></div>`;
 }
 function reviewPlan(p) {
   const remarks = [];
-  if (!p.targets?.length)
+  if (!validTimeZone(p.timezone))
+    remarks.push("Check the organizer's timezone in conference details before saving timed activities.");
+  if (!p.format)
+    remarks.push("Add the event format in conference details so the suggested actions fit this conference.");
+  if (!p.targets?.length && !p.skippedTasks?.targets)
     remarks.push(
       "Choose one concrete company, role, session or person, and write your first action.",
     );
-  else if (p.targets.some((x) => !x.action.trim()))
+  else if (p.targets.some((x) => !String(x.action || "").trim()))
     remarks.push(
       "A saved priority needs a specific next action that is in your control.",
     );
-  if (!p.access.registration || p.access.registration === "Needs checking")
+  if ((!p.access.registration || p.access.registration === "Needs checking") && !p.skippedTasks?.access)
     remarks.push(
       "Verify actual event registration in the organizer portal; this tool cannot confirm access.",
     );
@@ -794,11 +778,11 @@ function reviewPlan(p) {
     remarks.push(
       "One or more target access or application statuses still need official verification.",
     );
-  if (!p.story?.question && !p.story?.context)
+  if (!p.story?.question && !p.story?.context && !p.skippedTasks?.story)
     remarks.push(
       "Prepare one genuine project story or question for a relevant conversation.",
     );
-  if (!p.experience?.name)
+  if (!p.experience?.name && !p.skippedTasks?.experience)
     remarks.push(
       "Consider one learning or community opportunity beyond the main expo.",
     );
@@ -858,7 +842,7 @@ function fallbackCopy(s) {
 function delegatedClick(ev) {
   const target = ev.target.closest("button");
   if (!target) return;
-  if (handleRepresentativeClick(target)) return;
+  if (PlaybookAssistant.handleClick(target) || handlePlannerClick(target) || handleWorksheetClick(target) || handleRepresentativeClick(target)) return;
   const d = target.dataset;
   if (d.importV4) {
     try {
@@ -866,13 +850,13 @@ function delegatedClick(ev) {
       if (!old?.plans) throw Error("No prior plans");
       for (const [id, p] of Object.entries(old.plans)) {
         if (db.plans[id]) continue;
-        db.plans[id] = {
+        db.plans[id] = normalizePlanRecord({
           ...makePlan(id, p.name || id, p.date || "", p.location || "", p.end),
           ...p,
           activities: p.activities || [],
           printPreferences: defaultPrintPreferences(),
           timezone: p.timezone || EVENTS[id]?.timezone || "",
-        };
+        },id);
       }
       db.activeId =
         old.activeId && db.plans[old.activeId]
@@ -936,54 +920,7 @@ function delegatedClick(ev) {
     navTo("conference");
     return;
   }
-  if (d.saveActivity) {
-    const p = getPlan();
-    if (!p) return;
-    const label = gv("activity-label").trim(),
-      date = gv("activity-date"),
-      start = gv("activity-start"),
-      end = gv("activity-end"),
-      timezone = gv("activity-timezone").trim(),
-      status = gv("activity-access"),
-      fixed = gv("activity-fixed") === "fixed";
-    let error = "";
-    if (!label || !date) error = "Add the activity and local date.";
-    else if (
-      fixed &&
-      (!start || !end || !timezone || !gv("activity-venue").trim())
-    )
-      error =
-        "A fixed appointment needs start/end, event timezone and actual venue.";
-    else if (fixed && status !== "User-reported confirmed")
-      error = "Only an activity confirmed to you can be marked fixed.";
-    else if (start && end && end <= start)
-      error = "For a same-day block, end time must be later than start.";
-    if (error) {
-      document.getElementById("activity-error").textContent = error;
-      return;
-    }
-    const row = {
-      label,
-      date,
-      start,
-      end,
-      timezone: timezone || p.timezone || "",
-      venue: gv("activity-venue").trim(),
-      status,
-      fixed,
-      buffer: Math.max(0, Number(gv("activity-buffer")) || 0),
-      source: gv("activity-source").trim(),
-      confirmationRef: gv("activity-reference").trim(),
-      backup: gv("activity-backup").trim(),
-    };
-    p.activities = p.activities || [];
-    p.activities.push(row);
-    p.timezone = timezone || p.timezone;
-    p.tasks.schedule = true;
-    refresh();
-    notify("Activity saved to this conference.");
-    return;
-  }
+  if (d.saveActivity) { saveActivityWorksheet(target); return; }
   if (d.removeActivity !== undefined) {
     const p = getPlan();
     p.activities.splice(Number(d.removeActivity), 1);
@@ -1002,6 +939,7 @@ function delegatedClick(ev) {
       return;
     }
     const row = {
+      id: editingTarget >= 0 ? p.targets[editingTarget].id || freshPlanId("target") : freshPlanId("target"),
       name,
       action,
       kind: gv("target-kind"),
@@ -1017,6 +955,8 @@ function delegatedClick(ev) {
       notify("Limit to three active targets for a focused field plan.");
       return;
     }
+    clearWorksheetDraftFor(target,worksheetScope("targets"));
+    resumeTargetId = null;
     editingTarget = -1;
     currentGuideScratch().target = {};
     p.tasks.targets = true;
@@ -1029,6 +969,7 @@ function delegatedClick(ev) {
     return;
   }
   if (d.editTarget !== undefined) {
+    resumeTargetId = null;
     editingTarget = Number(d.editTarget);
     render();
     return;
@@ -1041,6 +982,7 @@ function delegatedClick(ev) {
     return;
   }
   if (d.cancelTarget !== undefined) {
+    resumeTargetId = null;
     editingTarget = -1;
     render();
     return;
@@ -1055,8 +997,9 @@ function delegatedClick(ev) {
       next: gv("decision-next").trim(),
     };
     p.tasks.decision = Boolean(p.decision.next);
+    clearWorksheetDraftFor(target,"decision");
     refresh();
-    notify("Decision saved.");
+    notifySaved("Decision saved.");
     return;
   }
   if (d.saveDaychoice) {
@@ -1068,8 +1011,9 @@ function delegatedClick(ev) {
       next: gv("day-next").trim(),
     };
     p.tasks.daychoice = Boolean(p.dayChoice.next);
+    clearWorksheetDraftFor(target,"daychoice");
     refresh();
-    notify("Choice saved.");
+    notifySaved("Choice saved.");
     return;
   }
   if (d.saveStory) {
@@ -1081,18 +1025,18 @@ function delegatedClick(ev) {
       ]),
     );
     p.tasks.story = Boolean(p.story.context && p.story.contribution);
+    clearWorksheetDraftFor(target,"story");
     refresh();
-    notify("Story saved.");
+    notifySaved("Story saved.");
     return;
   }
   if (d.saveBudget) {
     if (!validateBudget()) return;
     const p = getPlan();
-    p.budget = Object.fromEntries(
-      BUDGET_FIELDS.map(([k]) => [k, collectNumber(k)]),
-    );
+    p.budget = {...p.budget, ...Object.fromEntries(BUDGET_FIELDS.map(([k]) => [k, collectNumber(k)]))};
     currentGuideScratch().budget = {};
     p.tasks.budget = true;
+    clearWorksheetDraftFor(target,"budget");
     refresh();
     notify(
       storageAvailable
@@ -1101,45 +1045,12 @@ function delegatedClick(ev) {
     );
     return;
   }
-  if (d.saveExperience) {
-    const p = getPlan();
-    p.experience = {
-      name: gv("experience-name").trim(),
-      access: gv("experience-access"),
-      action: gv("experience-action").trim(),
-      backup: gv("experience-backup").trim(),
-    };
-    p.tasks.experience = Boolean(p.experience.name && p.experience.action);
-    refresh();
-    notify("Activity saved.");
-    return;
-  }
-  if (d.saveNote) {
-    const p = getPlan(),
-      ctx = gv("note-context").trim(),
-      action = gv("note-next").trim();
-    if (!ctx || !action) {
-      notify("Add the conversation context and a real next action.");
-      return;
-    }
-    p.notes = p.notes || [];
-    p.notes.push({
-      context: ctx,
-      action,
-      channel: gv("note-channel").trim(),
-      due: gv("note-due"),
-      done: false,
-      reply: "pending",
-    });
-    p.tasks.notes = true;
-    refresh();
-    notify("Private commitment saved.");
-    return;
-  }
+  if (d.saveExperience) { return; }
+  if (d.saveNote) { return; }
   if (d.toggleNote !== undefined) {
     const p = getPlan(),
       x = p.notes[Number(d.toggleNote)];
-    if (x) x.done = !x.done;
+    if (x) { x.done = !x.done; x.status=x.done ? "Completed" : "To do"; }
     refresh();
     return;
   }
@@ -1149,18 +1060,7 @@ function delegatedClick(ev) {
     refresh();
     return;
   }
-  if (d.saveInsight) {
-    const p = getPlan();
-    p.insight = {
-      learning: gv("insight-learning").trim(),
-      use: gv("insight-use").trim(),
-      action: gv("insight-action").trim(),
-    };
-    p.tasks.learning = Boolean(p.insight.action);
-    refresh();
-    notify("Learning saved.");
-    return;
-  }
+  if (d.saveInsight) { return; }
   if (d.saveTemplate) {
     const p = getPlan();
     if (!p) {
@@ -1170,8 +1070,9 @@ function delegatedClick(ev) {
       return;
     }
     p.drafts[d.saveTemplate] = gv("template-editor");
+    clearWorksheetDraftFor(target,"template:"+d.saveTemplate);
     refresh();
-    notify("Draft saved in this browser.");
+    notifySaved("Draft saved in this browser.");
     return;
   }
   if (d.copyTemplate !== undefined) {
@@ -1208,6 +1109,8 @@ function delegatedClick(ev) {
   }
 }
 function delegatedChange(ev) {
+  keepWorksheetDraft(ev.target);
+  if (ev.target.id==="backup-file") { handleBackupFile(ev.target); return; }
   const t = ev.target,
     p = getPlan();
   if (t.closest("[data-guide-tool=target]"))
@@ -1244,24 +1147,20 @@ function delegatedChange(ev) {
     return;
   }
 }
-function delegatedInput(ev) {
-  if (!ev.target.id?.startsWith("budget-")) return;
-  const b = Object.fromEntries(
-      BUDGET_FIELDS.map(([k]) => [k, collectNumber(k)]),
-    ),
-    q = budgetCalc(b);
-  for (const [id, value] of [
-    ["budget-total", q.total],
-    ["budget-net", q.net],
-    ["budget-upfront", q.upfront],
-  ]) {
-    const out = document.getElementById(id);
-    if (out) out.textContent = fmt(value);
+function updateBudgetTotals() {
+  if (!document.getElementById("budget-total") || !document.getElementById("budget-registration")) return;
+  const b=Object.fromEntries(BUDGET_FIELDS.map(([k])=>[k,collectNumber(k)])), q=budgetCalc(b), currency=getPlan()?.currency || "USD";
+  for(const [id,value] of [["budget-total",q.total],["budget-net",q.net],["budget-upfront",q.upfront]]) {
+    const out=document.getElementById(id); if(out) out.textContent=fmt(value,currency);
   }
-  const pending = document.getElementById("budget-pending-summary");
-  if (pending)
-    pending.textContent = fmt(q.pending) + " pending · Not subtracted";
+  const pending=document.getElementById("budget-pending-summary");
+  if(pending) pending.textContent=fmt(q.pending,currency)+" pending · Not subtracted";
 }
+function delegatedInput(ev) {
+  keepWorksheetDraft(ev.target);
+  if(ev.target.id?.startsWith("budget-")) updateBudgetTotals();
+}
+
 window.addEventListener("beforeprint", () => {
   document.querySelectorAll(".guide-details").forEach((x) => {
     x.dataset.wasOpen = x.open ? "1" : "0";
@@ -1275,6 +1174,7 @@ window.addEventListener("afterprint", () => {
   });
 });
 window.addEventListener("hashchange", () => {
+  PlaybookAssistant.onNavigate();
   render();
   document.getElementById("main").focus({ preventScroll: true });
   window.scrollTo(0, 0);
@@ -1282,4 +1182,5 @@ window.addEventListener("hashchange", () => {
 document.addEventListener("click", delegatedClick);
 document.addEventListener("change", delegatedChange);
 document.addEventListener("input", delegatedInput);
+initializePlannerTasks();
 render();

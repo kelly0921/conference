@@ -18,7 +18,7 @@ function application(stored = {}, blocked = false) {
     return nodes.get(id);
   };
   const context = vm.createContext({
-    console, Date, setTimeout:()=>1, clearTimeout(){},
+    console, Date, URL, URLSearchParams, setTimeout:()=>1, clearTimeout(){},
     location:{hash:'#/playbook/before'}, navigator:{},
     localStorage:{getItem:k=>{if(blocked)throw Error('blocked');return values.get(k)||null;},
       setItem:(k,v)=>{if(blocked)throw Error('blocked');values.set(k,v);}},
@@ -28,7 +28,7 @@ function application(stored = {}, blocked = false) {
   });
   const html = fs.readFileSync(path.join(root,'index.html'),'utf8');
   vm.runInContext(html.match(/<script>([\s\S]*?)<\/script>/)[1],context);
-  for (const file of ['assets/representative.js','assets/app.js'])
+  for (const file of ['assets/planning.js','assets/representative.js','assets/assistant.js','assets/app.js'])
     vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
   return {run:code=>vm.runInContext(code,context),node,values,listeners,context};
 }

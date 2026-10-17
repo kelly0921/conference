@@ -1,0 +1,8 @@
+// Local development only. Cloudflare Pages production/preview bindings stay in the dashboard.
+{
+  "name": "conference-playbook",
+  "pages_build_output_dir": ".",
+  "compatibility_date": "2026-10-13",
+  "vars": {"AI_ENABLED": "false", "AI_MODEL": "gpt-5.4-mini", "OPENAI_API_KEY": ""},
+  "d1_databases": [{"binding": "AI_LIMITS", "database_name": "local-ai-limits", "database_id": "00000000-0000-0000-0000-000000000001", "preview_database_id": "AI_LIMITS"}]
+}

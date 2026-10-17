@@ -1,0 +1,12 @@
+{
+  "name": "conference-playbook",
+  "pages_build_output_dir": "dist",
+  "compatibility_date": "2026-10-13",
+  "vars": {"AI_ENABLED": "false", "AI_MODEL": "gpt-5.4-mini"},
+  "env": {
+    "preview": {
+      "vars": {"AI_ENABLED": "true", "AI_MODEL": "gpt-5.4-mini"},
+      "d1_databases": [{"binding": "AI_LIMITS", "database_name": "conference-playbook-ai-limits", "database_id": "ea44ca1b-3fb6-4f03-af0c-5537a5f2fed3"}]
+    }
+  }
+}

@@ -1,6 +1,20 @@
-# Project status — October 13, 2026
+# Project status — October 17, 2026
 
-This repository starts with a **functional v5 HTML prototype** and a separate editorial reading-style experiment. It is **not** a deployed, finalized or attendee-tested product.
+Latest update: planning/review results now always include a clearly labeled, application-owned access-evidence question. A fresh frozen study ran twelve new fictional scenarios twice without tuning between calls: all 24 passed the contract and met their case rubrics on review by the same coding assistant. This is not an independent human review or a general accuracy percentage. There are 167 passing automated checks. See the [access fix and fresh study](AI_ACCESS_INDEPENDENT_REVIEW_2026-10-17.md); the [earlier repeated review](AI_REPEATED_REVIEW_2026-10-17.md) preserves its original failures and replays. Quality and public-release gates remain.
+
+The previously reviewed v5 site is hosted at https://conference-playbook.pages.dev/. The current planner upgrade is prepared for internal review on the development preview. It is not a finalized or attendee-tested product.
+
+Optional AI planning and review work on the development preview. The initial calculated-schedule pass and its earlier live smoke tests are recorded in the [first accuracy review](AI_ACCURACY_REVIEW_2026-10-17.md); the subsequent source/excerpt protocol and current limits are in the broader review above. Production AI is disabled. The historical rollout sections below retain their original context and counts.
+
+## Current planner pass
+
+Priorities 1–4 from the product review are implemented: persistent worksheet drafts, valid timezones, a complete conference profile, an integrated actionable checklist, and funding/community/follow-up/debrief details. Browser-local backup/restore and selected-plan deletion are available. The storage key remains compatible with existing v5 plans; records migrate to schema version 6.
+
+Verification now includes 40 Node and 10 Python checks, all 31 PDF pages, tagged-document structure and embedded Unicode fonts. In-app Chromium testing covers fictional profile creation, draft/navigation/reload recovery, timezone validation, checklist skipping and backup restore. The profile and field plan were checked at 320 px; a fictional HTTPS-preview profile also survives reload. Existing character branding and the approved palette/reading layout remain; browser/heading/footer/PDF naming is consistent.
+
+See [planner implementation and release QA](PLANNER_RELEASE_QA_2026-10-13.md). Screen readers, actual zoom/touch, Firefox/Safari, browser/physical printing, formal PDF accessibility and exact production-origin migration/recovery remain manual release checks. The AI preview is documented above; no public feedback campaign has begun.
+
+The sections below preserve evidence from the earlier design rollout and print integration. Their historical test counts and original limitations are superseded where the current planner report records a completed change.
 
 ## Approved design rollout · ready for internal review
 
@@ -30,7 +44,7 @@ See [full rollout review](../design/ROLLOUT_REVIEW.md), [initial screenshot revi
 4. Complete tagged-PDF accessibility and browser/physical print QA; generated workbook and exporter-based sample parity are now checked.
 5. Extend the completed localhost persistence/keyboard/layout checks to production-origin migration, screen readers, touch/zoom, A4/Letter pagination and cross-browser print behavior.
 6. Refresh organizer links and current access facts before any public distribution. Dynamic role/scholarship/meeting availability is not confirmed.
-7. Consider live AI only as an **explicit opt-in** plan reviewer after core product quality; currently none.
+7. Complete the optional AI preview's accuracy and public-rollout gates in the current review linked above.
 8. **Last phase:** voluntary attendee feedback only after hosted near-final build and internal QA.
 
 ## Development references

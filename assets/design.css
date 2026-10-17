@@ -1817,3 +1817,56 @@ body.review-surface {
   .review-surface .plansect .plan-line { font-size: 10pt; line-height: 1.5; }
   .review-surface .printnote { font-size: 9pt; padding-top: 10pt; }
 }
+/* Conference profile and actionable saved checklist. */
+.profile-editor { max-width: 760px; }
+.profile-editor h2 { margin: 20px 0 12px; font-size: 22px; }
+.profile-editor .save-state { display: block; margin-top: 12px; color: var(--secondary); font-size: 14px; }
+.profile-edit { margin-top: 10px; min-height: 44px; border: 0; padding: 0; background: transparent; color: var(--emphasis); font: 600 15px/1.6 var(--body-face); text-decoration: underline; cursor: pointer; }
+.review-surface .btn.sm { min-height: 44px; }
+.preset-options, .data-controls { border-top: 1px solid var(--rule); margin-top: 30px; padding-top: 18px; }
+.preset-options summary, .data-controls summary { cursor: pointer; font-weight: 600; min-height: 44px; }
+.preset-options .setuplist { margin-top: 14px; }
+.data-controls h2 { margin: 16px 0 10px; font-size: 20px; }
+.data-controls .helper { max-width: 760px; }
+.checklist-progress { margin: 18px 0; }
+.checklist-progress > p:first-child { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.checklist-progress progress { accent-color: var(--emphasis); width: 100%; height: 8px; display: block; }
+.review-surface .checklist-row { display: grid; grid-template-columns: 44px minmax(0,1fr); gap: 4px 8px; padding: 12px 0; align-items: start; }
+.checklist-row .task-check { margin: 0; width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer; }
+.checklist-row .task-check input { margin: 0; width: 19px; height: 19px; }
+.checklist-row .titlebutton { min-height: 44px; padding: 4px 0; }
+.checklist-row .task-meta { grid-column: 2; font-size: 12px; color: var(--secondary); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
+.checklist-row .task-meta a, .checklist-row .task-meta button { display: inline-flex; align-items: center; min-height: 44px; }
+.checklist-row .task-meta button { font: inherit; color: var(--emphasis); border: 0; background: transparent; text-decoration: underline; padding: 0; cursor: pointer; }
+.checklist-row.not-needed .task-state { font-style: italic; }
+.checklist-row .task-links { display: flex; gap: 16px; flex-wrap: wrap; }
+.draft-resume { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--control-border); border-radius: 8px; margin: 16px 0; }
+.draft-resume p { margin: 0; flex: 1; font-size: 14px; }
+.funding-sources { border-top: 1px solid var(--rule); margin-top: 28px; padding-top: 22px; }
+.funding-sources h3 { margin-bottom: 8px; }
+.funding-source-form h4 { font-size: 17px; margin: 24px 0 12px; }
+.detail-list li { gap: 16px; flex-wrap: wrap; }
+.detail-list li > div:first-child { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.detail-list .linkrow { flex-wrap: wrap; }
+.backup-import { position: relative; cursor: pointer; overflow: hidden; }
+.backup-import input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.backup-import:focus-within { outline: 3px solid var(--emphasis); outline-offset: 3px; }
+.delete-plan-control { margin-top: 26px; }
+.delete-plan-control p { margin-bottom: 10px; }
+dialog { max-width: min(520px, calc(100% - 32px)); padding: 28px; border: 1px solid var(--control-border); border-radius: 10px; color: var(--text); background: var(--surface); }
+dialog::backdrop { background: rgba(37,43,46,.45); }
+dialog p { margin: 12px 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.planbox, .planner-heading h1, .planner-heading p, .formrow { overflow-wrap: anywhere; }
+@media (max-width: 800px) {
+  .draft-resume { align-items: start; flex-wrap: wrap; }
+  .draft-resume .btn { margin-left: auto; }
+  .checklist-row .task-meta { font-size: 14px; }
+  .backup-import, .data-controls .linkrow .btn { min-height: 44px; }
+}
+@media print {
+  .plan-line { overflow-wrap: anywhere; }
+  .plansect { break-inside: auto; }
+  .plansect h3 { break-after: avoid; }
+  .planhead { break-inside: avoid; }
+}

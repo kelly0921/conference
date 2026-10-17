@@ -19,13 +19,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install pinned AI build and local runtime dependencies
+        run: npm ci
+      - name: Check AI client, endpoint types and request limits
+        run: |
+          npm run check:assistant
+          npm run typecheck
+          npm run test:assistant
+          npm run test:accuracy
       - name: Check application syntax
         run: |
           node --check assets/app.js
+          node --check assets/planning.js
           node --check assets/representative.js
+          node --check assets/assistant.js
           node --check design/palette-review.js
       - name: Test planning, calculations and private exports
-        run: node --test tests/runtime.test.cjs
+        run: node --test tests/runtime.test.cjs tests/planning.test.cjs
       - name: Verify reproducible web and print artifacts
         run: |
           python scripts/build.py --check
