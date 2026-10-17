@@ -2,15 +2,21 @@
 import assert from 'node:assert/strict';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {parseEnv} from 'node:util';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
-import {validateInput,validateResult,validateProviderResult,sharingTexts,redact} from '../.qa-cache/assistant-tests/contract.mjs';
+import {validateInput,validateResult,validateProviderResult,sharingTexts,redact,ACCESS_VERIFICATION_QUESTION} from '../.qa-cache/assistant-tests/contract.mjs';
 import {validateSchedule,inspectSchedule,interval} from '../.qa-cache/assistant-tests/grounding.mjs';
 import {providerRequest,extractResult,readBounded,failureCode} from '../.qa-cache/assistant-tests/server.mjs';
 const preview='https://develop-conference-playbook.conference-playbook.pages.dev';
 const model='gpt-5.4-mini';
 // Official model rates verified 2026-10-17. Charge cached input at the full rate.
 const inputRate=0.75/1e6,outputRate=4.50/1e6;
+const digest=text=>createHash('sha256').update(text).digest('hex');
+export function checkIndependentLock(datasetText,sourceFingerprint,clientText,lock){
+  const cases=JSON.parse(datasetText),payloadHash=digest(JSON.stringify(cases.map(f=>providerRequest(validateInput(f.input),model))));
+  if(lock.datasetSha256!==digest(datasetText)||lock.sourceFingerprint!==sourceFingerprint||lock.clientSha256!==digest(clientText)||lock.providerPayloadSha256!==payloadHash||lock.model!==model)throw Error('Independent study lock differs. Freeze the dataset and implementation before testing.');
+  return lock;
+}
 export function options(args){
   const flags=new Set(['--live','--direct']),values=new Set(['--base','--case','--cases','--limit','--repeat','--suite','--budget-usd']),parsed={};
   for(let i=0;i<args.length;i++){
@@ -24,7 +30,7 @@ export function options(args){
   if(!Number.isInteger(limit)||limit<1||limit>(direct?24:6))throw Error('Use at most six preview attempts or twenty-four direct test attempts.');
   if(!Number.isInteger(repeat)||repeat<1||repeat>3)throw Error('Use one to three repeats.');
   if(!Number.isFinite(budget)||budget<=0||budget>1)throw Error('The direct evaluation budget must be above zero and at most USD 1.');
-  if(!['regression','quality'].includes(suite))throw Error('Unknown evaluation suite.');
+  if(!['regression','quality','independent'].includes(suite))throw Error('Unknown evaluation suite.');
   if(parsed['--case']&&parsed['--cases'])throw Error('Choose --case or --cases.');
   if(live&&!direct&&parsed['--base']!==preview)throw Error('Hosted evaluation requires the exact development preview --base.');
   return {live,direct,limit,repeat,budget,suite,ids:String(parsed['--cases']||parsed['--case']||'').split(',').filter(Boolean)};
@@ -43,12 +49,12 @@ export async function runLive(cases,config,fetcher=fetch,onProgress=async()=>{})
   }
   outer:for(let iteration=1;iteration<=config.repeat;iteration++)for(const f of cases){
     if(report.live.length>=config.limit){report.stopReason='attempt_limit';break outer;}
-    if(config.suite==='quality'&&f.fictional!==true)throw Error('Only the checked-in fictional quality cases may be sent.');
+    if(config.suite!=='regression'&&f.fictional!==true)throw Error('Only the checked-in fictional quality cases may be sent.');
     const input=validateInput(f.input);
     if(sharingTexts(input).some(text=>redact(text)!==text))throw Error('Remove private details from the fictional evaluation fixture.');
     const payload=providerRequest(input,model),bound=costBound(payload);
     if(config.direct&&report.conservativeSpendUsd+bound>config.budget){report.stopReason='budget_limit';break outer;}
-    const start=performance.now();let status=0,body,result,error='',code='',providerRaw;
+    const start=performance.now();let status=0,body,result,error='',code='',providerRaw,candidate;
     try{
       const response=await fetcher(config.direct?'https://api.openai.com/v1/responses':preview+'/api/assistant',{
         method:'POST',headers:config.direct?{Authorization:'Bearer '+config.apiKey,'Content-Type':'application/json'}:{Origin:preview,'Content-Type':'application/json','User-Agent':'Mozilla/5.0 Conference Playbook fictional evaluation'},
@@ -57,10 +63,10 @@ export async function runLive(cases,config,fetcher=fetch,onProgress=async()=>{})
       if(config.direct&&!response.ok){await response.body?.cancel();code='provider_http_'+status;throw Error('Provider request failed. Response body was discarded to protect credentials.');}
       body=JSON.parse(await readBounded(response.body,131072));
       if(!response.ok){code=body.code||'endpoint_http_'+status;throw Error(body.error||'Endpoint unavailable.');}
-      if(config.direct){providerRaw=body;result=validateProviderResult(extractResult(body),input);}else result=validateResult(body.result,input);
+      if(config.direct){providerRaw=body;candidate=extractResult(body);result=validateProviderResult(candidate,input);}else result=validateResult(body.result,input);
     }catch(e){code=code||failureCode(e);error=config.direct?'Direct test request or response validation failed ('+code+').':e.message;}
     if(config.direct)report.conservativeSpendUsd+=actualCost(providerRaw?.usage,bound);
-    const record={id:f.id,iteration,split:f.split||'development',status,passed:!!result,contractAccepted:!!result,ms:Math.round(performance.now()-start),...(error?{error,code}:{}),input,response:result?{result,model:config.direct?(body.model||model):body.model}:body,...(providerRaw?{providerRaw}:{}),manualReview:{status:'pending',criteria:f.rubric||['Goal relevance','Unverified access and funding','Invented opportunities','Usefulness']}};
+    const record={id:f.id,iteration,split:f.split||'development',status,passed:!!result,contractAccepted:!!result,ms:Math.round(performance.now()-start),...(error?{error,code}:{}),input,response:result?{result,model:config.direct?(body.model||model):body.model}:body,...(providerRaw?{providerRaw}:{}),accessVerification:{source:'application',present:!!result?.questions.includes(ACCESS_VERIFICATION_QUESTION)},...(candidate?{modelQuestions:candidate.questions}:{}),manualReview:{status:'pending',criteria:f.rubric||['Goal relevance','Unverified access and funding','Invented opportunities','Usefulness']}};
     if(config.direct&&!providerRaw)delete record.response;
     report.live.push(record);await onProgress(report,record);
     if([401,403,429,503].includes(status)){report.stopReason='service_or_quota';break outer;}
@@ -90,9 +96,18 @@ async function main(){
   await mkdir(folder,{recursive:true});const path=folder+'/report.json';
   const save=()=>writeFile(path,JSON.stringify(report,null,2)+'\n');await save();
   if(config.live){
-    const suite=config.suite==='quality'?JSON.parse(await readFile('tests/fixtures/assistant-quality.json','utf8')):fixtures.filter(f=>f.live);
+    const datasetPath=config.suite==='independent'?'tests/fixtures/assistant-independent-v1.json':config.suite==='quality'?'tests/fixtures/assistant-quality.json':null;
+    const datasetText=datasetPath?await readFile(datasetPath,'utf8'):JSON.stringify(fixtures.filter(f=>f.live));
+    const suite=JSON.parse(datasetText);
+    report.dataset={suite:config.suite,path:datasetPath,sha256:createHash('sha256').update(datasetText).digest('hex')};
+    if(config.suite==='independent'){
+      const lock=JSON.parse(await readFile('tests/fixtures/assistant-independent-v1.lock.json','utf8'));
+      report.studyLock=checkIndependentLock(datasetText,sourceFingerprint,await readFile('assets/assistant.js','utf8'),lock);
+    }
     const cases=config.ids.length?suite.filter(f=>config.ids.includes(f.id)):suite;
     if(!cases.length||config.ids.some(id=>!cases.some(f=>f.id===id)))throw Error('No matching fictional evaluation case.');
+    for(const f of cases){const input=validateInput(f.input);if((config.suite!=='regression'&&f.fictional!==true)||sharingTexts(input).some(t=>redact(t)!==t))throw Error('Use only fictional evaluation inputs without private details.');}
+    report.selection={caseIds:cases.map(c=>c.id),repeat:config.repeat,limit:config.limit};await save();
     let apiKey;
     if(config.direct){
       try{const file=await readFile('.dev.vars','utf8');if(file.length>16384)throw Error();apiKey=parseEnv(file).OPENAI_API_KEY;if(!apiKey)throw Error();}

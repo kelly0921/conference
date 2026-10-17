@@ -1,12 +1,12 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import {validateInput,validateResult,redact} from '../.qa-cache/assistant-tests/contract.mjs';
+import {validateInput,validateResult,ACCESS_VERIFICATION_QUESTION,redact} from '../.qa-cache/assistant-tests/contract.mjs';
 import {handleRequest,reserveQuota,extractResult,providerRequest,readBounded} from '../.qa-cache/assistant-tests/server.mjs';
 import {Miniflare} from 'miniflare';
 const require=createRequire(import.meta.url),{application}=require('../scripts/application_runtime.cjs');
 const input={version:3,sourceLinks:['https://example.org/session'],schedule:null,mode:'plan',goal:'Learn one useful testing technique',constraints:'One afternoon; leave time for a break.',agenda:'Fictional workshop: testing small services. Public source: https://example.org/session',context:[{id:'profile',label:'Conference profile',text:'Fictional developer conference, online, 2027-03-08, Europe/Paris.'}]};
-const result={recommendedSessionIds:[],summary:'Focus on one relevant workshop and a realistic backup.',suggestions:[{title:'Check the testing workshop',action:'Read the abstract and check online access.',why:'It fits the specific learning goal and limited time.',uncertainty:'The timetable and pass requirements need checking.',guideId:'prioritize',evidenceIds:['goal'],evidenceQuotes:[{id:'goal',quote:input.goal}],worksheet:'targets',fields:[{key:'target-name',value:'Fictional testing workshop'},{key:'target-action',value:'Check the abstract and access.'},{key:'target-link',value:'https://example.org/session'}]}],questions:['What does your pass include?']};
+const result={recommendedSessionIds:[],summary:'Focus on one relevant workshop and a realistic backup.',suggestions:[{title:'Check the testing workshop',action:'Read the abstract and check online access.',why:'It fits the specific learning goal and limited time.',uncertainty:'The timetable and pass requirements need checking.',guideId:'prioritize',evidenceIds:['goal'],evidenceQuotes:[{id:'goal',quote:input.goal}],worksheet:'targets',fields:[{key:'target-name',value:'Fictional testing workshop'},{key:'target-action',value:'Check the abstract and access.'},{key:'target-link',value:'https://example.org/session'}]}],questions:[ACCESS_VERIFICATION_QUESTION,'What does your pass include?']};
 const env={AI_ENABLED:'true',OPENAI_API_KEY:'fictional-test-key-not-real',AI_MODEL:'gpt-5.4-mini',AI_LIMITS:null};
 const request=(body={consent:true,input},origin='https://example.org')=>new Request('https://example.org/api/assistant',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json','CF-Connecting-IP':'192.0.2.1'},body:JSON.stringify(body)});
 async function database() {
@@ -157,7 +157,7 @@ test('checked AI result opens an editable worksheet draft, and navigation cancel
   const checked=structuredClone(result);checked.suggestions[0].evidenceIds=['goal'];checked.suggestions[0].evidenceQuotes=[{id:'goal',quote:'Learn one testing technique'}];checked.suggestions[0].fields=checked.suggestions[0].fields.filter(f=>f.key!=='target-link');
   a.context.fetch=async()=>({ok:true,json:async()=>({result:checked})});
   click({aiPreview:'1'});a.node('ai-consent').checked=true;click({aiSend:'1'});await new Promise(resolve=>setImmediate(resolve));
-  assert.ok(a.node('ai-results').innerHTML.includes('Use in worksheet'));assert.equal(a.node('ai-consent').checked,false);
+  assert.ok(a.node('ai-results').innerHTML.includes('Use in worksheet'));assert.ok(a.node('ai-results').innerHTML.includes('Access check:'));assert.ok(a.node('ai-results').innerHTML.includes(ACCESS_VERIFICATION_QUESTION));assert.equal(a.node('ai-consent').checked,false);
   click({aiUse:'0'});assert.equal(a.run('location.hash'),'#/conference');assert.equal(a.run('getPlan().targets.length'),0);assert.ok(a.run("getPlan().worksheetDrafts['targets:new']"));
   a.run("location.hash='#/assistant/plan'");let aborted=false;
   a.context.fetch=async(_url,options)=>new Promise((_resolve,reject)=>options.signal.addEventListener('abort',()=>{aborted=true;reject(new DOMException('Cancelled','AbortError'));}));

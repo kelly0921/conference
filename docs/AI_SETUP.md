@@ -1,6 +1,6 @@
 # AI planning preview
 
-The saved planner now offers **Help me plan** and **Review my plan**. Both use an optional, explicit preview of the request. Only a user-approved request reaches OpenAI. Suggestions include an action, reason, uncertainty, relevant guide, exact supporting quotes and proposed worksheet text. “Use in worksheet” creates a recoverable draft; the user reviews it and saves through the normal editor. Existing drafts cannot be overwritten by AI. See the [current repeated review](AI_REPEATED_REVIEW_2026-10-17.md) for tested behavior and open quality gates.
+The saved planner now offers **Help me plan** and **Review my plan**. Both use an optional, explicit preview of the request. Only a user-approved request reaches OpenAI. Suggestions include an action, reason, uncertainty, relevant guide, exact supporting quotes and proposed worksheet text. “Use in worksheet” creates a recoverable draft; the user reviews it and saves through the normal editor. Existing drafts cannot be overwritten by AI. Every result includes a labeled access-evidence question supplied by the planner, separately from model questions. See the [access fix and fresh study](AI_ACCESS_INDEPENDENT_REVIEW_2026-10-17.md) for current evidence and open quality gates; the [earlier repeated review](AI_REPEATED_REVIEW_2026-10-17.md) preserves its historical findings.
 
 ## Enable the development preview
 
@@ -81,6 +81,14 @@ npm.cmd run eval:assistant -- --live --direct --suite quality --repeat 2 --limit
 Direct mode sends only checked-in fictional cases to `api.openai.com`, using the same payload and validators as Pages. It does not change public limits or add an evaluation endpoint. It accepts at most 24 attempts and three repeats, with an estimated cost guard of USD 0.50 by default and USD 1 maximum. Configure provider-project spending controls separately. The 16-case example above runs every case once and, if the budget allows, the first eight again; choose a smaller balanced `--cases` list if every selected case must repeat twice. Original development/holdout labels are retained for audit. The October 17 study consumed those holdouts during debugging, so this corpus is now a regression suite; create fresh independent cases before another held-out evaluation.
 
 Do not replace fictional fixtures with real personal plans. Successful direct provider responses, including rejected candidates, are retained locally for diagnosis; credentials and non-2xx provider bodies are excluded. Requests use `store: false`, with the same provider retention caveat documented above. Direct batches and their manual-review limitations are recorded in the repeated review.
+
+The frozen fresh study has twelve different cases, each run twice:
+
+```powershell
+npm.cmd run eval:assistant -- --live --direct --suite independent --repeat 2 --limit 24 --budget-usd 0.50
+```
+
+Its checked-in lock pins the exact dataset/rubrics, source fingerprint, client bytes, model and provider payloads. A mismatch aborts before reading the key or making paid calls. The inputs and outputs have now been reviewed; subsequent repeats are regressions, not fresh independent evidence. For a new implementation, create a separate frozen cohort and preserve the original capture and grades. Application-added access-question presence and raw model questions are reported separately. The same coding assistant wrote and reviewed this small fictional study; it is not an external attendee benchmark.
 
 `npm run dev:assistant` serves the full Pages app at `http://127.0.0.1:4174`. Live calls are disabled by default. Static port 4173 can show the interface and fictional example but cannot run the API. No key is required for tests: they use fictional provider responses and local Cloudflare SQLite.
 

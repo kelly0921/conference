@@ -1,7 +1,10 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {options,runLive} from '../scripts/evaluate_assistant.mjs';
+import {createHash} from 'node:crypto';
+import {options,runLive,checkIndependentLock} from '../scripts/evaluate_assistant.mjs';
+import {providerRequest} from '../.qa-cache/assistant-tests/server.mjs';
+import {validateInput} from '../.qa-cache/assistant-tests/contract.mjs';
 const fixtures=JSON.parse(await readFile(new URL('./fixtures/assistant-accuracy.json',import.meta.url),'utf8'));
 const fixture=fixtures.find(f=>f.id==='learning-goal-with-unknown-access');
 const sample={...fixture,fictional:true,rubric:['Check usefulness manually.']};
@@ -59,4 +62,21 @@ test('evaluation privacy matches endpoint text checks before JSON escaping publi
   assert.equal(report.live.length,1);assert.equal(report.live[0].contractAccepted,true);
   f.input.agenda='https://example.org/?token=private';let calls=0;
   await assert.rejects(()=>runLive([f],direct,async()=>{calls++;return completed(f.result);}));assert.equal(calls,0);
+});
+
+test('independent study refuses changed inputs, rubrics, source, client or model before paid calls',async()=>{
+  const text=JSON.stringify([sample]),hash=v=>createHash('sha256').update(v).digest('hex');
+  const lock={datasetSha256:hash(text),sourceFingerprint:'version',clientSha256:hash('client'),providerPayloadSha256:hash(JSON.stringify([providerRequest(validateInput(sample.input),'gpt-5.4-mini')])),model:'gpt-5.4-mini'};
+  assert.equal(checkIndependentLock(text,'version','client',lock),lock);
+  for(const [data,source,client,version] of [[JSON.stringify([{...sample,rubric:['changed']}]),'version','client',lock],[text,'new-version','client',lock],[text,'version','changed-client',lock],[text,'version','client',{...lock,model:'other'}],[text,'version','client',{...lock,providerPayloadSha256:'changed'}]])assert.throws(()=>checkIndependentLock(data,source,client,version));
+  const frozenText=await readFile(new URL('./fixtures/assistant-independent-v1.json',import.meta.url),'utf8');
+  const frozenLock=JSON.parse(await readFile(new URL('./fixtures/assistant-independent-v1.lock.json',import.meta.url),'utf8'));
+  assert.equal(hash(frozenText),frozenLock.datasetSha256);
+  assert.deepEqual(JSON.parse(frozenText).map(f=>f.id),frozenLock.caseIds);
+});
+
+test('access-question completion is reported as application behavior, separate from model questions',async()=>{
+  const f=structuredClone(sample);f.result.questions=[];
+  const r=await runLive([f],{...direct,limit:1,repeat:1},async()=>completed(f.result));
+  assert.deepEqual(r.live[0].modelQuestions,[]);assert.deepEqual(r.live[0].accessVerification,{source:'application',present:true});
 });

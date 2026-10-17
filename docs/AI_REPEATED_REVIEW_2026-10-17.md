@@ -1,5 +1,7 @@
 # Repeated AI accuracy review — October 17, 2026
 
+Later update: the missing access-evidence question is now supplied and labeled by the planner. A separate frozen twelve-case/two-run study is recorded in the [access fix and fresh evaluation](AI_ACCESS_INDEPENDENT_REVIEW_2026-10-17.md). The counts and limitations below preserve this earlier study as captured; they are not rewritten as new live results.
+
 The broader fictional study is complete. It reproduced useful responses and several real failures that a schema-only smoke test missed. The fixes are suitable for continued internal preview; this is not a public-launch approval or a general accuracy percentage.
 
 ## Findings fixed

@@ -1,6 +1,6 @@
 # Project status — October 17, 2026
 
-Latest update: the broader repeated AI study is complete and its captured safety defects now have regression checks. There are 162 passing automated checks. The 32-call matrix and six focused retests have separate original acceptance, manual grades and final-validator replays; they are not an accuracy percentage or a fresh final-build live batch. Answer-quality and public-release gates remain. See the [repeated AI review](AI_REPEATED_REVIEW_2026-10-17.md).
+Latest update: planning/review results now always include a clearly labeled, application-owned access-evidence question. A fresh frozen study ran twelve new fictional scenarios twice without tuning between calls: all 24 passed the contract and met their case rubrics on review by the same coding assistant. This is not an independent human review or a general accuracy percentage. There are 167 passing automated checks. See the [access fix and fresh study](AI_ACCESS_INDEPENDENT_REVIEW_2026-10-17.md); the [earlier repeated review](AI_REPEATED_REVIEW_2026-10-17.md) preserves its original failures and replays. Quality and public-release gates remain.
 
 The previously reviewed v5 site is hosted at https://conference-playbook.pages.dev/. The current planner upgrade is prepared for internal review on the development preview. It is not a finalized or attendee-tested product.
 

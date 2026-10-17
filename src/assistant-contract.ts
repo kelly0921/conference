@@ -10,6 +10,11 @@ export type Worksheet = keyof typeof worksheetFields;
 export type AssistantInput = {version:1|2|3; sourceLinks?:string[]; schedule?:Schedule|null; mode:"plan"|"review"; goal:string; constraints:string; agenda:string; context:{id:string;label:string;text:string}[]};
 export type Suggestion = {title:string; action:string; why:string; uncertainty:string; guideId:string; evidenceIds:string[]; worksheet:Worksheet; evidenceQuotes?:{id:string;quote:string}[]; fields:{key:string;value:string}[]};
 export type AssistantResult = {summary:string; suggestions:Suggestion[]; questions:string[]; recommendedSessionIds?:string[]};
+export const ACCESS_VERIFICATION_QUESTION='Which current organizer or activity-host source confirms you can join the activities you plan to use, including any pass, RSVP or approval requirements?';
+export function withAccessVerification(questions:readonly string[]):string[]{
+  const remaining=questions.filter(q=>q.trim().toLowerCase()!==ACCESS_VERIFICATION_QUESTION.toLowerCase());
+  return [ACCESS_VERIFICATION_QUESTION,...remaining.slice(0,3)];
+}
 const contextIds = ["profile", "priorities", "schedule", "budget", "learning", "notes"];
 const record = (v:unknown):v is Record<string,unknown> => !!v && typeof v==="object" && !Array.isArray(v);
 function exact(v:Record<string,unknown>, keys:string[]) { if(Object.keys(v).some(k=>!keys.includes(k)) || keys.some(k=>!(k in v))) throw Error("Unexpected fields."); }
@@ -92,7 +97,9 @@ export function validateResult(raw:unknown,input:AssistantInput):AssistantResult
       if(/\b(?:list|treat|count|use|consider)\s+(?:only\s+)?confirmed\s+(?:funding|support|awards?)\s+as\s+(?:available\s+)?cash\b|\bconfirmed\s+(?:funding|support|awards?)\s+(?:is|are)\s+(?:available\s+)?cash\b/i.test(cashText))throw Error('Funding approval alone does not establish upfront cash.');
     }
   }
-  checkGroundedResult(result,input);return result;
+  // Validate every original question before reserving a slot for the fixed check.
+  // A discarded fourth question must never hide an unsafe provider response.
+  checkGroundedResult(result,input);return {...result,questions:withAccessVerification(result.questions)};
 }
 const text={type:"string"};
 const fieldSchema={type:"object",additionalProperties:false,required:["key","value"],properties:{
@@ -139,6 +146,7 @@ export function providerSchema(input:AssistantInput){
     }
   }));
   return {...groundedResultSchema,properties:{...groundedResultSchema.properties,
+    questions:{...groundedResultSchema.properties.questions,maxItems:3},
     recommendedSessionIds:{type:'array',maxItems:input.schedule?.maxActivities||0,items:input.schedule?{type:'string',enum:input.schedule.sessions.map(s=>s.id)}:text},
     suggestions:{...groundedResultSchema.properties.suggestions,items:{anyOf:variants}}
   }};

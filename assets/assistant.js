@@ -237,6 +237,11 @@ var PlaybookAssistant = (() => {
     experience: ["experience-name", "experience-purpose", "experience-question", "experience-action", "experience-backup", "experience-source"],
     learning: ["insight-goal", "insight-use", "insight-action"]
   };
+  var ACCESS_VERIFICATION_QUESTION = "Which current organizer or activity-host source confirms you can join the activities you plan to use, including any pass, RSVP or approval requirements?";
+  function withAccessVerification(questions) {
+    const remaining = questions.filter((q) => q.trim().toLowerCase() !== ACCESS_VERIFICATION_QUESTION.toLowerCase());
+    return [ACCESS_VERIFICATION_QUESTION, ...remaining.slice(0, 3)];
+  }
   var contextIds = ["profile", "priorities", "schedule", "budget", "learning", "notes"];
   var record = (v) => !!v && typeof v === "object" && !Array.isArray(v);
   function exact(v, keys2) {
@@ -346,7 +351,7 @@ var PlaybookAssistant = (() => {
       }
     }
     checkGroundedResult(result, input);
-    return result;
+    return { ...result, questions: withAccessVerification(result.questions) };
   }
   var text = { type: "string" };
   var fieldSchema = { type: "object", additionalProperties: false, required: ["key", "value"], properties: {
@@ -459,10 +464,11 @@ var PlaybookAssistant = (() => {
     return `<div class="ai-payload"><p class="section-caption">${input.mode === "review" ? "Review my plan" : "Help me plan"} \xB7 Exact request details</p><dl><dt>Goal</dt><dd>${esc(input.goal)}</dd><dt>Constraints</dt><dd>${esc(input.constraints || "None supplied")}</dd><dt>Agenda</dt><dd>${esc(input.agenda || "None supplied")}</dd><dt>Source links eligible for worksheet drafts</dt><dd>${esc((input.sourceLinks || []).join("\n") || "None approved")}</dd>${input.context.map((c) => `<dt>${esc(c.label)}</dt><dd>${esc(c.text)}</dd>`).join("")}</dl>${scheduleFactsHTML(input.schedule)}</div><label class="ai-consent"><input type="checkbox" id="ai-consent" data-draft-exclude="1"> I approve sending these displayed details to OpenAI.</label><div class="linkrow"><button class="btn primary" id="ai-send" data-ai-send="1">Ask AI for suggestions</button><button class="btn" data-ai-cancel="1" hidden>Cancel request</button></div><p class="helper">Up to six attempts per hour per visitor, with a shared daily limit. Requests are never retried automatically.</p>`;
   }
   function resultsHTML(s) {
+    const questions = withAccessVerification(s.result.questions);
     return `<div class="assistant-results-heading"><span class="section-caption">${s.example ? "Fictional example \xB7 no AI request was made" : "AI suggestions \xB7 check before using"}</span><h2>A little focus goes a long way.</h2><p>${esc(s.result.summary)}</p><p class="helper">${s.example ? "This shows the experience with an invented event. These example suggestions cannot be added to your real plan." : "AI can be wrong. Dates, eligibility, funding and access still need confirmation from official sources. These suggestions do not change your saved plan."}</p></div>${s.example ? "" : scheduleFactsHTML(s.usedInput?.schedule, s.result.recommendedSessionIds)}${s.result.suggestions.map((x, i) => `<article class="assistant-card"><span class="section-caption">${String(i + 1).padStart(2, "0")} \xB7 ${esc(worksheetNames[x.worksheet])}</span><h3>${esc(x.title)}</h3><p class="ai-action">${esc(x.action)}</p><dl><dt>Why this fits</dt><dd>${esc(x.why)}</dd><dt>Needs checking</dt><dd>${esc(x.uncertainty)}</dd></dl>${x.evidenceQuotes ? `<details class="ai-evidence"><summary>Supporting details</summary><dl>${x.evidenceQuotes.map((q) => {
       const e = evidenceFor(s.usedInput).find((e2) => e2.id === q.id);
       return `<dt>${esc(e?.label || q.id)} \xB7 ${e?.kind === "calculated" ? "Calculated" : "You supplied"}</dt><dd>${esc(q.quote)}</dd>`;
-    }).join("")}</dl><p class="helper">Matching a quote confirms its source, not independent verification or whether the reasoning is correct.</p></details>` : `<p class="helper">Based on: ${x.evidenceIds.map((id) => esc(labels[id] || id)).join(", ")}.</p>`}<details><summary>Proposed worksheet draft</summary><dl>${x.fields.map((f) => `<dt>${esc(fieldLabels[f.key])}</dt><dd>${esc(f.value)}</dd>`).join("")}</dl></details><div class="linkrow">${s.example ? "" : `<button class="btn primary" data-ai-use="${i}">Use in worksheet \u2192</button>`}<a class="plainlink" href="#/guide/${x.guideId}">${esc(GUIDE_BY_ID[x.guideId].title)} \u2192</a></div></article>`).join("")}${s.result.questions.length ? `<div class="assistant-questions"><h3>Before you commit</h3><ul>${s.result.questions.map((q) => `<li>${esc(q)}</li>`).join("")}</ul></div>` : ""}`;
+    }).join("")}</dl><p class="helper">Matching a quote confirms its source, not independent verification or whether the reasoning is correct.</p></details>` : `<p class="helper">Based on: ${x.evidenceIds.map((id) => esc(labels[id] || id)).join(", ")}.</p>`}<details><summary>Proposed worksheet draft</summary><dl>${x.fields.map((f) => `<dt>${esc(fieldLabels[f.key])}</dt><dd>${esc(f.value)}</dd>`).join("")}</dl></details><div class="linkrow">${s.example ? "" : `<button class="btn primary" data-ai-use="${i}">Use in worksheet \u2192</button>`}<a class="plainlink" href="#/guide/${x.guideId}">${esc(GUIDE_BY_ID[x.guideId].title)} \u2192</a></div></article>`).join("")}<div class="assistant-questions"><h3>Before you commit</h3><p class="helper">The access check comes from the planner. Other questions come from ${s.example ? "this fictional example" : "AI"}.</p><ul>${questions.map((q, i) => `<li>${i === 0 ? "<strong>Access check:</strong> " : ""}${esc(q)}</li>`).join("")}</ul></div>`;
   }
   function showAvailability() {
     const out = document.getElementById("ai-availability");
