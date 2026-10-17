@@ -1,5 +1,7 @@
 # Broader AI review — October 17, 2026
 
+Update: the later [repeated study and fixes](AI_REPEATED_REVIEW_2026-10-17.md) supersede the pending-batch status and test counts below. This report retains the earlier pass as historical evidence.
+
 The development preview now uses protocol 3: explicitly approved source links and selectable evidence excerpts, alongside the existing code-calculated timetable checks. The main finding was that a response could satisfy the schema and warn about unverified information while still putting an injected link into worksheet source fields. That behavior is now rejected, and a fresh live retest passed.
 
 ## Findings and changes

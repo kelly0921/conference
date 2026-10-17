@@ -58,6 +58,9 @@ export function allowedSources(input:AssistantInput):Set<string> {
   if(input.version===3)return new Set(input.sourceLinks);
   return new Set(textURLs(JSON.stringify(input)).flatMap(sourceVariants));
 }
+export function sharingTexts(input:AssistantInput):string[]{
+  return [input.goal,input.constraints,input.agenda,...input.context.flatMap(c=>[c.label,c.text]),...(input.sourceLinks||[]),...(input.schedule?input.schedule.sessions.flatMap(s=>[s.label,s.source]):[])];
+}
 export function validateResult(raw:unknown,input:AssistantInput):AssistantResult {
   if(!record(raw)) throw Error("The response could not be checked."); exact(raw,["summary","suggestions","questions",...(input.version>=2?["recommendedSessionIds"]:[])]);
   if(!Array.isArray(raw.suggestions) || raw.suggestions.length<1 || raw.suggestions.length>4 || !Array.isArray(raw.questions) || raw.questions.length>4) throw Error("Invalid suggestions.");
@@ -85,6 +88,8 @@ export function validateResult(raw:unknown,input:AssistantInput):AssistantResult
     for(const t of text){
       if(redact(t)!==t)throw Error('Generated contact details or private links are unsupported.');
       if(textURLs(t).some(url=>!sourceVariants(url).some(v=>sources.has(v))))throw Error('Unprovided source URL.');
+      const cashText=t.replace(/\b(?:(?:do|must|should)\s+not|never)\s+(?:list|treat|count|use|consider)\s+(?:only\s+)?confirmed\s+(?:funding|support|awards?)\s+as\s+(?:available\s+)?cash\b/gi,'[cash timing caution]');
+      if(/\b(?:list|treat|count|use|consider)\s+(?:only\s+)?confirmed\s+(?:funding|support|awards?)\s+as\s+(?:available\s+)?cash\b|\bconfirmed\s+(?:funding|support|awards?)\s+(?:is|are)\s+(?:available\s+)?cash\b/i.test(cashText))throw Error('Funding approval alone does not establish upfront cash.');
     }
   }
   checkGroundedResult(result,input);return result;
@@ -117,31 +122,55 @@ export function quoteChoices(text:string,hint=''):string[]{
 }
 export function providerSchema(input:AssistantInput){
   if(input.version<3)return input.version===2?groundedResultSchema:resultSchema;
-  const choices=evidenceFor(input).map(e=>({type:'object',additionalProperties:false,required:['id','quote'],properties:{id:{type:'string',enum:[e.id]},quote:{type:'string',enum:quoteChoices(e.text,e.label)}}}));
+  const choices=evidenceFor(input).map(e=>({type:'object',additionalProperties:false,required:['id','quoteId'],properties:{id:{type:'string',enum:[e.id]},quoteId:{type:'string',enum:quoteChoices(e.text,e.label).map((_,i)=>'excerpt:'+(i+1))}}}));
   const {evidenceIds:_redundant,...properties}=groundedResultSchema.properties.suggestions.items.properties;
   const sourceKeys=['target-link','experience-source'];
-  const draftFields={type:'array',minItems:1,maxItems:6,items:{anyOf:[
-    {...fieldSchema,properties:{key:{type:'string',enum:fieldSchema.properties.key.enum.filter(k=>!sourceKeys.includes(k))},value:text}},
-    {...fieldSchema,properties:{key:{type:'string',enum:sourceKeys},value:{type:'string',enum:['',...(input.sourceLinks||[])]}}}
-  ]}};
-  return {...groundedResultSchema,properties:{...groundedResultSchema.properties,suggestions:{...groundedResultSchema.properties.suggestions,items:{...groundedResultSchema.properties.suggestions.items,required:groundedResultSchema.properties.suggestions.items.required.filter(k=>k!=='evidenceIds'),properties:{...properties,fields:draftFields,evidenceQuotes:{type:'array',minItems:1,maxItems:6,items:{anyOf:choices}}}}}}};
+  // A named object makes required target actions and worksheet membership
+  // expressible in the provider schema. The public/client shape remains an array.
+  const variants=Object.entries(worksheetFields).map(([worksheet,keys])=>({
+    ...groundedResultSchema.properties.suggestions.items,
+    required:groundedResultSchema.properties.suggestions.items.required.filter(k=>k!=='evidenceIds'),
+    properties:{...properties,worksheet:{type:'string',enum:[worksheet]},
+      fields:{type:'object',additionalProperties:false,required:keys,properties:Object.fromEntries(keys.map(key=>[key,
+        sourceKeys.includes(key)?{type:'string',enum:['',...(input.sourceLinks||[])]}:
+        {type:'string',maxLength:key==='target-name'?140:2000,...(['target-name','target-action'].includes(key)?{minLength:1,pattern:'\\S'}:{})}
+      ]))},
+      evidenceQuotes:{type:'array',minItems:1,maxItems:6,items:{anyOf:choices}}
+    }
+  }));
+  return {...groundedResultSchema,properties:{...groundedResultSchema.properties,
+    recommendedSessionIds:{type:'array',maxItems:input.schedule?.maxActivities||0,items:input.schedule?{type:'string',enum:input.schedule.sessions.map(s=>s.id)}:text},
+    suggestions:{...groundedResultSchema.properties.suggestions,items:{anyOf:variants}}
+  }};
 }
 export function validateProviderResult(raw:unknown,input:AssistantInput):AssistantResult {
   if(input.version<3||!record(raw)||!Array.isArray(raw.suggestions))return validateResult(raw,input);
-  const known=new Map(evidenceFor(input).map(e=>[e.id,e.text]));
+  const known=new Map(evidenceFor(input).map(e=>[e.id,e]));
   const suggestions=raw.suggestions.map(s=>{
-    if(!record(s)||Object.hasOwn(s,'evidenceIds')||!Array.isArray(s.evidenceQuotes))return s;
+    if(!record(s))return s;
+    let fields=s.fields;
+    if(record(fields)){
+      if(typeof s.worksheet!=='string'||!Object.hasOwn(worksheetFields,s.worksheet))throw Error('Unsupported worksheet field.');
+      exact(fields,[...worksheetFields[s.worksheet as Worksheet]]);
+      fields=Object.entries(fields).map(([key,value])=>({key,value}));
+    }
+    const normalized={...s,fields};
+    if(Object.hasOwn(s,'evidenceIds')||!Array.isArray(s.evidenceQuotes))return normalized;
     if(s.evidenceQuotes.length<1||s.evidenceQuotes.length>6)throw Error('Each reference needs supporting text.');
     const quotes=new Map<string,{id:string;quote:string}>();
     for(const q of s.evidenceQuotes){
-      if(!record(q)||typeof q.id!=='string'||typeof q.quote!=='string')throw Error('The supporting text was not supplied.');
-      exact(q,['id','quote']);
-      const source=known.get(q.id);
-      if(!source||!q.quote.trim()||q.quote.length>500||q.quote.length<Math.min(8,source.length)||!source.includes(q.quote))throw Error('The supporting text was not supplied.');
+      if(!record(q)||typeof q.id!=='string')throw Error('The supporting text was not supplied.');
+      const source=known.get(q.id);let quote:unknown=q.quote;
+      if(Object.hasOwn(q,'quoteId')){
+        exact(q,['id','quoteId']);
+        if(!source||typeof q.quoteId!=='string'||!/^excerpt:[1-4]$/.test(q.quoteId))throw Error('The supporting text was not supplied.');
+        quote=quoteChoices(source.text,source.label)[Number(q.quoteId.slice(8))-1];
+      }else exact(q,['id','quote']);
+      if(!source||typeof quote!=='string'||!quote.trim()||quote.length>500||quote.length<Math.min(8,source.text.length)||!source.text.includes(quote))throw Error('The supporting text was not supplied.');
       // Validate every quote before coalescing repeated references to one source.
-      if(!quotes.has(q.id))quotes.set(q.id,{id:q.id,quote:q.quote});
+      if(!quotes.has(q.id))quotes.set(q.id,{id:q.id,quote});
     }
-    return {...s,evidenceIds:[...quotes.keys()],evidenceQuotes:[...quotes.values()]};
+    return {...normalized,evidenceIds:[...quotes.keys()],evidenceQuotes:[...quotes.values()]};
   });
   return validateResult({...raw,suggestions},input);
 }

@@ -121,6 +121,18 @@ test('endpoint returns only checked provider results and preserves secrets in er
   }finally{await mf.dispose();}
 });
 
+test('endpoint converts constrained provider fields and quotes to the existing client shape',async()=>{
+  const {mf,db}=await database();try {
+    const candidate=structuredClone(result),s=candidate.suggestions[0];delete s.evidenceIds;s.evidenceQuotes=[{id:'goal',quoteId:'excerpt:1'}];
+    s.fields={'target-name':'Fictional testing workshop','target-action':'Check the abstract and access.','target-backup':'','target-question':'','target-link':'https://example.org/session'};
+    const response=await handleRequest(request(),{...env,AI_LIMITS:db},async()=>Response.json({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(candidate)}]}]}));
+    assert.equal(response.status,200);const checked=(await response.json()).result.suggestions[0];
+    assert.deepEqual(checked.evidenceIds,['goal']);assert.ok(Array.isArray(checked.fields));
+    assert.equal(checked.fields.find(f=>f.key==='target-action').value,'Check the abstract and access.');
+    assert.equal(checked.fields.find(f=>f.key==='target-link').value,'https://example.org/session');
+  }finally{await mf.dispose();}
+});
+
 async function clientFlow() {
   const a=application();a.run("ensurePreset('ghc');location.hash='#/assistant/plan'");
   a.context.AbortController=AbortController;a.context.AbortSignal=AbortSignal;

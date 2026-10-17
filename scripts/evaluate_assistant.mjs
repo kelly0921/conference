@@ -4,7 +4,7 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {parseEnv} from 'node:util';
 import {randomUUID} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
-import {validateInput,validateResult,validateProviderResult,redact} from '../.qa-cache/assistant-tests/contract.mjs';
+import {validateInput,validateResult,validateProviderResult,sharingTexts,redact} from '../.qa-cache/assistant-tests/contract.mjs';
 import {validateSchedule,inspectSchedule,interval} from '../.qa-cache/assistant-tests/grounding.mjs';
 import {providerRequest,extractResult,readBounded,failureCode} from '../.qa-cache/assistant-tests/server.mjs';
 const preview='https://develop-conference-playbook.conference-playbook.pages.dev';
@@ -45,7 +45,7 @@ export async function runLive(cases,config,fetcher=fetch,onProgress=async()=>{})
     if(report.live.length>=config.limit){report.stopReason='attempt_limit';break outer;}
     if(config.suite==='quality'&&f.fictional!==true)throw Error('Only the checked-in fictional quality cases may be sent.');
     const input=validateInput(f.input);
-    if(redact(JSON.stringify(input))!==JSON.stringify(input))throw Error('Remove private details from the fictional evaluation fixture.');
+    if(sharingTexts(input).some(text=>redact(text)!==text))throw Error('Remove private details from the fictional evaluation fixture.');
     const payload=providerRequest(input,model),bound=costBound(payload);
     if(config.direct&&report.conservativeSpendUsd+bound>config.budget){report.stopReason='budget_limit';break outer;}
     const start=performance.now();let status=0,body,result,error='',code='',providerRaw;

@@ -1,6 +1,6 @@
 # AI planning preview
 
-The saved planner now offers **Help me plan** and **Review my plan**. Both use an optional, explicit preview of the request. Only a user-approved request reaches OpenAI. Suggestions include an action, reason, uncertainty, relevant guide, exact supporting quotes and proposed worksheet text. “Use in worksheet” creates a recoverable draft; the user reviews it and saves through the normal editor. Existing drafts cannot be overwritten by AI. See the [current broader review](AI_BROADER_REVIEW_2026-10-17.md) for tested behavior and open quality gates.
+The saved planner now offers **Help me plan** and **Review my plan**. Both use an optional, explicit preview of the request. Only a user-approved request reaches OpenAI. Suggestions include an action, reason, uncertainty, relevant guide, exact supporting quotes and proposed worksheet text. “Use in worksheet” creates a recoverable draft; the user reviews it and saves through the normal editor. Existing drafts cannot be overwritten by AI. See the [current repeated review](AI_REPEATED_REVIEW_2026-10-17.md) for tested behavior and open quality gates.
 
 ## Enable the development preview
 
@@ -72,15 +72,15 @@ npm.cmd run eval:assistant -- --live --base https://develop-conference-playbook.
 
 `--limit` bounds total attempts, including repeats. Hosted runs permit at most six attempts, stop on quota/unavailable-service responses, and require the deployed source fingerprint to match the local build. The ordinary hourly/shared daily limits still apply. Reports are saved incrementally in distinct ignored `.qa-cache/assistant-evals/<run>/report.json` folders. There are no automatic error retries. Keep human review separate from contract acceptance. The six validator replays are constructed regressions, not fresh baseline model calls.
 
-For a larger private test batch, add a separate OpenAI test key directly to ignored `.dev.vars` as `OPENAI_API_KEY=...`; never put its value in chat or Git. Then use:
+For a larger private test batch, add your privately retained OpenAI project key directly to ignored `.dev.vars` (a separate test key is optional) as `OPENAI_API_KEY=...`; never put its value in chat or Git. Then use:
 
 ```powershell
 npm.cmd run eval:assistant -- --live --direct --suite quality --repeat 2 --limit 24 --budget-usd 0.50
 ```
 
-Direct mode sends only checked-in fictional cases to `api.openai.com`, using the same payload and validators as Pages. It does not change public limits or add an evaluation endpoint. It accepts at most 24 attempts and three repeats, with an estimated cost guard of USD 0.50 by default and USD 1 maximum. Configure provider-project spending controls separately. The 16-case example above runs every case once and, if the budget allows, the first eight again; choose a smaller balanced `--cases` list if every selected case must repeat twice. Development and holdout labels are included in the reports. Keep holdouts untouched while tuning.
+Direct mode sends only checked-in fictional cases to `api.openai.com`, using the same payload and validators as Pages. It does not change public limits or add an evaluation endpoint. It accepts at most 24 attempts and three repeats, with an estimated cost guard of USD 0.50 by default and USD 1 maximum. Configure provider-project spending controls separately. The 16-case example above runs every case once and, if the budget allows, the first eight again; choose a smaller balanced `--cases` list if every selected case must repeat twice. Original development/holdout labels are retained for audit. The October 17 study consumed those holdouts during debugging, so this corpus is now a regression suite; create fresh independent cases before another held-out evaluation.
 
-Do not replace fictional fixtures with real personal plans. Successful direct provider responses, including rejected candidates, are retained locally for diagnosis; credentials and non-2xx provider bodies are excluded. Requests use `store: false`, with the same provider retention caveat documented above. No direct batch was run during the broader review because the local key was not present.
+Do not replace fictional fixtures with real personal plans. Successful direct provider responses, including rejected candidates, are retained locally for diagnosis; credentials and non-2xx provider bodies are excluded. Requests use `store: false`, with the same provider retention caveat documented above. Direct batches and their manual-review limitations are recorded in the repeated review.
 
 `npm run dev:assistant` serves the full Pages app at `http://127.0.0.1:4174`. Live calls are disabled by default. Static port 4173 can show the interface and fictional example but cannot run the API. No key is required for tests: they use fictional provider responses and local Cloudflare SQLite.
 

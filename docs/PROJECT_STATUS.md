@@ -1,6 +1,6 @@
 # Project status — October 17, 2026
 
-Latest update: protocol 3 separates approved source links from untrusted agenda text and constrains evidence excerpts. The broader pass found a real source-promotion failure despite schema acceptance, fixed it, and passed a targeted live retest. There are 138 passing automated checks and a prepared 16-case human-review suite. The larger repeated live batch awaits a private local test key or later hosted quota windows; it has not been claimed complete. See the [broader AI review](AI_BROADER_REVIEW_2026-10-17.md).
+Latest update: the broader repeated AI study is complete and its captured safety defects now have regression checks. There are 162 passing automated checks. The 32-call matrix and six focused retests have separate original acceptance, manual grades and final-validator replays; they are not an accuracy percentage or a fresh final-build live batch. Answer-quality and public-release gates remain. See the [repeated AI review](AI_REPEATED_REVIEW_2026-10-17.md).
 
 The previously reviewed v5 site is hosted at https://conference-playbook.pages.dev/. The current planner upgrade is prepared for internal review on the development preview. It is not a finalized or attendee-tested product.
 

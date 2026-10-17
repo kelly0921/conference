@@ -169,6 +169,7 @@ var PlaybookAssistant = (() => {
   function checkGroundedResult(result, input) {
     if (input.version < 2) return;
     const known = new Map(evidenceFor(input).map((e) => [e.id, e]));
+    const ids = result.recommendedSessionIds || [];
     const identities = /* @__PURE__ */ new Map();
     const identity = (name, id) => {
       if (!identities.has(name)) identities.set(name, /* @__PURE__ */ new Set());
@@ -203,10 +204,13 @@ var PlaybookAssistant = (() => {
         for (const span of spans) {
           if (spans.some((other) => other !== span && other.start <= span.start && other.end >= span.end && (other.start < span.start || other.end > span.end))) continue;
           if (!s.evidenceIds.some((id) => span.ids.has(id))) throw Error("A named session or priority needs its own evidence reference.");
+          if (ids.length && [...span.ids].some((id) => /^(?:session|saved):/.test(id)) && !ids.some((id) => span.ids.has(id))) {
+            const action = s.action.replace(/\bnot(?:\s+as)?\s+(?:an?\s+)?(?:second|additional)\s+(?:\w+\s+){0,3}(?:session|activity|option)\b/gi, "[alternative limit]");
+            if (!/\b(?:backup|alternative|fallback|replacement|instead)\b/i.test(s.title + " " + s.action) || /\bafter\b[^.!?\n]{0,100}\b(?:primary|main)\b|\b(?:second|additional)\s+(?:\w+\s+){0,3}(?:session|activity|option)\b/i.test(action)) throw Error("A non-selected session must be labelled as an alternative.");
+          }
         }
       }
     }
-    const ids = result.recommendedSessionIds || [];
     if (new Set(ids).size !== ids.length || !input.schedule && ids.length) throw Error("Unsupported session selection.");
     if (input.schedule) {
       if (ids.length > input.schedule.maxActivities || ids.some((id) => !input.schedule.sessions.some((s) => s.id === id))) throw Error("Unsupported session selection.");
@@ -217,11 +221,12 @@ var PlaybookAssistant = (() => {
     const texts = [result.summary, ...result.questions, ...result.suggestions.flatMap((s) => [...suppliedNames.has(s.title) ? [] : [s.title], s.action, s.why, s.uncertainty, ...s.fields.filter((f) => !["target-link", "experience-source"].includes(f.key) && !(["target-name", "experience-name"].includes(f.key) && suppliedNames.has(f.value))).map((f) => f.value)])];
     const prose = texts.map((t) => {
       for (const name of [...suppliedNames].sort((a, b) => b.length - a.length)) t = t.replace(new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "giu"), "[supplied item]");
-      return t.replace(/https?:\/\/[^\s<>"'\\`]+/gi, "[source]").replace(/\bconflict[- ](?:resolution|management|free)\b/gi, "[topic]").replace(/\boverlap(?:ping)?(?: in)? (?:interests|topics|skills|expertise|areas)\b/gi, "[topic]");
+      return t.replace(/https?:\/\/[^\s<>"'\\`]+/gi, "[source]").replace(/\bconflict[- ](?:resolution|management|free)\b/gi, "[topic]").replace(/\boverlap(?:ping)?(?: in)? (?:interests|topics|skills|expertise|areas)\b/gi, "[topic]").replace(/\b(?:interests?|topics?|skills?|expertise|peers?)(?: (?:area|most|directly|closely|also))* overlaps?\b/gi, "[topic]").replace(/\b(?:kind|type) of overlap you want\b|\b(?:define|describe|clarify) the overlap you care about\b/gi, "[topic]");
     });
     const clock = /\b\d{1,2}:\d{2}\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}[/-]\d{1,2}[/-]\d{4}\b|\b\d{1,2}h\d{2}\b|\b(?:\d{1,2}(?:[.:]\d{2})?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s*[ap]\.?m\.?(?!\p{L})|\b(?:noon|midnight)\b/iu;
-    const relation = /\b(?:overlap\w*|simultaneous\w*|double[ -]?book\w*|back[ -]to[ -]back|at the same time)\b|\b(?:time|timing|schedule|scheduling)[ -]+conflict\w*\b|\b(?:sessions?|talks?|activities|appointments?)\s+(?:(?:all|both)\s+)?(?:conflict|clash)\w*\b|\b(?:conflicting|clashing)\s+(?:sessions?|talks?|activities|appointments?)\b/i;
-    if (prose.some((t) => clock.test(t) || relation.test(t))) throw Error("Timetable claims must use the calculated session checks.");
+    const relation = /\b(?:simultaneous\w*|double[ -]?book\w*|back[ -]to[ -]back|at the same time)\b|\b(?:time|timing|schedule|scheduling)[ -]+conflict\w*\b|\b(?:sessions?|talks?|activities|appointments?)\s+(?:(?:all|both)\s+)?(?:conflict|clash)\w*\b|\b(?:conflicting|clashing)\s+(?:sessions?|talks?|activities|appointments?)\b|\b(?:timed?|timing|schedule|scheduling)\b[^.!?\n]*\b(?:conflicts?|clashes?)\b/i;
+    const overlap = /\boverlap\w*\b/i, temporal = /\[supplied item\]|\b(?:sessions?|talks?|workshops?|activities|appointments?|events?|times?(?!\s+zones?\b)|timetable|timing|schedule|scheduling)\b/i;
+    if (prose.some((t) => clock.test(t) || relation.test(t) || overlap.test(t) && (input.schedule || temporal.test(t)) || input.schedule && /\b(?:second|additional)\b[^.!?\n]{0,40}\b(?:later|after|alongside)\b/i.test(t))) throw Error("Timetable claims must use the calculated session checks.");
   }
 
   // src/assistant-contract.ts
@@ -336,6 +341,8 @@ var PlaybookAssistant = (() => {
       for (const t of text2) {
         if (redact(t) !== t) throw Error("Generated contact details or private links are unsupported.");
         if (textURLs(t).some((url) => !sourceVariants(url).some((v) => sources.has(v)))) throw Error("Unprovided source URL.");
+        const cashText = t.replace(/\b(?:(?:do|must|should)\s+not|never)\s+(?:list|treat|count|use|consider)\s+(?:only\s+)?confirmed\s+(?:funding|support|awards?)\s+as\s+(?:available\s+)?cash\b/gi, "[cash timing caution]");
+        if (/\b(?:list|treat|count|use|consider)\s+(?:only\s+)?confirmed\s+(?:funding|support|awards?)\s+as\s+(?:available\s+)?cash\b|\bconfirmed\s+(?:funding|support|awards?)\s+(?:is|are)\s+(?:available\s+)?cash\b/i.test(cashText)) throw Error("Funding approval alone does not establish upfront cash.");
       }
     }
     checkGroundedResult(result, input);

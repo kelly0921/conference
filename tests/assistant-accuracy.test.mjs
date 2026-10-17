@@ -53,13 +53,61 @@ test('version 3 sources require explicit approval; agenda URLs alone cannot beco
   assert.throws(()=>validateInput({...f.input,sourceLinks:['https://example.org/?token=private']}));
 });
 test('provider schema offers paired exact excerpt choices and approved URL field values',()=>{
-  const input=validateInput(fixtures.find(f=>f.id==='learning-goal-with-unknown-access').input),schema=providerSchema(input),card=schema.properties.suggestions.items;
+  const input=validateInput(fixtures.find(f=>f.id==='learning-goal-with-unknown-access').input),schema=providerSchema(input),card=schema.properties.suggestions.items.anyOf[0];
   assert.ok(!card.required.includes('evidenceIds'));
   const choices=card.properties.evidenceQuotes.items.anyOf;
   assert.equal(choices[0].properties.id.enum[0],'goal');
-  assert.ok(choices[0].properties.quote.enum.every(q=>input.goal.includes(q)));
-  assert.deepEqual(card.properties.fields.items.anyOf[1].properties.value.enum,['']);
+  assert.deepEqual(choices[0].properties.quoteId.enum,['excerpt:1']);
+  assert.deepEqual(card.properties.fields.properties['target-link'].enum,['']);
+  assert.ok(card.properties.fields.required.includes('target-action'));
+  assert.equal(card.properties.fields.properties['target-action'].pattern,'\\S');
+  assert.equal(schema.properties.recommendedSessionIds.maxItems,0);
+  const timed=providerSchema(validateInput(fixtures.find(f=>f.id==='timed-learning-plan').input)).properties.recommendedSessionIds;
+  assert.deepEqual(timed.items.enum,['session:1','session:2','session:3']);assert.equal(timed.maxItems,2);
   for(const text of ['Go','x'.repeat(4000),'Sentence one. Sentence two.'])assert.ok(quoteChoices(text).every(q=>q&&q.length<=200&&text.includes(q)));
+});
+
+test('opaque quote choices support quoted JSON records and resolve only exact offered excerpts',()=>{
+  const f=structuredClone(fixtures.find(f=>f.id==='learning-goal-with-unknown-access'));
+  f.input.goal='Understand "quoted" project notes.';
+  f.input.context.push({id:'priorities',label:'Saved priorities',text:JSON.stringify([{name:'Prototype "feedback" circle',action:'Check access',source:'https://example.org/circle'}])});
+  const s=f.result.suggestions[0];delete s.evidenceIds;s.evidenceQuotes=[{id:'goal',quoteId:'excerpt:1'}];
+  assert.equal(validateProviderResult(f.result,validateInput(f.input)).suggestions[0].evidenceQuotes[0].quote,f.input.goal);
+  const schema=providerSchema(validateInput(f.input));
+  for(const variant of schema.properties.suggestions.items.anyOf)for(const choice of variant.properties.evidenceQuotes.items.anyOf){
+    assert.ok(choice.properties.quoteId.enum.every(id=>/^excerpt:[1-4]$/.test(id)));
+    assert.ok(!Object.hasOwn(choice.properties,'quote'));
+  }
+  s.evidenceQuotes=[{id:'goal',quoteId:'excerpt:4'}];assert.throws(()=>validateProviderResult(f.result,validateInput(f.input)));
+  s.evidenceQuotes=[{id:'goal',quoteId:'excerpt:1',quote:f.input.goal}];assert.throws(()=>validateProviderResult(f.result,validateInput(f.input)));
+});
+
+test('unselected sessions require alternatives independently of the timetable prose guard',()=>{
+  const f=structuredClone(fixtures.find(f=>f.id==='mixed-zone-extra-session-live-rejection'));
+  f.result.summary='Use the closest title match as a tentative primary learning target.';
+  assert.throws(()=>validateResult(f.result,validateInput(f.input)),/non-selected session/);
+  for(const s of f.result.suggestions)if(s.title.includes('Community discussion'))s.action='Alternative only: inspect the abstract before replacing the primary choice.';
+  assert.doesNotThrow(()=>validateResult(f.result,validateInput(f.input)));
+  f.result.summary='The timed records show conflicts.';
+  assert.throws(()=>validateResult(f.result,validateInput(f.input)),/Timetable claims/);
+});
+
+test('correct funding warnings are not treated as affirmative cash claims',()=>{
+  const f=structuredClone(fixtures.find(f=>f.id==='confirmed-award-is-not-upfront-cash-live-negative'));
+  for(const caution of ['Do not treat confirmed funding as available cash.','Never count confirmed awards as cash.','You should not list confirmed support as available cash.']){
+    f.result.suggestions[1].action=caution;assert.doesNotThrow(()=>validateResult(f.result,validateInput(f.input)));
+  }
+});
+
+test('provider draft objects preserve required actions and reject incomplete or foreign fields',()=>{
+  const f=structuredClone(fixtures.find(f=>f.id==='learning-goal-with-unknown-access')),r=f.result,s=r.suggestions[0];
+  s.worksheet='targets';s.fields={'target-name':'Learning research','target-action':'Check the current abstract','target-backup':'','target-question':'','target-link':''};delete s.evidenceIds;
+  assert.equal(validateProviderResult(r,validateInput(f.input)).suggestions[0].fields.find(f=>f.key==='target-action').value,'Check the current abstract');
+  const good=structuredClone(s.fields);
+  s.fields['target-action']=' ';assert.throws(()=>validateProviderResult(r,validateInput(f.input)));
+  s.fields=structuredClone(good);delete s.fields['target-action'];assert.throws(()=>validateProviderResult(r,validateInput(f.input)));
+  s.fields={...good,'confirmed-access':'yes'};assert.throws(()=>validateProviderResult(r,validateInput(f.input)));
+  s.fields=good;s.worksheet='learning';assert.throws(()=>validateProviderResult(r,validateInput(f.input)));
 });
 test('provider quote selection derives IDs, coalesces valid duplicates and rejects invalid duplicates',()=>{
   const f=structuredClone(fixtures.find(f=>f.id==='learning-goal-with-unknown-access')),r=f.result;

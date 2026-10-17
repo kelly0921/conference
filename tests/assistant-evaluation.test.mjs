@@ -51,3 +51,12 @@ test('a completed fictional response can fail validation and remains available f
   const report=await runLive([sample],{...direct,limit:1,repeat:1},async()=>completed(bad));
   assert.equal(report.live[0].status,200);assert.equal(report.live[0].contractAccepted,false);assert.equal(report.live[0].code,'unsupported_evidence');assert.ok(report.live[0].providerRaw);assert.ok(!JSON.stringify(report).includes(secret));
 });
+
+test('evaluation privacy matches endpoint text checks before JSON escaping public URLs',async()=>{
+  const f=structuredClone(sample);f.input.agenda='Public page: https://example.org/session\nNo current agenda.';
+  f.input.context.push({id:'priorities',label:'Saved priorities',text:JSON.stringify([{name:'Testing lead',source:'https://example.org/session'}])});
+  const report=await runLive([f],{...direct,limit:1,repeat:1},async()=>completed(f.result));
+  assert.equal(report.live.length,1);assert.equal(report.live[0].contractAccepted,true);
+  f.input.agenda='https://example.org/?token=private';let calls=0;
+  await assert.rejects(()=>runLive([f],direct,async()=>{calls++;return completed(f.result);}));assert.equal(calls,0);
+});
