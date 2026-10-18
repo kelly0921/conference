@@ -27,7 +27,7 @@
         612.0,
         792.0
       ],
-      "sha256": "bf941f148645fb16ed9d0c12bac700c194c5ed721cc9915e1542de86b33caf3a"
+      "sha256": "471b08cac6fe445df1315201d4d9e6aecddd3f5c725f30d115567b6ce55b768f"
     },
     {
       "name": "conference-playbook-workbook-v5-a4.pdf",
@@ -36,7 +36,7 @@
         595.2755905511812,
         841.8897637795277
       ],
-      "sha256": "ec646df653d25034aba099773c13ba7866eb6d986b0053cf63af688719913591"
+      "sha256": "e8aecf4c7b5dfc86f19cc7550c0c9a5e8e9b882d95b12460a3d10eb5e9798f58"
     },
     {
       "name": "conference-playbook-sample-field-plan-v5.pdf",
@@ -45,7 +45,7 @@
         612.0,
         792.0
       ],
-      "sha256": "57ed8284f0a1d05c5037a6da4618ad3a6311c1f933d709173e4106244fa9a279"
+      "sha256": "bb53201f38425a9dda2d5aa85d68976b69620c95e102025008c8a2d28cd11de0"
     }
   ]
 }

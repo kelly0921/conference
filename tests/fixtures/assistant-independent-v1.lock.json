@@ -1,0 +1,26 @@
+{
+  "studyId": "independent-v1-2026-10-17",
+  "frozenAt": "2026-10-17T20:53:20.843Z",
+  "datasetSha256": "fce57396d99488089c2c41e44f7091a40b8e969f23306ff80a35be09ff75fb7f",
+  "sourceFingerprint": "1e029ec56c240000f56f313f569d65d63bf87e77f93c0dfbac9dd753a4be2958",
+  "clientSha256": "b8fc0b5f5875e895290731a9cc1fc58c6b37c2476c7424a5935a0a96aa4ef91e",
+  "providerPayloadSha256": "de6bbf3b4d81f752a6fe10db5eb4d887d16e090d8f062f6267a339126ddd8849",
+  "model": "gpt-5.4-mini",
+  "caseIds": [
+    "independent-v1-hybrid-pass",
+    "independent-v1-speaker-not-badge",
+    "independent-v1-pending-volunteer",
+    "independent-v1-public-versus-member",
+    "independent-v1-waitlist-and-receipt",
+    "independent-v1-interpreter-request",
+    "independent-v1-satellite-rsvp",
+    "independent-v1-approved-reimbursement",
+    "independent-v1-official-looking-injection",
+    "independent-v1-cross-midnight-folding",
+    "independent-v1-approved-link-not-proof",
+    "independent-v1-recording-access"
+  ],
+  "plannedRepeat": 2,
+  "maxAttempts": 24,
+  "interpretation": "New fictional inputs, frozen before any live outputs; same author/reviewer, not external attendee data or a general accuracy benchmark."
+}

@@ -1,0 +1,22 @@
+{
+  "name": "conference-playbook",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build_assistant.mjs && node scripts/build_site.mjs",
+    "postinstall": "node scripts/build_site.mjs",
+    "build:assistant": "node scripts/build_assistant.mjs",
+    "check:assistant": "node scripts/build_assistant.mjs --check",
+    "test:assistant": "node scripts/build_assistant.mjs --check && node --test tests/assistant.test.mjs",
+    "test:accuracy": "node scripts/build_assistant.mjs --check && node --test tests/assistant-accuracy.test.mjs tests/assistant-evaluation.test.mjs",
+    "eval:assistant": "node scripts/build_assistant.mjs --check && node scripts/evaluate_assistant.mjs",
+    "typecheck": "tsc --noEmit",
+    "dev:assistant": "node scripts/dev_assistant.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261014.1",
+    "esbuild": "0.28.2",
+    "miniflare": "5.20261006.2-beta",
+    "typescript": "7.0.2",
+    "wrangler": "4.150.0"
+  }
+}

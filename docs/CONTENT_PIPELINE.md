@@ -2,6 +2,8 @@
 
 The approved `content/playbook-v1.3.snapshot.json` remains the only guide/template content input. It is a reviewed structured transcription of Notion, not a byte-for-byte copy. Its checksum remains `86a937b8c8af0f2f1529d10c44055c2ccc0d73c8fa829fd6c8208ae2a0cd7ca5`.
 
+The October 17 beta pass adds supplemental web teaching material in `assets/representative.js`: a starter path, a fictional learning journey and contextual follow-up examples. They are separate from the approved guide/template manuscript. The nine guides and four original template bodies remain unchanged in web and PDF. The new web examples are not included in the existing v1.3 workbooks or used as AI evidence. See [beta content review](BETA_CONTENT_REVIEW_2026-10-17.md).
+
 ## Repeatable local build
 
 Install development dependencies and run from the repository root:
@@ -51,4 +53,4 @@ For changed sources, reconcile the structured fields in a new reviewed version, 
 
 ## Checks and limits
 
-CI verifies content/runtime behavior, audit safeguards, reproducible artifacts, full PDF text parity, page bounds/sizes, bookmarks and sample/export consistency. Poppler renders support separate visual review. PDFs have selectable text and bookmarks but are untagged; no PDF/UA or WCAG certification is claimed. Screen readers, browser Print dialogs, physical printers, production-origin storage and organizer freshness remain release QA.
+CI verifies content/runtime behavior, audit safeguards, reproducible artifacts, full PDF text parity, page bounds/sizes, bookmarks and sample/export consistency. Poppler renders support separate visual review. PDFs now include semantic tags, logical reading order, language, annotated source links and embedded Unicode-mapped fonts; no PDF/UA or WCAG certification is claimed. Actual screen-reader review, browser Print dialogs, physical printers, production-origin storage and organizer freshness remain release QA. See [the current planner/release evidence](PLANNER_RELEASE_QA_2026-10-13.md).

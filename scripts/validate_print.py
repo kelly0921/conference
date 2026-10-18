@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pdfplumber
 from pypdf import PdfReader
+from pypdf.generic import ContentStream
 
 from build_workbook import printable, sample_payload
 from content import ROOT, load_snapshot
@@ -13,6 +14,52 @@ from content import ROOT, load_snapshot
 
 def normalized(text):
     return re.sub(r"\s+"," ",printable(text)).strip()
+
+
+def validate_structure(reader):
+    root=reader.trailer["/Root"]
+    assert root.get("/Lang")=="en-US","Missing document language"
+    assert root["/MarkInfo"]["/Marked"],"PDF is not marked as tagged"
+    tree=root["/StructTreeRoot"]
+    document=tree["/K"]
+    assert document["/S"]=="/Document","Missing logical document root"
+    sections=document["/K"]
+    assert len(sections)==len(reader.pages),"Reading order lost a page"
+    nums=tree["/ParentTree"]["/Nums"]
+    parents={int(nums[i]):nums[i+1] for i in range(0,len(nums),2)}
+    for page,section_ref in zip(reader.pages,sections):
+        section=section_ref.get_object()
+        children=[child.get_object() for child in section["/K"]]
+        assert any(child["/S"]=="/H1" for child in children),"Missing page heading"
+        mapping=parents[int(page["/StructParents"])].get_object()
+        expected=[int(child["/K"][0] if isinstance(child["/K"],list) else child["/K"]) for child in children]
+        found, used_fonts, marked = [],set(),[]
+        current_font=None
+        for operands,operator in ContentStream(page.get_contents(),reader).operations:
+            if operator in (b"BDC",b"BMC"):
+                marked.append(operands[0])
+                if operator==b"BDC" and "/MCID" in operands[1]:
+                    mcid=int(operands[1]["/MCID"])
+                    found.append(mcid)
+                    assert mapping[mcid].get_object()["/S"]==operands[0],"Content/tag role mismatch"
+            elif operator==b"EMC":
+                assert marked,"Unbalanced marked content"
+                marked.pop()
+            elif operator in (b"Tj",b"TJ"):
+                assert marked,"Untagged text"
+                used_fonts.add(current_font)
+            elif operator==b"Tf": current_font=operands[0]
+        assert not marked and found==expected,"Incorrect logical reading order"
+        for name in used_fonts:
+            font=page["/Resources"]["/Font"][name]
+            assert "/ToUnicode" in font,"Font lacks Unicode character mapping"
+            desc=font["/FontDescriptor"]
+            assert "/FontFile2" in desc or "/FontFile3" in desc,"Unembedded text font"
+        for annotation in page.get("/Annots",[]):
+            a=annotation.get_object()
+            if a.get("/Subtype")=="/Link":
+                assert a.get("/Contents"),"Source link lacks an accessible label"
+                assert parents[int(a["/StructParent"])].get_object()["/S"]=="/Link","Source annotation lacks a Link tag"
 
 
 def validate(output):
@@ -26,6 +73,7 @@ def validate(output):
         reader=PdfReader(path)
         assert len(reader.pages)==entry["pages"],f"Wrong page count: {path}"
         assert data["contentSha256"] in reader.metadata.subject,"Missing source digest"
+        validate_structure(reader)
         expected_size=entry["pageSizePoints"]
         with pdfplumber.open(path) as pdf:
             for page in pdf.pages:
@@ -60,7 +108,7 @@ def validate(output):
                 assert "CL-DEMO-27" in text and "America/Los_Angeles" in text,"Lost role/timezone"
                 assert "09:30-10:10" in text and "Demo Room A" in text,"Lost appointment fields"
         print(f"Verified {path.name}: {len(reader.pages)} pages")
-    print(f"Verified all {total} pages: bounds, text, metadata, bookmarks and sample privacy")
+    print(f"Verified all {total} pages: bounds, text, metadata, bookmarks, logical structure, embedded fonts and sample privacy")
 
 
 if __name__ == "__main__":

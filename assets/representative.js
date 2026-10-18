@@ -16,7 +16,7 @@ function currentGuideScratch() {
   }
   return guideScratch.get(key);
 }
-let exampleGoal = "Recruiting";
+let exampleGoal = "Learning";
 let storageAvailable = true;
 
 const GOAL_EXAMPLES = {
@@ -37,6 +37,59 @@ const GOAL_EXAMPLES = {
     "Sam’s fictional builder example starts with a question about coordination failure. Look for an accessible peer or founder conversation; unrelated recruiting tasks can be skipped.",
   ],
 };
+
+// Supplemental beta teaching material; the approved v1.3 manuscript stays versioned separately.
+function starterPlanSaved(p) {
+  return !!p?.decision?.goal?.trim() && p.targets.some(t=>t.name?.trim() && t.action?.trim() && t.backup?.trim());
+}
+function renderStarterPath(p,place) {
+  const complete=starterPlanSaved(p), onHome=place === "home";
+  const action=(task,label)=>p ? `<button class="plainlink" ${onHome ? "data-launch" : "data-task"}="${task}" data-focus-editor="1">${label} →</button>` : "";
+  const body=`<div class="starter-body"><p class="starter-intro">Start with five minutes. You can leave the rest for later.</p>
+    <ol class="starter-steps">
+      <li><span class="section-caption">01 · ${p?.decision?.goal?.trim() ? "Outcome saved" : "Your outcome"}</span><h3>Name one useful outcome</h3><p>What would make attending worthwhile? Try “learn one interview technique” or “meet a peer working on a similar problem.”</p>${action("decision","Name my outcome")}</li>
+      <li><span class="section-caption">02 · ${p?.targets?.some(t=>t.name?.trim() && t.action?.trim() && t.backup?.trim()) ? "Priority and backup saved" : "Your next move"}</span><h3>Choose a priority and a backup</h3><p>Find one real session, conversation or opportunity. Keep its source, your next action and an alternative if it falls through.</p>${action("targets","Choose my priority")}</li>
+      <li><span class="section-caption">03 · Take it with you</span><h3>Read your field plan</h3><p>See your choices together. Check missing details, then copy or print what you need.</p>${p ? '<a class="plainlink" href="#/plan">Open my field plan →</a>' : ""}</li>
+    </ol><div class="linkrow">${!p ? '<a class="btn primary" href="#/conference">Start my five-minute plan →</a>' : ""}<a class="plainlink" href="#/example/learning">See a complete learning example →</a></div>
+    <p class="helper">${p ? "These steps use your saved notes. " : "No account needed. "}Add funding, access and other details as needed before committing. AI help is optional.</p></div>`;
+  return onHome ? `<section class="starter-path no-print" aria-labelledby="starter-heading"><div class="section-caption">A small place to start</div><h2 id="starter-heading">One outcome. One priority. One backup.</h2>${body}</section>` :
+    `<details class="starter-path no-print" ${complete ? "" : "open"}><summary>Your five-minute plan${complete ? " · Starter notes saved" : ""}</summary>${body}</details>`;
+}
+
+function renderLearningJourney() {
+  return `<article class="learning-journey" aria-labelledby="journey-title"><a class="plainlink" href="#/playbook/before">← Back to the Playbook</a>
+    <div class="guide-heading"><div class="section-caption">Worked example · Fictional</div><h1 id="journey-title">A learning plan, start to finish.</h1><p class="guide-purpose">Leena wants to ask better questions for a neighborhood history project. Here’s how one conference becomes a small, useful next step.</p><p class="helper">Leena, the gathering, its program, access confirmation and later outcome are invented for this example. Reading it does not add anything to your plan.</p></div>
+    <section class="journey-stage"><span class="section-caption">Before · Make a choice</span><h2>A specific skill, within a small budget.</h2>
+      <dl class="journey-record"><dt>Conference</dt><dd>Community History Day · an invented one-day, in-person gathering at an example library. April 12, 2027 · Europe/London timezone.</dd>
+      <dt>One useful outcome</dt><dd>Learn an open-ended interview question and practice following the answer, rather than reading from a script.</dd>
+      <dt>Cost and decision</dt><dd>USD 25 entry + USD 10 transport = USD 35 upfront. Leena can safely spend USD 50 and expects no reimbursement. Her decision is to go if the workshop includes practice and her pass covers it.</dd>
+      <dt>Primary choice</dt><dd>“Asking better oral-history questions.” In this story, the session description says participants practice open-ended questions in pairs. That makes it a better fit than a broad keynote.</dd>
+      <dt>Source and access</dt><dd>Leena saves the organizer’s session description and checks the pass terms. In the fictional story, the organizer confirms her workshop place separately from general entry. In your plan, keep the actual source and your own confirmation.</dd>
+      <dt>One question</dt><dd>“How can I follow an unexpected answer without steering the person toward my own story?”</dd>
+      <dt>Next action and backup</dt><dd>Read the workshop instructions and bring one practice question. If the workshop becomes unavailable, replace it with the included oral-history exhibit and note one interviewing approach to research afterward.</dd></dl>
+      <div class="linkrow"><a class="plainlink" href="#/guide/prioritize">Choose your priority →</a><a class="plainlink" href="#/guide/funding">Check cost and cash timing →</a></div></section>
+    <section class="journey-stage"><span class="section-caption">During · Keep it realistic</span><h2>One session, then room to reflect.</h2><p>Her field plan has the confirmed workshop from 10:00–10:45 in Example Room A, on the event’s local agenda. She leaves 15 minutes afterward for notes and a break. The exhibit is a replacement if the workshop falls through; she does not try to do both at once.</p>
+      <p>In the workshop, Leena practices asking “What happened next?” and waiting before adding another question. She records one lesson: a neutral follow-up can reveal more than several prepared questions.</p><p>She has a friendly conversation but makes no promise and receives no contact route. There is no message she needs to send.</p>
+      <a class="plainlink" href="#/guide/time">Make room in your day →</a></section>
+    <section class="journey-stage"><span class="section-caption">After · Try it, then look back</span><h2>A useful outcome can be small.</h2>
+      <dl class="journey-record"><dt>What actually happened in the story</dt><dd>Leena attended the workshop and tried one follow-up question. She did not make a new professional contact.</dd>
+      <dt>Next action</dt><dd>With a willing project volunteer, practice one open question and one neutral follow-up. Ask permission before taking or sharing notes.</dd>
+      <dt>Review a week later</dt><dd>In this fictional outcome, the volunteer gave a more detailed account after the follow-up. Leena still interrupted once. She keeps the technique and decides to practice listening again.</dd>
+      <dt>What counts as success</dt><dd>A specific technique tried and a clear next practice step. One conversation does not establish that the method always works. No public recap, referral or new contact is required.</dd></dl>
+      <div class="linkrow"><a class="plainlink" href="#/guide/learning">Apply one lesson →</a><a class="plainlink" href="#/templates/follow">Choose an appropriate follow-up →</a></div></section>
+    <section class="next-move no-print"><div><h2>What would your version look like?</h2><p>Name one outcome, choose a real priority and keep a backup.</p></div><a class="btn" href="#/conference">Make my own plan →</a></section></article>`;
+}
+
+const FOLLOWUP_EXAMPLES=[
+  {title:"Send a resource you promised",context:"Fictional example: Maya offered a professional message channel and asked for the project link. Only use this structure if that happened.",text:"Hi Maya,\n\nThanks for talking with me after the session about keeping local-history notes organized. Here’s the project link I promised: [actual public project link]. The example we discussed is in [section].\n\nNo reply needed—I hope it’s useful.\nAmir"},
+  {title:"Ask one answerable question",context:"Fictional example: a speaker welcomed questions through the event’s public Q&A. Use the route actually offered.",text:"Thank you for the session on oral-history interviews. Your suggestion to pause before asking a follow-up helped me rethink my question list.\n\nFor a first practice interview, how would you choose between asking for an example and asking what happened next?\n\nAmir"}
+];
+function renderFollowupExamples() {
+  return `<section class="followup-examples" aria-labelledby="followup-examples-heading"><h3 id="followup-examples-heading">Give the message a reason.</h3><p>Use a real promise or one small question. Change “today” in the original structure if you are writing later, and use the actual channel offered.</p>
+    ${FOLLOWUP_EXAMPLES.map(x=>`<details class="message-example"><summary>${esc(x.title)}</summary><p class="helper">${esc(x.context)}</p><blockquote>${esc(x.text)}</blockquote><button class="btn sm" data-copy-text="${esc(x.text)}">Copy this example structure</button></details>`).join("")}
+    <details class="message-example"><summary>When no message is needed</summary><p>A useful conversation without a promise or appropriate contact route can end there. Save the insight and try something with it. If the next action is an official application, use that process.</p><a class="plainlink" href="#/guide/learning">Turn the insight into an action →</a></details>
+    <p class="helper">Copying an example does not replace your draft. Keep only details that are true for you; review it before sending.</p></section>`;
+}
 
 function guideReferences(g, p) {
   const keys = [
@@ -132,8 +185,7 @@ function standardGuideExample(g) {
   return `<section class="worked-example" id="worked-example" aria-labelledby="example-heading">
     <div class="section-caption"><span class="example-mark" aria-hidden="true">↳</span> A worked example · Fictional</div>
     <h2 id="example-heading">${esc(g.exampleTitle)}</h2>
-    <p class="example-prose">${esc(g.example)}</p>
-    <p class="helper">Fictional teaching example. These are not current jobs, meetings, grants or confirmed event programs.</p></section>`;
+    <p class="example-prose">${esc(g.example)}</p></section>`;
 }
 
 function guidePlanningLink(g) {
@@ -171,6 +223,7 @@ function renderEditorialGuide(g) {
       )
       .join("")}</div>
     ${priority ? priorityExample(g) : funding ? fundingExample(g) : standardGuideExample(g)}
+    ${["prioritize","explore","learning"].includes(g.id) ? '<p class="journey-link"><a class="plainlink" href="#/example/learning">Follow a complete learning plan, from choosing a session to trying the lesson →</a></p>' : ""}
     <details class="guide-details"><summary>${esc(g.detailsHeading)}<span aria-hidden="true" class="disclosure-icon">+</span></summary><ol class="method-steps">${g.details.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></details>
     ${priority || funding ? `<section class="inline-worksheet no-print" id="guide-worksheet" aria-labelledby="worksheet-heading"><div class="section-caption">Make it yours <span class="caption-divider">/</span> Optional</div><h2 id="worksheet-heading">${priority ? "Your first worthwhile priority" : "What would your trip cost?"}</h2>
       <p class="worksheet-intro">${priority ? "A specific target, a source to check, and a next action you control." : "Use one currency (USD). Separate costs, confirmed support and anything still pending."}</p>
@@ -189,7 +242,7 @@ function priorityWorksheet(p, inline = false) {
       : inline
         ? currentGuideScratch().target
         : {};
-  return `<div class="priority-form" data-guide-tool="${inline ? "target" : ""}">
+  return `<div class="priority-form" ${draftAttributes(p,worksheetScope("targets"))} data-guide-tool="${inline ? "target" : ""}">
     <div class="formrow"><label for="target-name">What are you considering? <span class="required-note">Required</span></label><input id="target-name" required maxlength="140" value="${esc(z?.name || "")}" placeholder="A real opportunity or a specific research task" aria-describedby="form-warning"></div>
     <div class="formrow"><label for="target-action">What will you do first? <span class="required-note">Required</span></label><textarea id="target-action" required rows="2" placeholder="Find the official posting and check eligibility" aria-describedby="form-warning">${esc(z?.action || "")}</textarea></div>
     <div class="fg2"><div class="formrow"><label for="target-link">Official source URL</label><input id="target-link" type="url" value="${esc(z?.source || "")}" placeholder="https://… or leave blank if unverified"></div>
@@ -210,15 +263,15 @@ function fundingWorksheet(p, inline = false) {
       inline && Object.keys(currentGuideScratch().budget).length
         ? currentGuideScratch().budget
         : p?.budget || {},
-    q = budgetCalc(b);
+    q = budgetCalc(b), currency=p?.currency || "USD";
   const field = ([k, label]) =>
-    `<div class="formrow"><label for="budget-${k}">${esc(label)}</label><div class="money-input"><span aria-hidden="true">$</span><input id="budget-${k}" inputmode="decimal" type="number" min="0" max="10000000" step="0.01" value="${esc(b[k] ?? "")}" placeholder="0"></div></div>`;
-  return `<div class="funding-form" data-guide-tool="${inline ? "budget" : ""}"><fieldset><legend>1. The full trip <span>USD</span></legend><div class="fg2">${BUDGET_FIELDS.slice(0, 6).map(field).join("")}</div><p class="helper">Include taxes, fees and care/access needs in the relevant expense or buffer.</p></fieldset>
+    `<div class="formrow"><label for="budget-${k}">${esc(label)}</label><div class="money-input"><span aria-hidden="true">${esc(currencySymbol(currency))}</span><input id="budget-${k}" inputmode="decimal" type="number" min="0" max="10000000" step="${Math.pow(10,-currencyPlaces(currency))}" value="${esc(b[k] ?? "")}" placeholder="0"></div></div>`;
+  return `<div class="funding-form" ${draftAttributes(p,"budget")} data-guide-tool="${inline ? "budget" : ""}"><fieldset><legend>1. The full trip <span>${esc(currency)}</span></legend><div class="fg2">${BUDGET_FIELDS.slice(0, 6).map(field).join("")}</div><p class="helper">Include taxes, fees and care/access needs in the relevant expense or buffer.</p></fieldset>
     <fieldset><legend>2. Support &amp; timing</legend>${BUDGET_FIELDS.slice(6).map(field).join("")}<p class="helper">Count each confirmed contribution once. Direct payment reduces upfront cash; later reimbursement does not.</p></fieldset>
-    <div class="worksheet-totals" aria-live="polite" aria-atomic="true"><div class="total-cost"><span>Full trip cost</span><strong id="budget-total">${fmt(q.total)}</strong></div><div><span>Estimated personal cost</span><strong id="budget-net">${fmt(q.net)}</strong><small>After confirmed support</small></div><div class="cash-result"><span>Possible upfront cash</span><strong id="budget-upfront">${fmt(q.upfront)}</strong><small>Before reimbursement</small></div><p id="budget-pending-summary">${fmt(q.pending)} pending · Not subtracted</p></div>
+    <div class="worksheet-totals" aria-live="polite" aria-atomic="true"><div class="total-cost"><span>Full trip cost</span><strong id="budget-total">${fmt(q.total,currency)}</strong></div><div><span>Estimated personal cost</span><strong id="budget-net">${fmt(q.net,currency)}</strong><small>After confirmed support</small></div><div class="cash-result"><span>Possible upfront cash</span><strong id="budget-upfront">${fmt(q.upfront,currency)}</strong><small>Before reimbursement</small></div><p id="budget-pending-summary">${fmt(q.pending,currency)} pending · Not subtracted</p></div>
     <p class="helper">Assumes listed costs are paid unless directly covered, and reimbursement comes later. Confirm booking, payment and refund terms. This is an estimate, not a funding approval.</p>
     <p class="error" id="budget-warning" role="alert"></p><div class="linkrow">${p ? '<button class="btn primary" data-save-budget="1">Save budget</button>' : '<a class="btn primary" href="#/conference">Choose an event to save →</a>'}<a class="plainlink" href="#/templates/funding">Draft a funding request →</a></div>
-    ${!p ? '<p class="helper scratch-note">These estimates last until reload. Return to this guide after choosing an event to save them.</p>' : ""}</div>`;
+    ${p && !inline ? renderFundingSources(p) : ""}${!p ? '<p class="helper scratch-note">These estimates last until reload. Return to this guide after choosing an event to save them.</p>' : ""}</div>`;
 }
 
 function plannerPhase(p) {
@@ -244,11 +297,11 @@ function renderPlannerWorkspace() {
     end = daysTo(p.end || p.date);
   if (n <= 0 && taskPhase === "now") taskPhase = end >= 0 ? "onsite" : "after";
   const eligible = TASKS.filter((t) => taskFilter(t, taskPhase));
-  const next = eligible.find((t) => !p.tasks[t.id]);
+  const next = eligible.find((t) => !p.tasks[t.id] && !p.skippedTasks[t.id]);
   const saved = storageAvailable
     ? "Saved in this browser"
     : "Storage unavailable · Copy or print";
-  return `<div class="planner-heading"><div><div class="section-caption"><span class="edition-dot" aria-hidden="true"></span> My Conference</div><h1>${esc(p.name)}</h1><p>${esc(prettyDate(p.date))}${p.location ? " · " + esc(p.location) : ""}</p></div>
+  return `<div class="planner-heading"><div><div class="section-caption"><span class="edition-dot" aria-hidden="true"></span> My Conference</div><h1>${esc(p.name)}</h1><p>${esc(planDateRange(p))}${p.format ? " · " + esc(p.format) : ""}${p.location ? " · " + esc(p.location) : ""}${p.timezone ? " · " + esc(zoneLabel(p.timezone)) : ""}</p><button class="plainlink profile-edit" data-edit-profile="1">Edit conference details</button></div>
     <div class="event-switcher"><label for="switch-event">Your conferences</label><div class="chooser"><select id="switch-event">${Object.values(
       db.plans,
     )
@@ -259,8 +312,8 @@ function renderPlannerWorkspace() {
       .join(
         "",
       )}</select><button class="btn" data-show-add="1">+ Add</button></div><span class="save-state" role="status">${saved}</span></div></div>
-    <div class="planner-context"><span class="event-pill">${n > 0 ? n + " days to go" : n === 0 ? "Starts today" : end >= 0 ? "At the conference" : "After the event"}</span><span>${plannerPhase(p)}</span><div class="planner-goal"><label for="plan-goal">I’m here for</label><select id="plan-goal" data-plan-goal="1"><option value="">Choose a main goal</option>${["Recruiting / career", "Technical learning", "People / community", "Build / share a project"].map((x) => `<option ${p.goal === x ? "selected" : ""}>${x}</option>`).join("")}</select></div><a href="#/plan" class="plainlink">My field plan ↗</a></div>
-    <section class="next-move" aria-label="Suggested next step"><span class="next-icon" aria-hidden="true">↗</span><div><span class="section-caption">${next ? "A good place to start" : "Room to adjust"}</span><h2>${next ? esc(next.label) : "Your suggested steps are checked off."}</h2><p>${next ? esc(next.sub) + "." : "Recheck changing details and leave space for a useful conversation."}</p></div>${next ? `<button class="btn" data-task="${next.id}" data-focus-editor="1">Open this step →</button>` : '<a class="btn" href="#/plan">Read my field plan →</a>'}</section>
+    ${renderDraftResume(p)}<div class="planner-context"><span class="event-pill">${n > 0 ? n + " days to go" : n === 0 ? "Starts today" : end >= 0 ? "At the conference" : "After the event"}</span><span>${plannerPhase(p)}</span><div class="planner-goal"><label for="plan-goal">I’m here for</label><select id="plan-goal" data-plan-goal="1"><option value="">Choose a main goal</option>${PLANNER_GOALS.map((x) => `<option ${p.goal === x ? "selected" : ""}>${x}</option>`).join("")}</select></div><a href="#/plan" class="plainlink">My field plan ↗</a></div>
+    ${renderStarterPath(p,"planner")}${starterPlanSaved(p) ? `<section class="next-move" aria-label="Suggested next step"><span class="next-icon" aria-hidden="true">↗</span><div><span class="section-caption">${next ? "A good place to start" : "Room to adjust"}</span><h2>${next ? esc(next.label) : "Your suggested steps are prepared or marked not needed."}</h2><p>${next ? esc(next.sub) + "." : "Recheck changing details and leave space for a useful conversation."}</p></div>${next ? `<button class="btn" data-task="${next.id}" data-focus-editor="1">Open this step →</button>` : '<a class="btn" href="#/plan">Read my field plan →</a>'}</section>` : ""}${PlaybookAssistant.renderEntry()}
     <div class="conference-grid"><section class="planner-sidebar" aria-label="Planning steps"><details class="planner-menu" ${window.matchMedia("(min-width: 801px)").matches ? "open" : ""}><summary>Browse planning steps <span aria-hidden="true">+</span></summary><h2>Your next moves</h2><p class="helper">Suggested timing, not organizer deadlines. Use the steps that fit your goal.</p><div class="phasebuttons" role="group" aria-label="Planning phase">${[
       ["now", "Now"],
       ["week", "Final week"],
@@ -276,23 +329,10 @@ function renderPlannerWorkspace() {
       )}</div><div id="timeline-tasks">${renderPlannerTasks(p)}</div></details>
     <div class="planner-side-note"><p>One thoughtful priority.<br>One realistic backup.<br><strong>Plenty of room to be human.</strong></p></div></section>
     <section class="edbox" id="planner-editor" tabindex="-1" aria-label="Current planning worksheet">${renderEditor(p)}</section></div>
-    <div class="planner-footer no-print"><div class="linkrow"><button class="btn" data-review="1">Review my plan</button><a href="#/templates" class="plainlink">Editable templates →</a><a href="#/plan" class="plainlink">Print &amp; privacy options →</a></div><p class="helper">Review uses a rules-based checklist, not AI. Your records stay in this browser; clearing browser data may remove them. Access is self-reported; verify changing details with official sources.</p></div>`;
+    <div class="planner-footer no-print"><div class="linkrow"><button class="btn" data-review="1">Basic plan checks</button><a href="#/templates" class="plainlink">Editable templates →</a><a href="#/plan" class="plainlink">Print &amp; privacy options →</a></div><p class="helper">Basic checks use fixed rules. AI sharing is optional and requires a preview and your approval. Planner records are kept in this browser; download a backup before clearing browser data. Access is self-reported; verify changing details with official sources.</p></div>${renderDataControls(p)}`;
 }
 
-function renderPlannerTasks(p) {
-  const eligible = TASKS.filter((t) => taskFilter(t, taskPhase));
-  const other = TASKS.filter((t) => !taskFilter(t, taskPhase));
-  if (!TASKS.some((t) => t.id === selectedTask))
-    selectedTask = eligible[0]?.id || "access";
-  const rows = (tasks) =>
-    tasks
-      .map(
-        (t, i) =>
-          `<div class="taskrow ${selectedTask === t.id ? "active" : ""}"><input type="checkbox" data-task-check="${t.id}" ${p.tasks[t.id] ? "checked" : ""} aria-label="Mark ${esc(t.label)} done"><button class="titlebutton" data-task="${t.id}" ${selectedTask === t.id ? 'aria-current="step"' : ""}><strong>${esc(t.label)}</strong><small>${esc(t.sub)}</small></button></div>`,
-      )
-      .join("");
-  return `${rows(eligible)}<details class="other-steps" ${other.some((t) => t.id === selectedTask) ? "open" : ""}><summary>All other planning steps</summary>${rows(other)}</details>`;
-}
+function renderPlannerTasks(p) { return renderChecklistRows(p); }
 
 function collectTargetDraft() {
   return {
@@ -405,7 +445,7 @@ document.addEventListener("input", (event) => {
     currentGuideScratch().budget = Object.fromEntries(
       BUDGET_FIELDS.map(([k]) => [k, collectNumber(k)]),
     );
-  if (event.target.closest(".edbody, .inline-worksheet, .templatebody"))
+  if (event.target.closest(".edbody, .inline-worksheet, .templatebody") && !event.target.closest("[data-draft-scope]"))
     document
       .querySelectorAll(".save-state")
       .forEach((x) => {

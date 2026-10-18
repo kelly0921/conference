@@ -11,7 +11,7 @@ const sample = app.run(`(() => {
   p.notes=[{...c.followup,done:c.followup.status.startsWith('Sent')}];
   p.printPreferences={};
   return {version:SNAPSHOT.snapshotVersion,contentSha256:SNAPSHOT.contentSha256,
-    event:{name:p.name,date:p.date,location:p.location,timezone:p.timezone,goal:p.goal},
+    event:{name:p.name,date:p.date,end:p.end,format:p.format,location:p.location,timezone:p.timezone,goal:p.goal},
     sections:exportSections(p),text:fieldPlanText(p)};
 })()`);
 process.stdout.write(JSON.stringify(sample,null,2)+'\n');

@@ -1,5 +1,7 @@
 # Design rollout QA · October 13, 2026
 
+This records the earlier reading-design rollout. See [the later planner/release QA](PLANNER_RELEASE_QA_2026-10-13.md) for completed draft recovery, currency/profile support, checklist integration, worksheet coverage and PDF structure. The remaining manual accessibility/cross-browser/print checks still apply. Historical counts below describe that earlier pass.
+
 Internal review only. No deployment, merge, external attendee testing or outreach.
 
 ## Automated results
