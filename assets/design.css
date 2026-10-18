@@ -946,6 +946,52 @@ body.review-surface {
   border-color: var(--control-border);
   flex-shrink: 0;
 }
+.starter-path {
+  margin: 0 0 32px;
+  padding: 24px 28px;
+  border: 1px solid var(--example-rule);
+  border-radius: 10px;
+  background: var(--accent-wash);
+}
+.starter-path h2, .starter-path > summary {
+  font: 750 23px/1.4 var(--heading-face);
+  color: var(--text);
+}
+.starter-path > summary { cursor: pointer; min-height: 44px; }
+.starter-path h2 { margin: 8px 0; }
+.starter-intro { margin: 12px 0 20px; color: var(--secondary); }
+.starter-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+.starter-steps h3 { font-size: 18px; line-height: 1.5; margin: 8px 0; }
+.starter-steps p { font-size: 15px; line-height: 1.7; color: var(--secondary); margin: 0 0 12px; }
+.starter-steps .plainlink { display: inline-flex; align-items: center; min-height: 44px; text-align: left; }
+.learning-journey { max-width: 780px; margin: 0 auto; }
+.learning-journey .guide-heading { margin: 32px 0; }
+.journey-stage { border-top: 1px solid var(--rule); padding: 30px 0; }
+.journey-stage h2 { font: 750 27px/1.4 var(--heading-face); margin: 10px 0 20px; }
+.journey-stage p, .journey-record dd { font-size: 17px; line-height: 1.8; color: var(--secondary); }
+.journey-stage p { margin-bottom: 18px; }
+.journey-record { margin: 0; }
+.journey-record dt { font-weight: 700; margin: 20px 0 5px; }
+.journey-record dd { margin: 0; }
+.journey-link { margin: 0 0 24px; }
+.followup-examples { padding: 20px; background: var(--accent-wash); border-radius: 8px; margin-bottom: 24px; }
+.followup-examples h3 { font-size: 19px; margin: 0 0 8px; }
+.followup-examples > p, .message-example p { line-height: 1.7; color: var(--secondary); }
+.message-example { margin: 12px 0; border-top: 1px solid var(--example-rule); }
+.message-example summary { font-weight: 700; padding: 12px 0; cursor: pointer; min-height: 44px; }
+.message-example blockquote { margin: 16px 0; padding-left: 16px; border-left: 2px solid var(--accent); white-space: pre-wrap; line-height: 1.8; overflow-wrap: anywhere; }
+@media (max-width: 800px) {
+  .starter-path { padding: 20px; }
+  .starter-steps { grid-template-columns: 1fr; gap: 18px; }
+  .starter-steps li + li { border-top: 1px solid var(--example-rule); padding-top: 18px; }
+}
 .review-surface .conference-grid {
   grid-template-columns: 290px minmax(0, 1fr);
   gap: 36px;

@@ -1,5 +1,7 @@
 # Project status — October 17, 2026
 
+Content beta update: a five-minute starting path, a complete fictional learning journey, concrete follow-up examples and broader attendee wording are implemented. The original nine-guide/four-template freeze remains intact. See [content changes](BETA_CONTENT_REVIEW_2026-10-17.md) and the [beta task and feedback kit](BETA_REVIEW_KIT.md). No attendee invitations have been sent. The historical AI study below remains separate from testing usefulness with people.
+
 Latest update: planning/review results now always include a clearly labeled, application-owned access-evidence question. A fresh frozen study ran twelve new fictional scenarios twice without tuning between calls: all 24 passed the contract and met their case rubrics on review by the same coding assistant. This is not an independent human review or a general accuracy percentage. There are 167 passing automated checks. See the [access fix and fresh study](AI_ACCESS_INDEPENDENT_REVIEW_2026-10-17.md); the [earlier repeated review](AI_REPEATED_REVIEW_2026-10-17.md) preserves its original failures and replays. Quality and public-release gates remain.
 
 The previously reviewed v5 site is hosted at https://conference-playbook.pages.dev/. The current planner upgrade is prepared for internal review on the development preview. It is not a finalized or attendee-tested product.

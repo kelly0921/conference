@@ -1,5 +1,6 @@
 /* Shared planner validation, migration, drafts and conference profile. */
-const PLANNER_GOALS = ["Recruiting / career", "Technical learning", "People / community", "Build / share a project"];
+const PLANNER_GOALS = ["Recruiting / career", "Learning / skills", "People / community", "Build / share a project"];
+function normalizePlannerGoal(value) { return value === "Technical learning" ? "Learning / skills" : value; }
 const EVENT_FORMATS = ["In person", "Online", "Hybrid"];
 const TASK_GUIDES = {decision:"worth", access:"prepare", targets:"prioritize", story:"conversations",
   budget:"funding", experience:"explore", outreach:"conversations", schedule:"time",
@@ -49,6 +50,7 @@ function normalizePlanRecord(raw, id) {
   const p = {...raw};
   p.id = id || p.id;
   for (const key of ["name","date","location","timezone","goal"]) p[key] = typeof p[key] === "string" ? p[key] : "";
+  p.goal = normalizePlannerGoal(p.goal);
   p.end = typeof p.end === "string" && p.end ? p.end : p.date;
   p.currency = validCurrency(p.currency) ? p.currency : "USD";
   p.format = typeof p.format === "string" ? p.format : "";
@@ -92,7 +94,7 @@ function taskAppliesToProfile(t,p) {
   if (t.id === "online") return !p.format || ["Online","Hybrid"].includes(p.format);
   if (t.id === "travel") return !p.format || ["In person","Hybrid"].includes(p.format);
   if (t.id === "applications") return !p.goal || p.goal === "Recruiting / career";
-  if (t.id === "outreach") return !p.goal || p.goal !== "Technical learning";
+  if (t.id === "outreach") return !p.goal || normalizePlannerGoal(p.goal) !== "Learning / skills";
   return true;
 }
 function checklistProgress(p,phase) {
@@ -142,7 +144,7 @@ function restoreWorksheetDrafts() {
     for (const field of container.querySelectorAll("input[id],textarea[id],select[id]")) {
       if (field.type === "file" || field.dataset.draftExclude !== undefined || field.closest("[data-draft-scope]") !== container || !(field.id in draft.values)) continue;
       if (field.type === "checkbox") field.checked = !!draft.values[field.id];
-      else field.value = String(draft.values[field.id]);
+      else field.value = field.id === "custom-goal" ? normalizePlannerGoal(String(draft.values[field.id])) : String(draft.values[field.id]);
     }
     restored = true;
   }
@@ -181,7 +183,7 @@ function selectField(id,label,options,value) {
 function profileValues() {
   return {name:gv("custom-name").trim(),date:gv("custom-date"),end:gv("custom-end") || gv("custom-date"),
     timezone:gv("custom-timezone").trim(),format:gv("custom-format"),location:gv("custom-location").trim(),
-    organizerUrl:gv("custom-url").trim(),currency:gv("custom-currency").trim().toUpperCase(),goal:gv("custom-goal")};
+    organizerUrl:gv("custom-url").trim(),currency:gv("custom-currency").trim().toUpperCase(),goal:normalizePlannerGoal(gv("custom-goal"))};
 }
 function profileValidation(p) {
   if (!p.name) return ["Enter a conference name.","custom-name"];
@@ -215,7 +217,7 @@ function renderProfileEditor(p,setup) {
 }
 function renderUniversalSetup() {
   return '<section class="setup"><div class="eyebrow">My Conference</div><h1>A plan for your conference.</h1>' +
-    '<p class="lead">Start with one useful outcome. Save a private checklist, use the guides you need, and take your field plan with you.</p>' +
+    '<p class="lead">Add the event, then name one useful outcome and choose a priority with a backup. Your starter plan stays in this browser.</p><p class="helper">For attendees learning a skill, meeting people, exploring careers or sharing a project. <a href="#/example/learning">See a complete learning example →</a></p>' +
     (oldPlanAvailable() ? '<div class="quiet-card"><p>An earlier plan can be imported without replacing current conferences.</p><button class="btn" data-import-v4="1">Import my v4 plans</button></div>' : "") +
     renderProfileEditor(null,true) +
     '<details class="preset-examples"><summary>Or start with an example conference</summary><p class="helper">Edition details are reference information, not confirmation of your registration or pass access. You can edit them.</p>' +

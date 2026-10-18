@@ -305,6 +305,7 @@ function render() {
   else if (view === "templates") html = renderTemplates(target);
   else if (view === "plan") html = renderFieldPlan();
   else if (view === "downloads") html = renderDownloads();
+  else if (view === "example" && target === "learning") html = renderLearningJourney();
   else html = renderHome(STAGES[target] ? target : "before");
   document.getElementById("main").innerHTML = html;
   restoreWorksheetDrafts();
@@ -330,14 +331,14 @@ function render() {
   document.title =
     (view === "guide" && GUIDE_BY_ID[target]
       ? GUIDE_BY_ID[target].title + " · "
-      : "") + "The Conference Playbook";
+      : view === "example" && target === "learning" ? "A learning plan, start to finish · " : "") + "The Conference Playbook";
 }
 function renderHome(stage) {
   selectedStage = stage;
   const g = GUIDES.filter((g) => g.stage === stage),
     p = getPlan(),
     d = p ? daysTo(p.date) : null;
-  return `<section class="pageintro"><div class="eyebrow">A practical conference resource</div><h1>The Conference Playbook</h1><p class="lead" style="margin-top:12px">Short guides, worked examples and planning tools for tech conferences. Read only what you need—or make a plan you can take with you.</p></section><nav class="stagebar" aria-label="Conference stage">${Object.keys(
+  return `<section class="pageintro"><div class="eyebrow">For conference attendees</div><h1>The Conference Playbook</h1><p class="lead" style="margin-top:12px">Choose a useful outcome, make room for what matters, and follow through. Practical guides and tools for learning, community, careers or sharing a project—in person or online.</p></section>${stage === "before" ? renderStarterPath(p,"home") : ""}<nav class="stagebar" aria-label="Conference stage">${Object.keys(
     STAGES,
   )
     .map(
@@ -562,11 +563,11 @@ function renderTemplates(requested) {
       ${keys.map((id) => `<a href="#/templates/${id}" class="${id === k ? "active" : ""}" ${id === k ? 'aria-current="page"' : ""}>${esc(TEMPLATE_DATA[id].name)}</a>`).join("")}
       <a class="template-resources" href="#/downloads">Printable resources ↓</a></nav>
     <section class="templatebody" aria-labelledby="template-title" ${draftAttributes(p,"template:"+k)}><div class="section-caption">${esc(t.stage)} <span class="caption-divider">/</span> Editable template</div>
-      <h2 id="template-title">${esc(t.name)}</h2><p class="template-check">${esc(t.check)}</p>
+      <h2 id="template-title">${esc(t.name)}</h2><p class="template-check">${esc(t.check)}</p>${k === "follow" ? renderFollowupExamples() : ""}
       <div class="template-state"><span>${p ? `For <strong>${esc(p.name)}</strong>` : 'Copy a draft here, or <a href="#/conference">choose an event</a> to save it.'}</span>
       <span class="save-state" role="status">${p?.drafts?.[k] !== undefined ? "Saved in this browser" : "Not saved yet"}</span></div>
       <div class="linkrow template-actions"><button class="btn primary" data-save-template="${k}">${p ? "Save to " + esc(p.name) : "Save to My Conference"}</button><button class="btn" data-copy-template="1">Copy draft</button><a href="#/conference" class="plainlink">My Conference →</a></div>
-      <div class="formrow"><label for="template-editor">Edit all bracketed details</label><textarea id="template-editor" rows="15">${esc(body)}</textarea></div>
+      <div class="formrow"><label for="template-editor">${k === "follow" ? "Edit the original structure · use only what fits" : "Edit all bracketed details"}</label><textarea id="template-editor" rows="15">${esc(body)}</textarea></div>
       <p class="fineprint">The template source is shared with the printable workbook. Save is browser-local and event-specific. A public recap is optional.</p></section></div>
     <div class="print-resources no-print"><strong>Prefer paper?</strong><div class="linkrow"><a class="plainlink" href="output/pdf/conference-playbook-workbook-v5.pdf" download>Printable workbook ↓</a><a class="plainlink" href="output/pdf/conference-playbook-sample-field-plan-v5.pdf" download>Completed fictional sample ↓</a></div></div>`;
 }
@@ -607,10 +608,10 @@ function exportSections(p) {
     if (clean.length) sections.push({ title, lines: clean });
   };
   const q = budgetCalc(p.budget || {});
-  if (p.decision?.next)
+  if (p.decision?.goal || p.decision?.next)
     add("Attendance decision", [
       `Choice: ${p.decision.status || "Not decided"}; goal: ${p.decision.goal || "unspecified"}`,
-      `Condition / next: ${p.decision.next}`,
+      p.decision.next ? `Condition / next: ${p.decision.next}` : "",
       p.decision.alternative ? `Alternative: ${p.decision.alternative}` : "",
     ]);
   add(

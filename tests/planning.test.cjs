@@ -33,9 +33,47 @@ test("universal setup saves complete multi-day profiles without depending on pre
  assert.equal(a.run("getPlan().end"),profile.end);assert.equal(a.run("getPlan().timezone"),profile.timezone);
  assert.equal(a.run("getPlan().organizerUrl"),profile.url);assert.equal(a.run("getPlan().format"),"Online");
  assert.equal(a.run("getPlan().currency"),"EUR");assert.equal(a.run("getPlan().presetId"),"");
+ assert.equal(a.run("getPlan().goal"),"Learning / skills");
  assert.ok(a.run("renderSetup()").indexOf("data-create-custom")<a.run("renderSetup()").indexOf("data-create-event"));
  const b=application(Object.fromEntries(a.values));assert.equal(b.run("getPlan().name"),profile.name);
  assert.ok(b.run("renderFieldPlan()").includes("Mar 10"));assert.ok(b.run("fieldPlanText(getPlan())").includes(profile.url));
+});
+
+test("broader learning label retains legacy plans, checklist applicability and unfinished profile goals",()=>{
+ const stored={id:"legacy-learning",name:"Existing learning plan",date:"2027-04-12",goal:"Technical learning",targets:[{id:"old-target",name:"Existing session",action:"Read its abstract",backup:"Exhibit"}],worksheetDrafts:{profile:{values:{'custom-goal':'Technical learning'}}}};
+ const a=application({[key]:JSON.stringify({activeId:stored.id,plans:{[stored.id]:stored}})});
+ assert.equal(a.run("getPlan().goal"),"Learning / skills");
+ assert.equal(a.run("getPlan().targets[0].name"),"Existing session");
+ assert.equal(a.run("taskAppliesToProfile({id:'outreach'},getPlan())"),false);
+ const field=a.node('custom-goal');field.type='select-one';field.dataset={};
+ const container={getAttribute:k=>k==='data-draft-owner'?stored.id:'profile',querySelectorAll:()=>[field]};
+ field.closest=()=>container;a.context.document.querySelectorAll=s=>s==='[data-draft-scope]'?[container]:[];
+ a.run('restoreWorksheetDrafts()');assert.equal(field.value,'Learning / skills');
+ a.run('save()');const b=application(Object.fromEntries(a.values));
+ assert.equal(b.run('getPlan().goal'),'Learning / skills');assert.equal(b.run('getPlan().targets[0].id'),'old-target');
+});
+
+test("starter path uses saved outcomes and backups without treating preparation checkmarks as proof",()=>{
+ const a=application();a.run("ensurePreset('ghc');getPlan().tasks={decision:true,targets:true};getPlan().goal='Learning / skills'");
+ assert.equal(a.run('starterPlanSaved(getPlan())'),false);
+ let html=a.run("renderStarterPath(getPlan(),'planner')");assert.ok(html.includes('data-task="decision"'));assert.ok(html.includes('data-task="targets"'));assert.ok(html.includes('href="#/plan"'));
+ click(a,{task:'decision',focusEditor:'1'});assert.equal(a.run('selectedTask'),'decision');
+ assert.equal(a.run('starterPlanSaved(getPlan())'),false);
+ a.run("getPlan().decision.goal='Learn one technique';getPlan().targets=[{name:'Workshop',action:'Read the abstract',backup:''}]");
+ assert.equal(a.run('starterPlanSaved(getPlan())'),false);
+ a.run("getPlan().targets[0].backup='Find a public article'");assert.equal(a.run('starterPlanSaved(getPlan())'),true);
+ const fieldPlan=a.run('fieldPlanText(getPlan())');assert.ok(fieldPlan.includes('Learn one technique'));assert.ok(fieldPlan.includes('Find a public article'));assert.ok(fieldPlan.includes('Source: Not verified'));
+ html=a.run("renderStarterPath(getPlan(),'planner')");assert.ok(html.includes('Starter notes saved'));assert.ok(!html.includes(' open>'));
+});
+
+test("copying a follow-up example preserves saved and unfinished template drafts",async()=>{
+ const a=application();a.run("ensurePreset('ghc');getPlan().drafts.follow='Saved personal message';recordWorksheetDraft('ghc','template:follow',{'template-editor':'Unfinished personal message'})");
+ let copied='';a.context.navigator.clipboard={writeText:async s=>{copied=s;}};
+ const message=a.run('FOLLOWUP_EXAMPLES[0].text');click(a,{copyText:message});await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(copied,message);assert.equal(a.run('getPlan().drafts.follow'),'Saved personal message');
+ assert.equal(a.run("getPlan().worksheetDrafts['template:follow'].values['template-editor']"),'Unfinished personal message');
+ const before=a.run('JSON.stringify(db)');a.run("location.hash='#/example/learning';render()");
+ assert.ok(a.node('main').innerHTML.includes('A learning plan, start to finish.'));assert.equal(a.run('JSON.stringify(db)'),before);
 });
 test("invalid profile dates, timezones, URL schemes and currencies cannot create a plan",()=>{
  for(const change of [{end:"2027-03-01"},{date:"2027-02-30"},{timezone:"not/a-zone"},{url:"javascript:alert(1)"},{currency:"ZZZ"}]){

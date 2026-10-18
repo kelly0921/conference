@@ -16,7 +16,7 @@ function currentGuideScratch() {
   }
   return guideScratch.get(key);
 }
-let exampleGoal = "Recruiting";
+let exampleGoal = "Learning";
 let storageAvailable = true;
 
 const GOAL_EXAMPLES = {
@@ -37,6 +37,59 @@ const GOAL_EXAMPLES = {
     "Sam’s fictional builder example starts with a question about coordination failure. Look for an accessible peer or founder conversation; unrelated recruiting tasks can be skipped.",
   ],
 };
+
+// Supplemental beta teaching material; the approved v1.3 manuscript stays versioned separately.
+function starterPlanSaved(p) {
+  return !!p?.decision?.goal?.trim() && p.targets.some(t=>t.name?.trim() && t.action?.trim() && t.backup?.trim());
+}
+function renderStarterPath(p,place) {
+  const complete=starterPlanSaved(p), onHome=place === "home";
+  const action=(task,label)=>p ? `<button class="plainlink" ${onHome ? "data-launch" : "data-task"}="${task}" data-focus-editor="1">${label} →</button>` : "";
+  const body=`<div class="starter-body"><p class="starter-intro">Start with five minutes. You can leave the rest for later.</p>
+    <ol class="starter-steps">
+      <li><span class="section-caption">01 · ${p?.decision?.goal?.trim() ? "Outcome saved" : "Your outcome"}</span><h3>Name one useful outcome</h3><p>What would make attending worthwhile? Try “learn one interview technique” or “meet a peer working on a similar problem.”</p>${action("decision","Name my outcome")}</li>
+      <li><span class="section-caption">02 · ${p?.targets?.some(t=>t.name?.trim() && t.action?.trim() && t.backup?.trim()) ? "Priority and backup saved" : "Your next move"}</span><h3>Choose a priority and a backup</h3><p>Find one real session, conversation or opportunity. Keep its source, your next action and an alternative if it falls through.</p>${action("targets","Choose my priority")}</li>
+      <li><span class="section-caption">03 · Take it with you</span><h3>Read your field plan</h3><p>See your choices together. Check missing details, then copy or print what you need.</p>${p ? '<a class="plainlink" href="#/plan">Open my field plan →</a>' : ""}</li>
+    </ol><div class="linkrow">${!p ? '<a class="btn primary" href="#/conference">Start my five-minute plan →</a>' : ""}<a class="plainlink" href="#/example/learning">See a complete learning example →</a></div>
+    <p class="helper">${p ? "These steps use your saved notes. " : "No account needed. "}Add funding, access and other details as needed before committing. AI help is optional.</p></div>`;
+  return onHome ? `<section class="starter-path no-print" aria-labelledby="starter-heading"><div class="section-caption">A small place to start</div><h2 id="starter-heading">One outcome. One priority. One backup.</h2>${body}</section>` :
+    `<details class="starter-path no-print" ${complete ? "" : "open"}><summary>Your five-minute plan${complete ? " · Starter notes saved" : ""}</summary>${body}</details>`;
+}
+
+function renderLearningJourney() {
+  return `<article class="learning-journey" aria-labelledby="journey-title"><a class="plainlink" href="#/playbook/before">← Back to the Playbook</a>
+    <div class="guide-heading"><div class="section-caption">Worked example · Fictional</div><h1 id="journey-title">A learning plan, start to finish.</h1><p class="guide-purpose">Leena wants to ask better questions for a neighborhood history project. Here’s how one conference becomes a small, useful next step.</p><p class="helper">Leena, the gathering, its program, access confirmation and later outcome are invented for this example. Reading it does not add anything to your plan.</p></div>
+    <section class="journey-stage"><span class="section-caption">Before · Make a choice</span><h2>A specific skill, within a small budget.</h2>
+      <dl class="journey-record"><dt>Conference</dt><dd>Community History Day · an invented one-day, in-person gathering at an example library. April 12, 2027 · Europe/London timezone.</dd>
+      <dt>One useful outcome</dt><dd>Learn an open-ended interview question and practice following the answer, rather than reading from a script.</dd>
+      <dt>Cost and decision</dt><dd>USD 25 entry + USD 10 transport = USD 35 upfront. Leena can safely spend USD 50 and expects no reimbursement. Her decision is to go if the workshop includes practice and her pass covers it.</dd>
+      <dt>Primary choice</dt><dd>“Asking better oral-history questions.” In this story, the session description says participants practice open-ended questions in pairs. That makes it a better fit than a broad keynote.</dd>
+      <dt>Source and access</dt><dd>Leena saves the organizer’s session description and checks the pass terms. In the fictional story, the organizer confirms her workshop place separately from general entry. In your plan, keep the actual source and your own confirmation.</dd>
+      <dt>One question</dt><dd>“How can I follow an unexpected answer without steering the person toward my own story?”</dd>
+      <dt>Next action and backup</dt><dd>Read the workshop instructions and bring one practice question. If the workshop becomes unavailable, replace it with the included oral-history exhibit and note one interviewing approach to research afterward.</dd></dl>
+      <div class="linkrow"><a class="plainlink" href="#/guide/prioritize">Choose your priority →</a><a class="plainlink" href="#/guide/funding">Check cost and cash timing →</a></div></section>
+    <section class="journey-stage"><span class="section-caption">During · Keep it realistic</span><h2>One session, then room to reflect.</h2><p>Her field plan has the confirmed workshop from 10:00–10:45 in Example Room A, on the event’s local agenda. She leaves 15 minutes afterward for notes and a break. The exhibit is a replacement if the workshop falls through; she does not try to do both at once.</p>
+      <p>In the workshop, Leena practices asking “What happened next?” and waiting before adding another question. She records one lesson: a neutral follow-up can reveal more than several prepared questions.</p><p>She has a friendly conversation but makes no promise and receives no contact route. There is no message she needs to send.</p>
+      <a class="plainlink" href="#/guide/time">Make room in your day →</a></section>
+    <section class="journey-stage"><span class="section-caption">After · Try it, then look back</span><h2>A useful outcome can be small.</h2>
+      <dl class="journey-record"><dt>What actually happened in the story</dt><dd>Leena attended the workshop and tried one follow-up question. She did not make a new professional contact.</dd>
+      <dt>Next action</dt><dd>With a willing project volunteer, practice one open question and one neutral follow-up. Ask permission before taking or sharing notes.</dd>
+      <dt>Review a week later</dt><dd>In this fictional outcome, the volunteer gave a more detailed account after the follow-up. Leena still interrupted once. She keeps the technique and decides to practice listening again.</dd>
+      <dt>What counts as success</dt><dd>A specific technique tried and a clear next practice step. One conversation does not establish that the method always works. No public recap, referral or new contact is required.</dd></dl>
+      <div class="linkrow"><a class="plainlink" href="#/guide/learning">Apply one lesson →</a><a class="plainlink" href="#/templates/follow">Choose an appropriate follow-up →</a></div></section>
+    <section class="next-move no-print"><div><h2>What would your version look like?</h2><p>Name one outcome, choose a real priority and keep a backup.</p></div><a class="btn" href="#/conference">Make my own plan →</a></section></article>`;
+}
+
+const FOLLOWUP_EXAMPLES=[
+  {title:"Send a resource you promised",context:"Fictional example: Maya offered a professional message channel and asked for the project link. Only use this structure if that happened.",text:"Hi Maya,\n\nThanks for talking with me after the session about keeping local-history notes organized. Here’s the project link I promised: [actual public project link]. The example we discussed is in [section].\n\nNo reply needed—I hope it’s useful.\nAmir"},
+  {title:"Ask one answerable question",context:"Fictional example: a speaker welcomed questions through the event’s public Q&A. Use the route actually offered.",text:"Thank you for the session on oral-history interviews. Your suggestion to pause before asking a follow-up helped me rethink my question list.\n\nFor a first practice interview, how would you choose between asking for an example and asking what happened next?\n\nAmir"}
+];
+function renderFollowupExamples() {
+  return `<section class="followup-examples" aria-labelledby="followup-examples-heading"><h3 id="followup-examples-heading">Give the message a reason.</h3><p>Use a real promise or one small question. Change “today” in the original structure if you are writing later, and use the actual channel offered.</p>
+    ${FOLLOWUP_EXAMPLES.map(x=>`<details class="message-example"><summary>${esc(x.title)}</summary><p class="helper">${esc(x.context)}</p><blockquote>${esc(x.text)}</blockquote><button class="btn sm" data-copy-text="${esc(x.text)}">Copy this example structure</button></details>`).join("")}
+    <details class="message-example"><summary>When no message is needed</summary><p>A useful conversation without a promise or appropriate contact route can end there. Save the insight and try something with it. If the next action is an official application, use that process.</p><a class="plainlink" href="#/guide/learning">Turn the insight into an action →</a></details>
+    <p class="helper">Copying an example does not replace your draft. Keep only details that are true for you; review it before sending.</p></section>`;
+}
 
 function guideReferences(g, p) {
   const keys = [
@@ -132,8 +185,7 @@ function standardGuideExample(g) {
   return `<section class="worked-example" id="worked-example" aria-labelledby="example-heading">
     <div class="section-caption"><span class="example-mark" aria-hidden="true">↳</span> A worked example · Fictional</div>
     <h2 id="example-heading">${esc(g.exampleTitle)}</h2>
-    <p class="example-prose">${esc(g.example)}</p>
-    <p class="helper">Fictional teaching example. These are not current jobs, meetings, grants or confirmed event programs.</p></section>`;
+    <p class="example-prose">${esc(g.example)}</p></section>`;
 }
 
 function guidePlanningLink(g) {
@@ -171,6 +223,7 @@ function renderEditorialGuide(g) {
       )
       .join("")}</div>
     ${priority ? priorityExample(g) : funding ? fundingExample(g) : standardGuideExample(g)}
+    ${["prioritize","explore","learning"].includes(g.id) ? '<p class="journey-link"><a class="plainlink" href="#/example/learning">Follow a complete learning plan, from choosing a session to trying the lesson →</a></p>' : ""}
     <details class="guide-details"><summary>${esc(g.detailsHeading)}<span aria-hidden="true" class="disclosure-icon">+</span></summary><ol class="method-steps">${g.details.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></details>
     ${priority || funding ? `<section class="inline-worksheet no-print" id="guide-worksheet" aria-labelledby="worksheet-heading"><div class="section-caption">Make it yours <span class="caption-divider">/</span> Optional</div><h2 id="worksheet-heading">${priority ? "Your first worthwhile priority" : "What would your trip cost?"}</h2>
       <p class="worksheet-intro">${priority ? "A specific target, a source to check, and a next action you control." : "Use one currency (USD). Separate costs, confirmed support and anything still pending."}</p>
@@ -259,8 +312,8 @@ function renderPlannerWorkspace() {
       .join(
         "",
       )}</select><button class="btn" data-show-add="1">+ Add</button></div><span class="save-state" role="status">${saved}</span></div></div>
-    ${renderDraftResume(p)}<div class="planner-context"><span class="event-pill">${n > 0 ? n + " days to go" : n === 0 ? "Starts today" : end >= 0 ? "At the conference" : "After the event"}</span><span>${plannerPhase(p)}</span><div class="planner-goal"><label for="plan-goal">I’m here for</label><select id="plan-goal" data-plan-goal="1"><option value="">Choose a main goal</option>${["Recruiting / career", "Technical learning", "People / community", "Build / share a project"].map((x) => `<option ${p.goal === x ? "selected" : ""}>${x}</option>`).join("")}</select></div><a href="#/plan" class="plainlink">My field plan ↗</a></div>
-    ${PlaybookAssistant.renderEntry()}<section class="next-move" aria-label="Suggested next step"><span class="next-icon" aria-hidden="true">↗</span><div><span class="section-caption">${next ? "A good place to start" : "Room to adjust"}</span><h2>${next ? esc(next.label) : "Your suggested steps are prepared or marked not needed."}</h2><p>${next ? esc(next.sub) + "." : "Recheck changing details and leave space for a useful conversation."}</p></div>${next ? `<button class="btn" data-task="${next.id}" data-focus-editor="1">Open this step →</button>` : '<a class="btn" href="#/plan">Read my field plan →</a>'}</section>
+    ${renderDraftResume(p)}<div class="planner-context"><span class="event-pill">${n > 0 ? n + " days to go" : n === 0 ? "Starts today" : end >= 0 ? "At the conference" : "After the event"}</span><span>${plannerPhase(p)}</span><div class="planner-goal"><label for="plan-goal">I’m here for</label><select id="plan-goal" data-plan-goal="1"><option value="">Choose a main goal</option>${PLANNER_GOALS.map((x) => `<option ${p.goal === x ? "selected" : ""}>${x}</option>`).join("")}</select></div><a href="#/plan" class="plainlink">My field plan ↗</a></div>
+    ${renderStarterPath(p,"planner")}${starterPlanSaved(p) ? `<section class="next-move" aria-label="Suggested next step"><span class="next-icon" aria-hidden="true">↗</span><div><span class="section-caption">${next ? "A good place to start" : "Room to adjust"}</span><h2>${next ? esc(next.label) : "Your suggested steps are prepared or marked not needed."}</h2><p>${next ? esc(next.sub) + "." : "Recheck changing details and leave space for a useful conversation."}</p></div>${next ? `<button class="btn" data-task="${next.id}" data-focus-editor="1">Open this step →</button>` : '<a class="btn" href="#/plan">Read my field plan →</a>'}</section>` : ""}${PlaybookAssistant.renderEntry()}
     <div class="conference-grid"><section class="planner-sidebar" aria-label="Planning steps"><details class="planner-menu" ${window.matchMedia("(min-width: 801px)").matches ? "open" : ""}><summary>Browse planning steps <span aria-hidden="true">+</span></summary><h2>Your next moves</h2><p class="helper">Suggested timing, not organizer deadlines. Use the steps that fit your goal.</p><div class="phasebuttons" role="group" aria-label="Planning phase">${[
       ["now", "Now"],
       ["week", "Final week"],

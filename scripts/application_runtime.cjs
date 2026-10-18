@@ -13,7 +13,7 @@ function application(stored = {}, blocked = false) {
   const node = id => {
     if (!nodes.has(id)) nodes.set(id, {
       id, value: '', textContent: '', innerHTML: '', dataset: {},
-      validity: {valid:true}, removeAttribute(){}, setAttribute(){}, focus(){}
+      validity: {valid:true}, removeAttribute(){}, setAttribute(){}, focus(){}, scrollIntoView(){}
     });
     return nodes.get(id);
   };
